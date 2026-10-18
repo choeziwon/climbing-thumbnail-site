@@ -81,7 +81,7 @@ function setupMobileWorkspace(){
     editorViewport.logical=query.matches;
     document.body.classList.toggle('mobile-editing',query.matches);shell.hidden=!query.matches;
     if(query.matches){
-      move($('saveResult'),header);move(frame,canvas);move($('previewHint'),shell);canvas.after($('previewHint'));
+      move($('saveResult'),header);move(frame,canvas);
       move(text,panels[0]);move(document.querySelector('main .gym-picker'),panels[0]);move(document.querySelector('main .position-controls'),panels[0]);
       panels[0].append(styleControls);move(document.querySelector('main .color-controls'),styleControls);
       move(document.querySelector('main .success-controls'),panels[1]);
