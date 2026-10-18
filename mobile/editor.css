@@ -11,7 +11,7 @@ body.mobile-editing{overflow:hidden}
  .mobile-canvas #preview{white-space:pre;overflow-wrap:normal}
  .mobile-canvas .heart-row{flex-wrap:nowrap}
  .mobile-tabs{display:flex;flex:none;padding:0;border-bottom:1px solid #e7e8eb;gap:0}
- .mobile-tabs button{flex:1;border:0;border-radius:0;background:none;min-height:48px;padding:10px 0;color:#737780;font-size:14px;border-bottom:2px solid transparent}
+ .mobile-tabs button{flex:1;border:0;border-radius:0;background:none;min-height:48px;padding:10px 0;color:#737780;font-size:15px;border-bottom:2px solid transparent}
  .mobile-tabs button[aria-selected=true]{color:#111;font-weight:700;border-bottom-color:#111}
  .mobile-tools{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:18px 16px max(24px,env(safe-area-inset-bottom));scroll-padding-bottom:24px}
  .mobile-panel{margin:0}
