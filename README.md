@@ -17,6 +17,6 @@
 
 ## 웹 폰트 파일 이름
 
-`assets/`의 파일명은 실제 폰트 이름으로 관리합니다. 한컷체 웹용은 `one-cut-Web.ttf`이며, 나머지는 `NotoSansKR.woff`, `NanumGothic.woff`, `GothicA1.woff`, `BlackHanSans.woff`, `Jua.woff`, `NanumMyeongjo.woff`, `NotoSerifKR.woff`, `Hahmlet.woff`, `GowunBatang.woff`, `SongMyung.woff`입니다. CSS URL의 `?v=` 값으로 폰트 변경 시 캐시를 갱신합니다.
+`assets/`의 파일명은 실제 폰트 이름으로 관리합니다. 한컷체 웹용은 `OneKut-Web.ttf`이며, 나머지는 `NotoSansKR.woff`, `NanumGothic.woff`, `GothicA1.woff`, `BlackHanSans.woff`, `Jua.woff`, `NanumMyeongjo.woff`, `NotoSerifKR.woff`, `Hahmlet.woff`, `GowunBatang.woff`, `SongMyung.woff`입니다. CSS URL의 `?v=` 값으로 폰트 변경 시 캐시를 갱신합니다.
 
-설치용 파일과 이용 조건: [한컷체 다운로드](https://github.com/choeziwon/climbing-thumbnail-site/releases/tag/font-v1.0.1). 제작자는 **원이네 스튜디오**이며 개인·기업의 상업적 이용까지 무료인 **SIL OFL 1.1**을 적용합니다.
+설치용 파일과 이용 조건: [한컷체 다운로드](https://github.com/choeziwon/climbing-thumbnail-site/releases/tag/font-v1.0.2). 제작자는 **원이네 스튜디오**이며 개인·기업의 상업적 이용까지 무료인 **SIL OFL 1.1**을 적용합니다.
