@@ -72,7 +72,7 @@ function setupMobileWorkspace(){
     shell.style.setProperty('--mobile-top',(v?.offsetTop||0)+'px');
     fitMobilePreview();
   }
-  const query=window.WONINE_MOBILE_FORCE?{matches:true,addEventListener(){}}:window.matchMedia('(max-width:600px)');
+  const query=window.WONINE_MOBILE_FORCE?{matches:true,addEventListener(){}}:window.matchMedia('(width < 1080px)');
   function apply(){
     if(query.matches===mobileWorkspace.active)return;
     mobileWorkspace.active=query.matches;
