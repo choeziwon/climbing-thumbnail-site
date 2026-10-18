@@ -603,4 +603,3 @@ $('saveResult').addEventListener('click',async()=>{
     exporting=false;$('saveResult').textContent='결과물 저장';$('saveResult').disabled=state.fontLoading;
   }
 });
-
