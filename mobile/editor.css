@@ -26,17 +26,17 @@ body.mobile-editing{overflow:hidden}
  .mobile-style{margin-top:16px}
  .mobile-panel .color-controls{margin:0 0 12px;gap:16px 10px}
  .mobile-panel .align-control{max-width:none}
- .mobile-panel .success-controls{grid-template-columns:120px minmax(0,1fr);margin:0;gap:20px 16px}
+ .mobile-panel .success-controls{grid-template-columns:120px minmax(0,1fr);margin:0;gap:16px}
  .mobile-panel .success-controls .success-order{grid-column:2;grid-row:1;justify-self:stretch}
- .mobile-panel .order-options{width:100%}
- .mobile-panel .order-options button{flex:1}
+ .mobile-panel .order-options{width:100%;height:44px;min-height:44px}
+ .mobile-panel .order-options button{flex:1;height:36px;min-height:36px;padding:6px 10px}
  .mobile-panel .heart-field{grid-column:1/-1;grid-row:2}
  .mobile-panel .heart-heading-row{min-height:20px;margin-bottom:8px}
  .mobile-panel #clearHearts{position:relative;min-height:20px;padding:0}
  .mobile-panel #clearHearts::after{content:"";position:absolute;inset:-20px 0 -4px}
  .mobile-panel .heart-section{display:block!important}
  .mobile-panel .heart-palette{display:flex;flex-wrap:wrap;gap:8px;margin:0!important}
- .mobile-panel .heart-toolbar{margin:14px 0 0!important;display:flex;gap:8px}
+ .mobile-panel .heart-toolbar{margin:16px 0 0!important;display:flex;gap:8px}
  .mobile-panel .heart-toolbar button{flex:1}
  .mobile-editor>.preview-hint{flex:none}
  .mobile-panel .photo-tools{display:block;margin:0;padding:0;border:0}
