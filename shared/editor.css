@@ -136,3 +136,6 @@ main>.text-section:first-child{margin-top:0}
 }
 
 .mobile-count{display:none}
+
+.gym-option-detail{display:block;font-size:12px;line-height:18px;color:#71757d;margin-top:2px}
+#gymSearchMore{width:100%;margin-top:10px;font-size:13px}

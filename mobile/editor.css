@@ -16,13 +16,12 @@ body.mobile-editing{overflow:hidden}
  .mobile-tools{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:18px 16px max(24px,env(safe-area-inset-bottom));scroll-padding-bottom:24px}
  .mobile-panel{margin:0}
  .mobile-panel textarea{min-height:80px;height:80px;resize:vertical;font-size:16px}
- .mobile-panel .gym-picker{display:grid;grid-template-columns:90px minmax(0,1fr);margin:16px 0;gap:16px 12px}
+ .mobile-panel .gym-picker{display:grid;grid-template-columns:minmax(0,1fr);margin:16px 0;gap:16px}
  .mobile-panel .position-controls{margin:16px 0}
  .mobile-panel .position-controls>.font-field{flex:1 1 100%;min-width:0}
  .mobile-panel .position-controls>label[for=size]{flex:1 1 100%;min-width:0}
- .mobile-panel .gym-picker>.region-field{grid-column:1;grid-row:1;width:100%;min-width:0}
- .mobile-panel .gym-picker>.gym-field{grid-column:2;grid-row:1;width:100%;min-width:0}
- .mobile-panel .gym-picker>#branchField{grid-column:2;grid-row:2;width:100%;min-width:0}
+ .mobile-panel .gym-picker>.gym-field{grid-column:1;grid-row:1;width:100%;min-width:0}
+ .mobile-panel .gym-picker>#branchField{grid-column:1;grid-row:2;width:100%;min-width:0}
  .mobile-panel .gym-search-panel input{font-size:16px}
  .mobile-style{margin-top:16px}
  .mobile-panel .color-controls{margin:0 0 12px;gap:16px 10px}
