@@ -135,5 +135,4 @@ main>.text-section:first-child{margin-top:0}
  .text-section .success-controls .heart-field .heart-section{flex-wrap:nowrap}
 }
 
-.font-downloads{border-top:1px solid #e0e3e8;margin-top:32px;padding-top:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.font-downloads h2{font-size:20px;line-height:1.4;margin:0}.font-downloads p{font-size:14px;margin:6px 0 0}.font-download-links{display:flex;gap:8px;flex-wrap:wrap}.font-download-links a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 12px;border:1px solid #d9d9d9;border-radius:9px;color:#111111;background:#fff;font-size:14px;text-decoration:none}.font-download-links a:hover{background:#f5f5f5}.font-download-links a:focus-visible{outline:2px solid #111111;outline-offset:3px}
 .mobile-count{display:none}

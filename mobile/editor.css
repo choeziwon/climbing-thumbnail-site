@@ -55,11 +55,6 @@ body.mobile-editing{overflow:hidden}
  .mobile-panel .photo-attachment{max-width:100%;justify-content:space-between}
  .mobile-panel .ratio-control{margin:0;display:flex;flex-wrap:wrap;gap:8px}
  .mobile-panel .ratio-control button{flex:1;min-height:44px}
- .mobile-panel .font-downloads{margin-top:24px;padding-top:20px;gap:12px}
- .mobile-panel .font-downloads h2{font-size:15px}
- .mobile-panel .font-downloads p{font-size:13px}
- .mobile-panel .font-download-links{width:100%}
- .mobile-panel .font-download-links a{flex:1;font-size:13px}
  .mobile-tools .status{margin:0 0 12px;font-size:13px}
 body{background:#f4f5f7}
 .mobile-editor{width:min(100%,600px);margin-inline:auto}

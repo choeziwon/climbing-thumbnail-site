@@ -121,7 +121,6 @@ function setupMobileWorkspace(){
       move(document.querySelector('main .success-controls'),panels[1]);
       panels[1].querySelector('.heart-palette').after(counter);counter.after(note);
       move(document.querySelector('main .photo-tools'),panels[2]);panels[2].append(imageNote);
-      move(document.querySelector('main .font-downloads'),panels[2]);
       move($('fontStatus'),tools);move($('status'),tools);tools.prepend($('fontStatus'),$('status'));
       selectTab(0);viewport();
     }else{
