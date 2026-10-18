@@ -24,8 +24,7 @@ body.mobile-editing{overflow:hidden}
  .mobile-panel .gym-picker>.region-field{flex:0 0 90px}
  .mobile-panel .gym-picker>.gym-field{flex:1;min-width:0}
  .mobile-panel .gym-search-panel input{font-size:16px}
- .mobile-style{border-top:1px solid #e7e8eb;margin-top:18px}
- .mobile-style summary{padding:16px 0;cursor:pointer;font-size:14px;font-weight:600;min-height:48px}
+ .mobile-style{margin-top:16px}
  .mobile-panel .color-controls{margin:0 0 12px;gap:16px 10px}
  .mobile-panel .align-control{max-width:none}
  .mobile-panel .success-controls{grid-template-columns:120px minmax(0,1fr);margin:0;gap:20px 16px}

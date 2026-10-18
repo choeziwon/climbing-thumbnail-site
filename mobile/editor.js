@@ -64,7 +64,7 @@ function setupMobileWorkspace(){
   const header=shell.querySelector('.mobile-header'),canvas=shell.querySelector('.mobile-canvas'),tools=shell.querySelector('.mobile-tools');
   const panels=['text','marks','image'].map(name=>$(`mobile-${name}-panel`));
   const tabs=Array.from(shell.querySelectorAll('[role=tab]'));
-  const details=document.createElement('details');details.className='mobile-style';details.innerHTML='<summary>꾸미기 · 정렬, 색상, 외곽선</summary>';
+  const styleControls=document.createElement('div');styleControls.className='mobile-style';
   const counter=document.createElement('div');counter.className='mobile-counter';counter.setAttribute('role','group');counter.setAttribute('aria-label','선택한 색상 개수');
   counter.innerHTML='<select class="mobile-counter-label" aria-label="개수를 조절할 색상"></select><button type="button" aria-label="선택한 색상 하나 빼기">−</button><output aria-live="polite"></output><button type="button" aria-label="선택한 색상 하나 더하기">+</button>';
   const [minus,plus]=counter.querySelectorAll('button');
@@ -117,7 +117,7 @@ function setupMobileWorkspace(){
     if(query.matches){
       move($('saveResult'),header);move(frame,canvas);
       move(text,panels[0]);move(document.querySelector('main .gym-picker'),panels[0]);move(document.querySelector('main .position-controls'),panels[0]);
-      panels[0].append(details);move(document.querySelector('main .color-controls'),details);
+      panels[0].append(styleControls);move(document.querySelector('main .color-controls'),styleControls);
       move(document.querySelector('main .success-controls'),panels[1]);
       panels[1].querySelector('.heart-palette').after(counter);counter.after(note);
       move(document.querySelector('main .photo-tools'),panels[2]);panels[2].append(imageNote);
@@ -125,7 +125,7 @@ function setupMobileWorkspace(){
       selectTab(0);viewport();
     }else{
       for(const {node,anchor} of moves.reverse()){anchor.replaceWith(node);}moves.length=0;
-      counter.remove();note.remove();details.remove();imageNote.remove();
+      counter.remove();note.remove();styleControls.remove();imageNote.remove();
       frame.style.width='';frame.style.height='';stage.style.transform='';stage.style.width='';
       layer.style.width='';layer.style.maxWidth='';layer.style.transform='';layer.style.transformOrigin='';mobileWorkspace.bounds=null;editorViewport.bounds=null;
     }
