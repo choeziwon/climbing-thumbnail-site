@@ -33,7 +33,7 @@ function renderMobileCanvas(){
 }
 function setupMobileWorkspace(){
   const shell=document.createElement('div');shell.className='mobile-editor';shell.hidden=true;
-  shell.innerHTML=`<header class="mobile-header"><h1>클라이밍 썸네일 만들기</h1></header>
+  shell.innerHTML=`<header class="mobile-header"><h1>완등 한 컷</h1></header>
     <div class="mobile-canvas" aria-label="썸네일 미리보기"></div>
     <nav class="mobile-tabs" role="tablist" aria-label="썸네일 편집 도구">
       <button type="button" id="mobile-text-tab" role="tab" aria-controls="mobile-text-panel" aria-selected="true">텍스트</button>
