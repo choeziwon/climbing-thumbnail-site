@@ -14,13 +14,16 @@ function fitMobilePreview(){
 }
 function renderMobileCanvas(){
   if(!mobileWorkspace?.active)return false;
-  // Use the export layout as the mobile canvas: viewport zoom must never
-  // introduce extra line breaks or change the composition being saved.
+  // Wrap within the same logical canvas used by export, before preview scaling.
+  const canvasWidth=1032; // Match the desktop editor content width.
   const measure=mobileWorkspace.measure;
   measure.font=getComputedStyle(preview).font;
-  const layout=explicitExportLayout(measure,text.value,arrangedMarks(state.hearts,state.problemOrder),Number(size.value),state.fontFamily==='Wave'?0:-2,state.alignment);
+  const layout=explicitExportLayout(measure,text.value,arrangedMarks(state.hearts,state.problemOrder),Number(size.value),state.fontFamily==='Wave'?0:-2,state.alignment,canvasWidth-40);
+  const wrappedText=layout.lines.join('\n');
+  if(preview.textContent!==wrappedText)preview.textContent=wrappedText;
+  updateHearts(layout.marks);
   const [rw,rh]=state.ratio.split(':').map(Number);
-  const frame=exportFrame({width:1000,height:1000*rh/rw},layout,Boolean(state.photoURL));
+  const frame=exportFrame({width:canvasWidth,height:canvasWidth*rh/rw},layout,Boolean(state.photoURL));
   mobileWorkspace.bounds=frame.bounds;editorViewport.bounds=frame.bounds;
   stage.style.width=frame.width+'px';stage.style.height=frame.height+'px';
   layer.style.width=layout.width+'px';layer.style.maxWidth='none';
@@ -46,7 +49,6 @@ function setupMobileWorkspace(){
   const panels=['text','marks','image'].map(name=>$(`mobile-${name}-panel`));
   const tabs=Array.from(shell.querySelectorAll('[role=tab]'));
   const styleControls=document.createElement('div');styleControls.className='mobile-style';
-  const imageNote=document.createElement('p');imageNote.className='mobile-image-note';imageNote.textContent='이미지는 선택한 비율에 맞춰 가운데를 기준으로 잘립니다.';
   const frame=document.querySelector('.preview-frame');
   mobileWorkspace={shell,canvas,frame,measure:document.createElement('canvas').getContext('2d'),active:false};
   const moves=[];
@@ -79,7 +81,7 @@ function setupMobileWorkspace(){
     editorViewport.logical=query.matches;
     document.body.classList.toggle('mobile-editing',query.matches);shell.hidden=!query.matches;
     if(query.matches){
-      move($('saveResult'),header);move(frame,canvas);canvas.after(imageNote);
+      move($('saveResult'),header);move(frame,canvas);move($('previewHint'),shell);canvas.after($('previewHint'));
       move(text,panels[0]);move(document.querySelector('main .gym-picker'),panels[0]);move(document.querySelector('main .position-controls'),panels[0]);
       panels[0].append(styleControls);move(document.querySelector('main .color-controls'),styleControls);
       move(document.querySelector('main .success-controls'),panels[1]);
@@ -88,7 +90,7 @@ function setupMobileWorkspace(){
       selectTab(0);viewport();
     }else{
       for(const {node,anchor} of moves.reverse()){anchor.replaceWith(node);}moves.length=0;
-      styleControls.remove();imageNote.remove();
+      styleControls.remove();preview.textContent=text.value.normalize('NFC');updateHearts();
       frame.style.width='';frame.style.height='';stage.style.transform='';stage.style.width='';
       layer.style.width='';layer.style.maxWidth='';layer.style.transform='';layer.style.transformOrigin='';mobileWorkspace.bounds=null;editorViewport.bounds=null;
     }

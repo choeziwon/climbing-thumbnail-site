@@ -336,7 +336,7 @@ function renderPosition(){
   editorViewport.afterRender?.();
 }
 function schedulePosition(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;renderPosition();});}
-function updateHearts(){
+function updateHearts(marks=arrangedMarks(state.hearts,state.problemOrder)){
   problemOrderButtons.forEach((button,index)=>button.setAttribute('aria-pressed',String(state.problemOrder===(index===0?'color':'added'))));
   heartPreview.replaceChildren();
   function addRow(){
@@ -346,7 +346,7 @@ function updateHearts(){
     heartPreview.append(row);return row;
   }
   let row=state.hearts.length?addRow():null;
-  arrangedMarks(state.hearts,state.problemOrder).forEach(key=>{
+  marks.forEach(key=>{
     if(key==='\n'){row=addRow();return;}
     const svg=markSVG(key);
     const path=svg.querySelector('path');
@@ -477,9 +477,21 @@ document.fonts.ready.then(()=>{updateLineSpacing();schedulePosition();});window.
 window.addEventListener('pagehide',event=>{if(!event.persisted&&state.photoURL)URL.revokeObjectURL(state.photoURL);});
 syncGymSelection();updateRatio();update();
 
-// Export only authored line breaks; responsive wrapping belongs to the preview.
-function explicitExportLayout(ctx,caption,hearts,baseSize,letterSpacing,alignment){
-  const lines=caption.normalize('NFC').replace(/\r\n?/g,'\n').split('\n');
+// Desktop retains authored breaks; mobile shares bounded wrapping with export.
+function explicitExportLayout(ctx,caption,hearts,baseSize,letterSpacing,alignment,maxWidth=Infinity){
+  const lines=[];
+  for(const paragraph of caption.normalize('NFC').replace(/\r\n?/g,'\n').split('\n')){
+    let line='',count=0;
+    for(const {segment} of new Intl.Segmenter('ko',{granularity:'grapheme'}).segment(paragraph)){
+      const glyph=segment==='\t'?'        ':segment;
+      if(line&&ctx.measureText(line+glyph).width+count*letterSpacing>maxWidth){
+        lines.push(line.trimEnd());line='';count=0;
+        if(/^\s+$/.test(glyph))continue;
+      }
+      line+=glyph;count++;
+    }
+    lines.push(line);
+  }
   if(!caption)lines.length=0;
   const gap=baseSize*.16,heartSize=baseSize*.48,heartInset=heartSize*12/224,columnGap=markColumnGap(baseSize);
   const metrics=ctx.measureText(lines.join('')||'한글');
@@ -498,7 +510,12 @@ function explicitExportLayout(ctx,caption,hearts,baseSize,letterSpacing,alignmen
     return {glyphs,width:Math.max(0,ctx.measureText(prefix).width+Math.max(0,segments.length-1)*letterSpacing)};
   });
   const heartRows=hearts.length?[[]]:[];
-  hearts.forEach(key=>key==='\n'?heartRows.push([]):heartRows.at(-1).push(key));
+  hearts.forEach(key=>{
+    if(key==='\n'){heartRows.push([]);return;}
+    const row=heartRows.at(-1);
+    if(row.length&&(row.length+1)*heartSize+row.length*columnGap>maxWidth)heartRows.push([]);
+    heartRows.at(-1).push(key);
+  });
   const heartWidths=heartRows.map(row=>row.length?row.length*heartSize+(row.length-1)*columnGap:0);
   const width=Math.max(1,...textRows.map(row=>row.width),...heartWidths);
   const align=alignment==='center'?.5:alignment==='right'?1:0;
@@ -509,7 +526,7 @@ function explicitExportLayout(ctx,caption,hearts,baseSize,letterSpacing,alignmen
   const heartHeight=heartSize-2*heartInset;
   const heartItems=[];
   heartRows.forEach((row,index)=>row.forEach((key,i)=>heartItems.push({key,x:(width-heartWidths[index])*align+i*(heartSize+columnGap),y:heartTop+index*(heartHeight+gap)-heartInset,width:heartSize,height:heartSize})));
-  return {width,height:heartRows.length?heartTop+heartRows.length*heartHeight+(heartRows.length-1)*gap:textHeight,glyphs,hearts:heartItems};
+  return {lines,marks:heartRows.flatMap((row,i)=>i?['\n',...row]:row),width,height:heartRows.length?heartTop+heartRows.length*heartHeight+(heartRows.length-1)*gap:textHeight,glyphs,hearts:heartItems};
 }
 function exportFrame(box,layout,hasPhoto){
   const width=hasPhoto?box.width:Math.max(box.width,layout.width+40);
@@ -555,7 +572,7 @@ $('saveResult').addEventListener('click',async()=>{
     const style=getComputedStyle(preview);
     const measure=document.createElement('canvas').getContext('2d');if(!measure)throw new Error('canvas');
     measure.font=style.font;
-    const layout=explicitExportLayout(measure,text.value,arrangedMarks(state.hearts,state.problemOrder),Number(size.value),state.fontFamily==='Wave'?0:-2,state.alignment);
+    const layout=explicitExportLayout(measure,text.value,arrangedMarks(state.hearts,state.problemOrder),Number(size.value),state.fontFamily==='Wave'?0:-2,state.alignment,editorViewport.logical?box.width-40:Infinity);
     const frame=exportFrame(box,layout,hasPhoto);
     const origin=offsetFromPosition(frame.bounds,state.x,state.y);
     const factor=Math.min(2,4096/Math.max(frame.width,frame.height));
