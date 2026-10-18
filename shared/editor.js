@@ -467,6 +467,30 @@ removePhoto.addEventListener('click',()=>{
   photo.hidden=true;photo.removeAttribute('src');stage.classList.remove('has-photo');
   removePhoto.disabled=true;$('saveResult').disabled=exporting||state.fontLoading;photoInput.value='';$('photoName').textContent='';$('photoName').title='';showStatus('');state.y=0;updateRatio();photoInput.focus();
 });
+// Reset editing state without reloading or letting pending image/font loads restore it.
+const resetDialog=$('resetDialog');
+$('resetEditor').addEventListener('click',()=>{if(!exporting){resetDialog.returnValue='cancel';resetDialog.showModal();}});
+resetDialog.addEventListener('close',()=>{
+  if(resetDialog.returnValue!=='reset'||exporting)return;
+  state.loadVersion++;state.fontVersion++;
+  if(state.photoURL)URL.revokeObjectURL(state.photoURL);
+  if(drag&&layer.hasPointerCapture(drag.id))layer.releasePointerCapture(drag.id);
+  drag=null;
+  Object.assign(state,{problemOrder:'color',alignment:'left',x:0,y:0,hearts:[],shape:'heart',photoURL:null,ratio:'3:4',fontFamily:'Wave',fontLoading:false});
+  try{localStorage.removeItem(problemOrderStorageKey);}catch{}
+  fontPending=Promise.resolve();
+  text.value=text.defaultValue;
+  for(const input of [size,fillColor,strokeColor])input.value=input.defaultValue;
+  outline.checked=outline.defaultChecked;shadow.checked=shadow.defaultChecked;
+  fontSelect.value='Wave';syncFontPicker();closeFontPicker();fontStatus('');
+  shapeSelect.value='heart';shapePickerUI.sync();updateShapePalette();
+  gymSearch.value='';lastGymQuery=null;closeGymSearch();syncGymSelection();
+  photo.hidden=true;photo.removeAttribute('src');photo.alt='';photoInput.value='';
+  stage.classList.remove('has-photo');removePhoto.disabled=true;
+  $('photoName').textContent='';$('photoName').title='';showStatus('');
+  $('saveResult').disabled=false;
+  updateRatio();update();window.dispatchEvent(new Event('editorreset'));
+});
 layer.addEventListener('pointerdown',event=>{
   if(event.button!==0||!event.isPrimary)return;
   event.preventDefault();layer.focus({preventScroll:true});
@@ -573,7 +597,7 @@ function addTextMaskOutline(overlay,ink,color,scaleX,scaleY){
 let exporting=false;
 $('saveResult').addEventListener('click',async()=>{
   if(exporting||state.fontLoading)return;
-  exporting=true;$('saveResult').disabled=true;$('saveResult').textContent='저장 중…';
+  exporting=true;$('resetEditor').disabled=true;$('saveResult').disabled=true;$('saveResult').textContent='저장 중…';
   const version=state.loadVersion,fontVersion=state.fontVersion,hasPhoto=Boolean(state.photoURL);
   try{
     await fontPending;
@@ -632,6 +656,6 @@ $('saveResult').addEventListener('click',async()=>{
   }catch(error){
     showStatus(error.message==='changed'?'사진이나 폰트가 변경됐어요. 결과물 저장을 다시 눌러 주세요.':'저장하지 못했어요. 이미지를 다시 확인하고 결과물 저장을 눌러 주세요.');
   }finally{
-    exporting=false;$('saveResult').textContent='결과물 저장';$('saveResult').disabled=state.fontLoading;
+    exporting=false;$('resetEditor').disabled=false;$('saveResult').textContent='결과물 저장';$('saveResult').disabled=state.fontLoading;
   }
 });

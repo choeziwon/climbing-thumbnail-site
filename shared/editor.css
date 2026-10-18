@@ -139,3 +139,15 @@ main>.text-section:first-child{margin-top:0}
 
 .gym-option-detail{display:block;font-size:12px;line-height:18px;color:#71757d;margin-top:2px}
 #gymSearchMore{width:100%;margin-top:10px;font-size:13px}
+
+.editor-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+#resetEditor{min-height:44px;padding:10px 12px;white-space:nowrap;background:transparent;color:#666;border-color:transparent}
+#resetEditor:hover{background:#f5f5f5;color:#111}
+
+#resetDialog{width:min(360px,calc(100% - 32px));padding:24px;border:1px solid #e0e3e8;border-radius:16px;color:#111;background:#fff;box-shadow:0 16px 60px #0002}
+#resetDialog::backdrop{background:#0006}
+#resetDialog h2{font:700 20px/1.4 system-ui;margin:0 0 12px}
+#resetDialog p{font:14px/1.6 system-ui;color:#666;margin:0 0 24px}
+.reset-dialog-actions{display:flex;justify-content:flex-end;gap:8px}
+.reset-dialog-actions button{min-height:44px;min-width:76px}
+#confirmReset{background:#111;color:#fff;border-color:#111}

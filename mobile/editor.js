@@ -57,6 +57,7 @@ function setupMobileWorkspace(){
     tabs.forEach((tab,i)=>{tab.setAttribute('aria-selected',String(i===index));tab.tabIndex=i===index?0:-1;panels[i].hidden=i!==index;});
     tools.scrollTop=0;
   }
+  window.addEventListener('editorreset',()=>{if(mobileWorkspace.active)selectTab(0);});
   tabs.forEach((tab,index)=>{
     tab.addEventListener('click',()=>selectTab(index));
     tab.addEventListener('keydown',event=>{
@@ -81,7 +82,7 @@ function setupMobileWorkspace(){
     editorViewport.logical=query.matches;
     document.body.classList.toggle('mobile-editing',query.matches);shell.hidden=!query.matches;
     if(query.matches){
-      move($('saveResult'),header);move(frame,canvas);
+      move(document.querySelector('.editor-actions'),header);move(frame,canvas);
       move(text,panels[0]);move(document.querySelector('main .gym-picker'),panels[0]);move(document.querySelector('main .position-controls'),panels[0]);
       panels[0].append(styleControls);move(document.querySelector('main .color-controls'),styleControls);
       move(document.querySelector('main .success-controls'),panels[1]);

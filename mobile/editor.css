@@ -50,3 +50,9 @@ body{background:#f4f5f7}
 .mobile-editor{width:min(100%,600px);margin-inline:auto}
 .mobile-panel .color-controls{grid-template-columns:repeat(4,minmax(0,1fr))}
 .mobile-panel .align-control{grid-column:1/-1}
+
+.mobile-header{gap:8px}
+.mobile-header h1{font-size:clamp(20px,calc(12.5vw - 20px),30px);min-width:0}
+.mobile-header .editor-actions{gap:2px;flex:none}
+.mobile-header #resetEditor{font-size:13px;padding:8px 6px}
+@media(max-width:350px){.mobile-header{padding-inline:12px;gap:6px}.mobile-header #saveResult{font-size:12px;padding-inline:8px}.mobile-header #resetEditor{font-size:12px;padding-inline:4px}}
