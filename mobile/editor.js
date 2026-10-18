@@ -5,12 +5,12 @@ function fitMobilePreview(){
   if(!mobileWorkspace?.active)return;
   const {canvas,frame}=mobileWorkspace;
   const maxHeight=Math.max(100,Math.min(320,(window.visualViewport?.height||window.innerHeight)*.34));
-  const availableWidth=canvas.clientWidth-32,availableHeight=maxHeight-24;
+  const availableWidth=canvas.clientWidth,availableHeight=maxHeight;
   const scale=Math.min(availableWidth/stage.offsetWidth,availableHeight/stage.offsetHeight,1);
   stage.style.transform=`scale(${scale})`;
   frame.style.width=(stage.offsetWidth*scale)+'px';
   frame.style.height=(stage.offsetHeight*scale)+'px';
-  canvas.style.height=Math.min(maxHeight,Math.max(100,stage.offsetHeight*scale+24))+'px';
+  canvas.style.height=(stage.offsetHeight*scale)+'px';
 }
 function renderMobileCanvas(){
   if(!mobileWorkspace?.active)return false;
@@ -46,7 +46,7 @@ function setupMobileWorkspace(){
   const panels=['text','marks','image'].map(name=>$(`mobile-${name}-panel`));
   const tabs=Array.from(shell.querySelectorAll('[role=tab]'));
   const styleControls=document.createElement('div');styleControls.className='mobile-style';
-  const imageNote=document.createElement('p');imageNote.className='mobile-note';imageNote.textContent='이미지는 선택한 비율에 맞춰 가운데를 기준으로 잘립니다.';
+  const imageNote=document.createElement('p');imageNote.className='mobile-image-note';imageNote.textContent='이미지는 선택한 비율에 맞춰 가운데를 기준으로 잘립니다.';
   const frame=document.querySelector('.preview-frame');
   mobileWorkspace={shell,canvas,frame,measure:document.createElement('canvas').getContext('2d'),active:false};
   const moves=[];
@@ -79,11 +79,11 @@ function setupMobileWorkspace(){
     editorViewport.logical=query.matches;
     document.body.classList.toggle('mobile-editing',query.matches);shell.hidden=!query.matches;
     if(query.matches){
-      move($('saveResult'),header);move(frame,canvas);
+      move($('saveResult'),header);move(frame,canvas);canvas.after(imageNote);
       move(text,panels[0]);move(document.querySelector('main .gym-picker'),panels[0]);move(document.querySelector('main .position-controls'),panels[0]);
       panels[0].append(styleControls);move(document.querySelector('main .color-controls'),styleControls);
       move(document.querySelector('main .success-controls'),panels[1]);
-      move(document.querySelector('main .photo-tools'),panels[2]);panels[2].append(imageNote);
+      move(document.querySelector('main .photo-tools'),panels[2]);
       move($('fontStatus'),tools);move($('status'),tools);tools.prepend($('fontStatus'),$('status'));
       selectTab(0);viewport();
     }else{
