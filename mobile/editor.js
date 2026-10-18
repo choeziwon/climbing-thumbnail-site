@@ -7,17 +7,47 @@ function syncMobileCounts(){
   const counts=new Map();
   for(const key of state.hearts)if(key!=='\n')counts.set(markColor(key),(counts.get(markColor(key))||0)+1);
   palette.forEach(button=>{
-    let badge=button.querySelector('.mobile-count');
-    if(!badge){badge=document.createElement('span');badge.className='mobile-count';badge.setAttribute('aria-hidden','true');button.append(badge);}
     const color=button.dataset.heart,count=counts.get(color)||0;
-    badge.textContent=count;
-    button.classList.toggle('is-selected',color===mobileWorkspace.color);
     button.setAttribute('aria-label',markTemplates.get(color).label+' '+markShapes[state.shape].label+' 추가'+(mobileWorkspace.active?`, 현재 ${count}개`:''));
   });
-  const color=mobileWorkspace.color,count=counts.get(color)||0;
-  mobileWorkspace.counterLabel.value=color;
-  mobileWorkspace.counterValue.textContent=count;
-  mobileWorkspace.minus.disabled=count===0;
+  const {counters,rows}=mobileWorkspace;
+  let focusColor=null;
+  for(const [color,row] of rows){
+    if(counts.has(color))continue;
+    if(row.contains(document.activeElement))focusColor=color;
+    row.remove();rows.delete(color);
+  }
+  let index=0;
+  for(const [color,count] of counts){
+    let row=rows.get(color);
+    if(!row){
+      const label=markTemplates.get(color).label;
+      row=document.createElement('div');row.className='mobile-counter';row.dataset.color=color;
+      row.setAttribute('role','group');row.setAttribute('aria-label',label+' 문제 개수');
+      const swatch=document.createElement('span');swatch.className='mobile-counter-swatch';swatch.setAttribute('aria-hidden','true');
+      swatch.style.backgroundColor=markTemplates.get(color).svg.querySelector('path').getAttribute('fill');
+      const name=document.createElement('span');name.className='mobile-counter-label';name.textContent=label;
+      const minus=document.createElement('button');minus.type='button';minus.textContent='−';minus.setAttribute('aria-label',label+' 하나 빼기');
+      const output=document.createElement('output');output.setAttribute('aria-label',label+' 문제 개수');output.setAttribute('aria-live','polite');
+      const plus=document.createElement('button');plus.type='button';plus.textContent='+';plus.setAttribute('aria-label',label+' 하나 더하기');
+      minus.addEventListener('click',()=>{
+        // Preserve mixed shapes and other colors; remove the last mark of this color.
+        const last=state.hearts.findLastIndex(key=>key!=='\n'&&markColor(key)===color);
+        if(last<0)return;state.hearts.splice(last,1);
+        while(state.hearts.at(-1)==='\n')state.hearts.pop();
+        updateHearts();schedulePosition();
+      });
+      plus.addEventListener('click',()=>{state.hearts.push(markKey(state.shape,color));updateHearts();schedulePosition();});
+      row.append(swatch,name,minus,output,plus);rows.set(color,row);
+    }
+    const output=row.querySelector('output');
+    if(output.textContent!==String(count))output.textContent=count;
+    // Keep existing row elements and focus stable during repeated taps.
+    if(counters.children[index]!==row)counters.insertBefore(row,counters.children[index]||null);
+    index++;
+  }
+  counters.hidden=counts.size===0;
+  if(focusColor)palette.find(button=>button.dataset.heart===focusColor)?.focus({preventScroll:true});
 }
 function fitMobilePreview(){
   if(!mobileWorkspace?.active)return;
@@ -65,16 +95,11 @@ function setupMobileWorkspace(){
   const panels=['text','marks','image'].map(name=>$(`mobile-${name}-panel`));
   const tabs=Array.from(shell.querySelectorAll('[role=tab]'));
   const styleControls=document.createElement('div');styleControls.className='mobile-style';
-  const counter=document.createElement('div');counter.className='mobile-counter';counter.setAttribute('role','group');counter.setAttribute('aria-label','선택한 색상 개수');
-  counter.innerHTML='<select class="mobile-counter-label" aria-label="개수를 조절할 색상"></select><button type="button" aria-label="선택한 색상 하나 빼기">−</button><output aria-live="polite"></output><button type="button" aria-label="선택한 색상 하나 더하기">+</button>';
-  const [minus,plus]=counter.querySelectorAll('button');
-  const counterLabel=counter.querySelector('select');
-  for(const button of palette){const option=document.createElement('option');option.value=button.dataset.heart;option.textContent=markTemplates.get(option.value).label;counterLabel.append(option);}
-  counterLabel.addEventListener('change',()=>{mobileWorkspace.color=counterLabel.value;syncMobileCounts();});
-  const note=document.createElement('p');note.className='mobile-note';note.textContent='색을 누르면 하나씩 추가돼요. 선택한 색의 개수는 − / +로 조절하세요.';
+  const counters=document.createElement('div');counters.className='mobile-counters';counters.setAttribute('role','group');counters.setAttribute('aria-label','추가한 색상별 개수');counters.hidden=true;
+  const note=document.createElement('p');note.className='mobile-note';note.textContent='색을 누르면 하나씩 추가돼요.';
   const imageNote=document.createElement('p');imageNote.className='mobile-note';imageNote.textContent='이미지는 선택한 비율에 맞춰 가운데를 기준으로 잘립니다.';
   const frame=document.querySelector('.preview-frame');
-  mobileWorkspace={shell,canvas,frame,measure:document.createElement('canvas').getContext('2d'),active:false,color:palette[0].dataset.heart,counterLabel,counterValue:counter.querySelector('output'),minus};
+  mobileWorkspace={shell,canvas,frame,measure:document.createElement('canvas').getContext('2d'),active:false,counters,rows:new Map()};
   const moves=[];
   function move(node,parent){const anchor=document.createComment('desktop position');node.before(anchor);moves.push({node,anchor});parent.append(node);}
   function selectTab(index){
@@ -90,16 +115,6 @@ function setupMobileWorkspace(){
       if(event.key==='Home')next=0;if(event.key==='End')next=tabs.length-1;
       if(next!==undefined){event.preventDefault();selectTab(next);tabs[next].focus();}
     });
-  });
-  palette.forEach(button=>button.addEventListener('click',()=>{mobileWorkspace.color=button.dataset.heart;syncMobileCounts();}));
-  plus.addEventListener('click',()=>{state.hearts.push(markKey(state.shape,mobileWorkspace.color));updateHearts();schedulePosition();});
-  minus.addEventListener('click',()=>{
-    // Remove the most recently added mark of this color, preserving other
-    // colors, mixed shapes and explicit line breaks elsewhere in the sequence.
-    const index=state.hearts.findLastIndex(key=>key!=='\n'&&markColor(key)===mobileWorkspace.color);
-    if(index<0)return;state.hearts.splice(index,1);
-    while(state.hearts.at(-1)==='\n')state.hearts.pop();
-    updateHearts();schedulePosition();
   });
   function viewport(){
     if(!mobileWorkspace.active)return;
@@ -119,13 +134,13 @@ function setupMobileWorkspace(){
       move(text,panels[0]);move(document.querySelector('main .gym-picker'),panels[0]);move(document.querySelector('main .position-controls'),panels[0]);
       panels[0].append(styleControls);move(document.querySelector('main .color-controls'),styleControls);
       move(document.querySelector('main .success-controls'),panels[1]);
-      panels[1].querySelector('.heart-palette').after(counter);counter.after(note);
+      panels[1].querySelector('.heart-palette').after(note);note.after(counters);
       move(document.querySelector('main .photo-tools'),panels[2]);panels[2].append(imageNote);
       move($('fontStatus'),tools);move($('status'),tools);tools.prepend($('fontStatus'),$('status'));
       selectTab(0);viewport();
     }else{
       for(const {node,anchor} of moves.reverse()){anchor.replaceWith(node);}moves.length=0;
-      counter.remove();note.remove();styleControls.remove();imageNote.remove();
+      counters.remove();note.remove();styleControls.remove();imageNote.remove();
       frame.style.width='';frame.style.height='';stage.style.transform='';stage.style.width='';
       layer.style.width='';layer.style.maxWidth='';layer.style.transform='';layer.style.transformOrigin='';mobileWorkspace.bounds=null;editorViewport.bounds=null;
     }
