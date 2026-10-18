@@ -120,10 +120,10 @@ fontSelect.addEventListener('change',()=>{
     }
   })();
 });
-const fontMenuChoices=[{family:'Wave',label:'원이네'},...fontChoices];
+const fontMenuChoices=[{family:'Wave',label:'한컷체'},...fontChoices];
 let activeFont=0;
 function syncFontPicker(){
-  $('fontTrigger').textContent=fontMenuChoices.find(font=>font.family===fontSelect.value)?.label||'원이네';
+  $('fontTrigger').textContent=fontMenuChoices.find(font=>font.family===fontSelect.value)?.label||'한컷체';
   Array.from($('fontList').children).forEach((item,i)=>item.setAttribute('aria-selected',String(fontMenuChoices[i].family===fontSelect.value)));
 }
 function activateFont(index){
