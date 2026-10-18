@@ -53,6 +53,6 @@ body{background:#f4f5f7}
 
 .mobile-header{gap:8px}
 .mobile-header h1{font-size:clamp(20px,calc(12.5vw - 20px),30px);min-width:0}
-.mobile-header .editor-actions{gap:2px;flex:none}
+.mobile-header .editor-actions{gap:8px;flex:none}
 .mobile-header #resetEditor{font-size:13px;padding:8px 6px}
 @media(max-width:350px){.mobile-header{padding-inline:12px;gap:6px}.mobile-header #saveResult{font-size:12px;padding-inline:8px}.mobile-header #resetEditor{font-size:12px;padding-inline:4px}}
