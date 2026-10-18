@@ -80,7 +80,6 @@ function setupMobileWorkspace(){
   const shell=document.createElement('div');shell.className='mobile-editor';shell.hidden=true;
   shell.innerHTML=`<header class="mobile-header"><h1>클라이밍 썸네일 만들기</h1></header>
     <div class="mobile-canvas" aria-label="썸네일 미리보기"></div>
-    <p class="mobile-canvas-hint">글자와 도형을 끌어서 위치를 조절하세요</p>
     <nav class="mobile-tabs" role="tablist" aria-label="썸네일 편집 도구">
       <button type="button" id="mobile-text-tab" role="tab" aria-controls="mobile-text-panel" aria-selected="true">텍스트</button>
       <button type="button" id="mobile-marks-tab" role="tab" aria-controls="mobile-marks-panel" aria-selected="false" tabindex="-1">성공 문제</button>
@@ -96,7 +95,6 @@ function setupMobileWorkspace(){
   const tabs=Array.from(shell.querySelectorAll('[role=tab]'));
   const styleControls=document.createElement('div');styleControls.className='mobile-style';
   const counters=document.createElement('div');counters.className='mobile-counters';counters.setAttribute('role','group');counters.setAttribute('aria-label','추가한 색상별 개수');counters.hidden=true;
-  const note=document.createElement('p');note.className='mobile-note';note.textContent='색을 누르면 하나씩 추가돼요.';
   const imageNote=document.createElement('p');imageNote.className='mobile-note';imageNote.textContent='이미지는 선택한 비율에 맞춰 가운데를 기준으로 잘립니다.';
   const frame=document.querySelector('.preview-frame');
   mobileWorkspace={shell,canvas,frame,measure:document.createElement('canvas').getContext('2d'),active:false,counters,rows:new Map()};
@@ -134,13 +132,13 @@ function setupMobileWorkspace(){
       move(text,panels[0]);move(document.querySelector('main .gym-picker'),panels[0]);move(document.querySelector('main .position-controls'),panels[0]);
       panels[0].append(styleControls);move(document.querySelector('main .color-controls'),styleControls);
       move(document.querySelector('main .success-controls'),panels[1]);
-      panels[1].querySelector('.heart-palette').after(note);note.after(counters);
+      panels[1].querySelector('.heart-palette').after(counters);
       move(document.querySelector('main .photo-tools'),panels[2]);panels[2].append(imageNote);
       move($('fontStatus'),tools);move($('status'),tools);tools.prepend($('fontStatus'),$('status'));
       selectTab(0);viewport();
     }else{
       for(const {node,anchor} of moves.reverse()){anchor.replaceWith(node);}moves.length=0;
-      counters.remove();note.remove();styleControls.remove();imageNote.remove();
+      counters.remove();styleControls.remove();imageNote.remove();
       frame.style.width='';frame.style.height='';stage.style.transform='';stage.style.width='';
       layer.style.width='';layer.style.maxWidth='';layer.style.transform='';layer.style.transformOrigin='';mobileWorkspace.bounds=null;editorViewport.bounds=null;
     }
