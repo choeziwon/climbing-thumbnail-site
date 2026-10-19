@@ -19,4 +19,6 @@
 
 `assets/`의 파일명은 실제 폰트 이름으로 관리합니다. 한컷체 웹용은 `OneKut-Web.ttf`이며, 나머지는 `NotoSansKR.woff`, `NanumGothic.woff`, `GothicA1.woff`, `BlackHanSans.woff`, `Jua.woff`, `NanumMyeongjo.woff`, `NotoSerifKR.woff`, `Hahmlet.woff`, `GowunBatang.woff`, `SongMyung.woff`입니다. CSS URL의 `?v=` 값으로 폰트 변경 시 캐시를 갱신합니다.
 
-설치용 파일과 이용 조건: [한컷체 다운로드](https://github.com/choeziwon/climbing-thumbnail-site/releases/tag/font-v1.0.2). 제작자는 **원이네 스튜디오**이며 개인·기업의 상업적 이용까지 무료인 **SIL OFL 1.1**을 적용합니다.
+설치용 파일과 이용 조건: [한컷체 다운로드](https://github.com/choeziwon/climbing-thumbnail-site/releases/tag/font-v1.0.3). 제작자는 **원이네 스튜디오**이며 개인·기업의 상업적 이용까지 무료인 **한컷체 · OneKut 무료 이용 라이선스 1.0**을 적용합니다.
+
+현재 1.003 배포본은 앱·웹 임베딩과 상업적 이용을 무료로 허용합니다. 폰트 수정·별도 재배포·폰트 자체 판매는 사전 허락이 필요합니다. [전체 라이선스](https://choeziwon.github.io/climbing-thumbnail-site/assets/OneKut-LICENSE.txt)를 확인하세요. 이전 OFL 배포본의 권한은 유지되며 이번 변경이 소급 적용되지 않습니다.
