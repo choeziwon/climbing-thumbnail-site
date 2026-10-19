@@ -18,7 +18,7 @@ function renderMobileCanvas(){
   const canvasWidth=1032; // Match the desktop editor content width.
   const measure=mobileWorkspace.measure;
   measure.font=getComputedStyle(preview).font;
-  const layout=explicitExportLayout(measure,text.value,arrangedMarks(state.hearts,state.problemOrder),Number(size.value),state.fontFamily==='Wave'?0:-2,state.alignment,canvasWidth-40);
+  const layout=explicitExportLayout(measure,text.value,arrangedMarks(state.hearts,state.problemOrder),Number(size.value),0,state.alignment,canvasWidth-40);
   const wrappedText=layout.lines.join('\n');
   if(preview.textContent!==wrappedText)preview.textContent=wrappedText;
   updateHearts(layout.marks);

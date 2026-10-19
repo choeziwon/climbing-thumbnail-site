@@ -20,6 +20,7 @@ const editorViewport={render:null,bounds:null,syncCounts:null,logical:false};
 const $=id=>document.getElementById(id);
 const text=$('text'),preview=$('preview'),stage=$('previewStage'),layer=$('textLayer');
 const fontSelect=$('fontSelect');
+const fontChoices=[{"family": "Tteoksang", "label": "떡상체"}, {"family": "Neujoh", "label": "느좋체"}, {"family": "HanGulim", "label": "한굴림체"}, {"family": "Covendard", "label": "Covendard"}, {"family": "Hippie", "label": "히피체"}, {"family": "Mona12", "label": "Mona12"}, {"family": "Mona8x12", "label": "Mona8×12"}, {"family": "HSHwalkongSerif", "label": "HS활공명조"}];
 const size=$('size'),shadow=$('shadow'),outline=$('outline'),fillColor=$('fillColor'),strokeColor=$('strokeColor');
 const heartPreview=$('heartPreview'),clearHearts=$('clearHearts'),breakHearts=$('breakHearts'),removeHeart=$('removeHeart');
 const photo=$('photo'),photoInput=$('photoInput'),removePhoto=$('removePhoto');
@@ -98,11 +99,11 @@ let queued=false,drag=null;
 fontSelect.value='Wave';
 let fontPending=Promise.resolve();
 // Preserve the established OneKut preview and export scale.
-function fontDisplayScale(){return 1.3;}
+function fontDisplayScale(family){return family==='Wave'?1.3:1;}
 function fontStatus(message){$('fontStatus').textContent=message;$('fontStatus').hidden=!message;}
 fontSelect.addEventListener('change',()=>{
   const family=fontSelect.value;
-  if(family!=='Wave')return;
+  if(family!=='Wave'&&!fontChoices.some(font=>font.family===family))return;
   const version=++state.fontVersion,previous=state.fontFamily;
   state.fontLoading=true;$('saveResult').disabled=true;fontStatus('폰트를 불러오는 중…');
   fontPending=(async()=>{
@@ -119,7 +120,7 @@ fontSelect.addEventListener('change',()=>{
     }
   })();
 });
-const fontMenuChoices=[{family:'Wave',label:'한컷체'}];
+const fontMenuChoices=[{family:'Wave',label:'한컷체'},...fontChoices];
 let activeFont=0;
 function syncFontPicker(){
   $('fontTrigger').textContent=fontMenuChoices.find(font=>font.family===fontSelect.value)?.label||'한컷체';
@@ -407,7 +408,7 @@ function update(){
   preview.textContent=text.value.normalize('NFC');
   preview.style.fontFamily='"'+state.fontFamily+'", sans-serif';
   preview.style.fontSize=(Number(size.value)*fontDisplayScale(state.fontFamily))+'px';
-  preview.style.letterSpacing=state.fontFamily==='Wave'?'0px':'-2px';
+  preview.style.letterSpacing='0px';
   layer.style.fontSize=size.value+'px';$('value').value=size.value+'px';
   preview.style.color=fillColor.value;
   preview.style.webkitTextStroke='0px transparent';
@@ -610,7 +611,7 @@ $('saveResult').addEventListener('click',async()=>{
     const style=getComputedStyle(preview);
     const measure=document.createElement('canvas').getContext('2d');if(!measure)throw new Error('canvas');
     measure.font=style.font;
-    const layout=explicitExportLayout(measure,text.value,arrangedMarks(state.hearts,state.problemOrder),Number(size.value),state.fontFamily==='Wave'?0:-2,state.alignment,editorViewport.logical?box.width-40:Infinity);
+    const layout=explicitExportLayout(measure,text.value,arrangedMarks(state.hearts,state.problemOrder),Number(size.value),0,state.alignment,editorViewport.logical?box.width-40:Infinity);
     const frame=exportFrame(box,layout,hasPhoto);
     const origin=offsetFromPosition(frame.bounds,state.x,state.y);
     const factor=Math.min(2,4096/Math.max(frame.width,frame.height));
