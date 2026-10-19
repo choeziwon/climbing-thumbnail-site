@@ -20,7 +20,6 @@ const editorViewport={render:null,bounds:null,syncCounts:null,logical:false};
 const $=id=>document.getElementById(id);
 const text=$('text'),preview=$('preview'),stage=$('previewStage'),layer=$('textLayer');
 const fontSelect=$('fontSelect');
-const fontChoices=[{"id": "notosanskr", "family": "Noto Sans KR", "label": "노토 산스 KR", "group": "고딕", "popularity": 38, "source": "https://github.com/google/fonts/tree/main/ofl/notosanskr", "filename": "NotoSansKR[wght].ttf", "coverage": 11172, "file": "추가폰트/notosanskr.woff", "license": "SIL Open Font License 1.1"}, {"id": "nanumgothic", "family": "Nanum Gothic", "label": "나눔고딕", "group": "고딕", "popularity": 106, "source": "https://github.com/google/fonts/tree/main/ofl/nanumgothic", "filename": "NanumGothic-Regular.ttf", "coverage": 11172, "file": "추가폰트/nanumgothic.woff", "license": "SIL Open Font License 1.1"}, {"id": "gothica1", "family": "Gothic A1", "label": "고딕 A1", "group": "고딕", "popularity": 221, "source": "https://github.com/google/fonts/tree/main/ofl/gothica1", "filename": "GothicA1-Regular.ttf", "coverage": 11172, "file": "추가폰트/gothica1.woff", "license": "SIL Open Font License 1.1"}, {"id": "blackhansans", "family": "Black Han Sans", "label": "검은고딕", "group": "고딕", "popularity": 269, "source": "https://github.com/google/fonts/tree/main/ofl/blackhansans", "filename": "BlackHanSans-Regular.ttf", "coverage": 2581, "file": "추가폰트/blackhansans.woff", "license": "SIL Open Font License 1.1"}, {"id": "jua", "family": "Jua", "label": "주아", "group": "고딕", "popularity": 340, "source": "https://github.com/google/fonts/tree/main/ofl/jua", "filename": "Jua-Regular.ttf", "coverage": 2367, "file": "추가폰트/jua.woff", "license": "SIL Open Font License 1.1"}, {"id": "nanummyeongjo", "family": "Nanum Myeongjo", "label": "나눔명조", "group": "명조", "popularity": 163, "source": "https://github.com/google/fonts/tree/main/ofl/nanummyeongjo", "filename": "NanumMyeongjo-Regular.ttf", "coverage": 11172, "file": "추가폰트/nanummyeongjo.woff", "license": "SIL Open Font License 1.1"}, {"id": "notoserifkr", "family": "Noto Serif KR", "label": "노토 세리프 KR", "group": "명조", "popularity": 166, "source": "https://github.com/google/fonts/tree/main/ofl/notoserifkr", "filename": "NotoSerifKR[wght].ttf", "coverage": 11172, "file": "추가폰트/notoserifkr.woff", "license": "SIL Open Font License 1.1"}, {"id": "hahmlet", "family": "Hahmlet", "label": "함렛", "group": "명조", "popularity": 567, "source": "https://github.com/google/fonts/tree/main/ofl/hahmlet", "filename": "Hahmlet[wght].ttf", "coverage": 2788, "file": "추가폰트/hahmlet.woff", "license": "SIL Open Font License 1.1"}, {"id": "gowunbatang", "family": "Gowun Batang", "label": "고운바탕", "group": "명조", "popularity": 603, "source": "https://github.com/google/fonts/tree/main/ofl/gowunbatang", "filename": "GowunBatang-Regular.ttf", "coverage": 11172, "file": "추가폰트/gowunbatang.woff", "license": "SIL Open Font License 1.1"}, {"id": "songmyung", "family": "Song Myung", "label": "송명", "group": "명조", "popularity": 819, "source": "https://github.com/google/fonts/tree/main/ofl/songmyung", "filename": "SongMyung-Regular.ttf", "coverage": 2350, "file": "추가폰트/songmyung.woff", "license": "SIL Open Font License 1.1"}];
 const size=$('size'),shadow=$('shadow'),outline=$('outline'),fillColor=$('fillColor'),strokeColor=$('strokeColor');
 const heartPreview=$('heartPreview'),clearHearts=$('clearHearts'),breakHearts=$('breakHearts'),removeHeart=$('removeHeart');
 const photo=$('photo'),photoInput=$('photoInput'),removePhoto=$('removePhoto');
@@ -98,12 +97,12 @@ const state={problemOrder:readProblemOrder(),alignment:'left',x:0,y:0,hearts:[],
 let queued=false,drag=null;
 fontSelect.value='Wave';
 let fontPending=Promise.resolve();
-// Match the median visible Hangul height: Wave ~0.683 em, other faces ~0.896 em.
-function fontDisplayScale(family){return family==='Wave'?1.3:1;}
+// Preserve the established OneKut preview and export scale.
+function fontDisplayScale(){return 1.3;}
 function fontStatus(message){$('fontStatus').textContent=message;$('fontStatus').hidden=!message;}
 fontSelect.addEventListener('change',()=>{
   const family=fontSelect.value;
-  if(family!=='Wave'&&!fontChoices.some(font=>font.family===family))return;
+  if(family!=='Wave')return;
   const version=++state.fontVersion,previous=state.fontFamily;
   state.fontLoading=true;$('saveResult').disabled=true;fontStatus('폰트를 불러오는 중…');
   fontPending=(async()=>{
@@ -120,7 +119,7 @@ fontSelect.addEventListener('change',()=>{
     }
   })();
 });
-const fontMenuChoices=[{family:'Wave',label:'한컷체'},...fontChoices];
+const fontMenuChoices=[{family:'Wave',label:'한컷체'}];
 let activeFont=0;
 function syncFontPicker(){
   $('fontTrigger').textContent=fontMenuChoices.find(font=>font.family===fontSelect.value)?.label||'한컷체';
