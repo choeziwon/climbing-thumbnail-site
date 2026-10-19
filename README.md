@@ -19,9 +19,13 @@
 
 웹 폰트는 한컷체와 요청한 추가 8종을 제공합니다. 읽을 수 있는 폰트명으로 파일을 저장하며, 처음 접속할 때는 기본 한컷체만 로드합니다. CSS URL의 `?v=` 값으로 폰트 변경 시 캐시를 갱신합니다.
 
-설치용 파일과 이용 조건: [한컷체 다운로드](https://github.com/choeziwon/climbing-thumbnail-site/releases/tag/font-v1.0.3). 제작자는 **원이네 스튜디오**이며 개인·기업의 상업적 이용까지 무료인 **한컷체 · OneKut 무료 이용 라이선스 1.0**을 적용합니다.
+설치용 파일과 이용 조건: [한컷체 다운로드](https://github.com/choeziwon/climbing-thumbnail-site/releases/tag/font-v1.0.4). 제작자는 **원이네 스튜디오**이며 개인·기업의 상업적 이용까지 무료인 **한컷체 · OneKut 무료 이용 라이선스 1.0**을 적용합니다.
 
-현재 1.003 배포본은 앱·웹 임베딩과 상업적 이용을 무료로 허용합니다. 폰트 수정·별도 재배포·폰트 자체 판매는 사전 허락이 필요합니다. [전체 라이선스](https://choeziwon.github.io/climbing-thumbnail-site/assets/OneKut-LICENSE.txt)를 확인하세요. 이전 OFL 배포본의 권한은 유지되며 이번 변경이 소급 적용되지 않습니다.
+현재 1.004 배포본은 앱·웹 임베딩과 상업적 이용을 무료로 허용합니다. 폰트 수정·별도 재배포·폰트 자체 판매는 사전 허락이 필요합니다. [전체 라이선스](https://choeziwon.github.io/climbing-thumbnail-site/assets/OneKut-LICENSE.txt)를 확인하세요. 이전 OFL 배포본의 권한은 유지되며 이번 변경이 소급 적용되지 않습니다.
+
+## 한컷체 1.004
+
+현대 한글 11,172자를 완성된 글자 단위로 검토하고 쌍초성의 두께, 자음·모음 사이의 간격과 속공간을 개선했습니다. 모바일과 데스크톱에 같은 한컷체 배포본을 적용합니다.
 
 ## 추가 폰트
 

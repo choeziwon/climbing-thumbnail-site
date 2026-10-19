@@ -1,5 +1,5 @@
 한컷체 · OneKut 무료 이용 라이선스 1.0
-적용 배포본: OneKut 1.003 (font-v1.0.3)
+적용 배포본: OneKut 1.004 (font-v1.0.4)
 시행일: 2026-10-19
 권리자: 원이네 스튜디오
 
@@ -22,4 +22,4 @@
 이 조건은 이 라이선스가 명시된 배포본에 적용합니다. 이전에 SIL Open Font License 1.1로 배포된 1.001·1.002 버전의 이용 조건과 이미 부여된 권한을 변경하거나 취소하지 않습니다. 이 라이선스는 서비스 소스 코드나 다른 제작자의 폰트·이미지에 적용되지 않습니다.
 
 공식 다운로드
-https://github.com/choeziwon/climbing-thumbnail-site/releases/tag/font-v1.0.3
+https://github.com/choeziwon/climbing-thumbnail-site/releases/tag/font-v1.0.4
