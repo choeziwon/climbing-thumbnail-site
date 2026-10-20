@@ -3,11 +3,17 @@ function clamp(value,min,max){return Math.max(min,Math.min(max,value));}
 // text-stroke rasterization can leave dark spikes along small curved glyphs.
 const textOutlineOffsets=Array.from({length:8},(_,i)=>{
   const angle=i*Math.PI/4;
-  return [Math.round(Math.cos(angle)*.5*1e6)/1e6,Math.round(Math.sin(angle)*.5*1e6)/1e6];
+  return [Math.round(Math.cos(angle)*1e6)/1e6,Math.round(Math.sin(angle)*1e6)/1e6];
 });
-// Eight masks overlap; lower each opacity to retain the original thin border.
+// Radius is 1% of the rendered font size, including each font's display scale.
+// Preview and PNG export use the same ratio before canvas/viewport scaling.
+function textOutlineRadius(fontSize){return fontSize*.01;}
+// Eight masks overlap; keep their opacity low for smooth, unobtrusive edges.
 const textOutlineOpacity=89/255;
-function textOutlineShadow(color){return textOutlineOffsets.map(([x,y])=>`${x}px ${y}px 0 ${color}59`).join(',');}
+function textOutlineShadow(color,fontSize){
+  const radius=textOutlineRadius(fontSize);
+  return textOutlineOffsets.map(([x,y])=>`${x*radius}px ${y*radius}px 0 ${color}59`).join(',');
+}
 function positionBounds(stageWidth,stageHeight,layerWidth,layerHeight){
   const padX=Math.min(20,Math.max(0,(stageWidth-layerWidth)/2));
   const padY=Math.min(20,Math.max(0,(stageHeight-layerHeight)/2));
@@ -412,7 +418,7 @@ function update(){
   layer.style.fontSize=size.value+'px';$('value').value=size.value+'px';
   preview.style.color=fillColor.value;
   preview.style.webkitTextStroke='0px transparent';
-  preview.style.textShadow=outline.checked?textOutlineShadow(strokeColor.value):'none';
+  preview.style.textShadow=outline.checked?textOutlineShadow(strokeColor.value,parseFloat(preview.style.fontSize)):'none';
   layer.style.filter=shadow.checked?'drop-shadow(0 3px 4px rgba(0,0,0,0.32))':'none';
   layer.style.textAlign=state.alignment;
   alignmentButtons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.align===state.alignment)));
@@ -582,7 +588,7 @@ function exportCrop(width,height,ratio){
 }
 function loadExportImage(src){return new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('image'));image.src=src;});}
 function canvasBlob(canvas){return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('encode')),'image/png'));}
-function addTextMaskOutline(overlay,ink,color,scaleX,scaleY){
+function addTextMaskOutline(overlay,ink,color,scaleX,scaleY,fontSize){
   const mask=document.createElement('canvas');mask.width=overlay.width;mask.height=overlay.height;
   const maskInk=mask.getContext('2d');if(!maskInk)throw new Error('canvas');
   maskInk.drawImage(overlay,0,0);
@@ -590,7 +596,8 @@ function addTextMaskOutline(overlay,ink,color,scaleX,scaleY){
   maskInk.fillRect(0,0,mask.width,mask.height);
   ink.save();ink.setTransform(1,0,0,1,0,0);ink.globalCompositeOperation='destination-over';
   ink.globalAlpha=textOutlineOpacity;
-  for(const [x,y] of textOutlineOffsets)ink.drawImage(mask,x*scaleX,y*scaleY);
+  const radius=textOutlineRadius(fontSize);
+  for(const [x,y] of textOutlineOffsets)ink.drawImage(mask,x*radius*scaleX,y*radius*scaleY);
   ink.restore();
   mask.width=mask.height=0;
 }
@@ -630,7 +637,7 @@ $('saveResult').addEventListener('click',async()=>{
       if(!glyph.text.trim())continue;
       ink.fillText(glyph.text,glyph.x,glyph.y);
     }
-    if(outline.checked&&layout.glyphs.some(g=>g.text.trim()))addTextMaskOutline(overlay,ink,strokeColor.value,scaleX*frame.fit,scaleY*frame.fit);
+    if(outline.checked&&layout.glyphs.some(g=>g.text.trim()))addTextMaskOutline(overlay,ink,strokeColor.value,scaleX*frame.fit,scaleY*frame.fit,parseFloat(style.fontSize));
     const heartJobs=layout.hearts.map(rect=>{
       const clone=markSVG(rect.key);
       clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
