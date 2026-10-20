@@ -101,7 +101,7 @@ function setupMobileWorkspace(){
       move(document.querySelector('main .success-controls'),panels[1]);
       move(document.querySelector('main .photo-tools'),panels[2]);
       move($('fontStatus'),feedback);move($('status'),feedback);
-      selectTab(0);viewport();
+      selectTab(0);collapsePanel(true);viewport();
     }else{
       for(const {node,anchor} of moves.reverse()){anchor.replaceWith(node);}moves.length=0;
       styleControls.remove();preview.textContent=text.value.normalize('NFC');updateHearts();
