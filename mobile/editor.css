@@ -10,7 +10,13 @@ body.mobile-editing{overflow:hidden}
  .mobile-canvas .preview-hint{display:none}
  .mobile-canvas #preview{white-space:pre;overflow-wrap:normal}
  .mobile-canvas .heart-row{flex-wrap:nowrap}
- .mobile-tabs{position:sticky;top:var(--mobile-header-height,61px);z-index:2;background:#fff;display:flex;flex:none;padding:0;border-bottom:1px solid #e7e8eb;gap:0}
+ .mobile-panel-bar{position:sticky;top:var(--mobile-header-height,61px);z-index:2;background:#fff;display:flex;align-items:stretch;flex:none;border-bottom:1px solid #e7e8eb}
+ .mobile-tabs{display:flex;flex:1;min-width:0;padding:0;gap:0}
+ #mobile-panel-toggle{flex:none;border:0;border-left:1px solid #e7e8eb;border-radius:0;min-width:58px;min-height:48px;padding:10px 8px;font-size:13px;color:#666;background:#fff}
+ .mobile-editor.panel-collapsed{overflow:hidden}
+ .panel-collapsed .mobile-panel-bar{position:relative;top:auto;padding-bottom:env(safe-area-inset-bottom)}
+ .mobile-feedback{flex:none}
+ .mobile-feedback .status{padding:8px 16px;margin:0;font-size:13px}
  .mobile-tabs button{flex:1;border:0;border-radius:0;background:none;min-height:48px;padding:10px 0;color:#737780;font-size:15px;border-bottom:2px solid transparent}
  .mobile-tabs button[aria-selected=true]{color:#111;font-weight:700;border-bottom-color:#111}
  .mobile-tools{flex:none;min-height:0;padding:18px 16px max(24px,env(safe-area-inset-bottom));scroll-margin-top:calc(var(--mobile-header-height,61px) + 48px)}

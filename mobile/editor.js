@@ -3,14 +3,15 @@
 var mobileWorkspace;
 function fitMobilePreview(){
   if(!mobileWorkspace?.active)return;
-  const {canvas,frame}=mobileWorkspace;
+  const {canvas,frame,shell,header,bar,feedback,collapsed}=mobileWorkspace;
   // Keep the image full-width; the workspace scrolls instead of shrinking
   // portrait images to reserve space for every editing control.
-  const scale=Math.min(canvas.clientWidth/stage.offsetWidth,1);
+  const availableHeight=Math.max(1,shell.clientHeight-header.offsetHeight-bar.offsetHeight-feedback.offsetHeight);
+  const scale=Math.min(canvas.clientWidth/stage.offsetWidth,collapsed?availableHeight/stage.offsetHeight:Infinity,1);
   stage.style.transform=`scale(${scale})`;
   frame.style.width=(stage.offsetWidth*scale)+'px';
   frame.style.height=(stage.offsetHeight*scale)+'px';
-  canvas.style.height=(stage.offsetHeight*scale)+'px';
+  canvas.style.height=(collapsed?availableHeight:stage.offsetHeight*scale)+'px';
 }
 function renderMobileCanvas(){
   if(!mobileWorkspace?.active)return false;
@@ -34,27 +35,40 @@ function renderMobileCanvas(){
 function setupMobileWorkspace(){
   const shell=document.createElement('div');shell.className='mobile-editor';shell.hidden=true;
   shell.innerHTML=`<header class="mobile-header"><h1>완등 한 컷</h1></header>
+    <div class="mobile-feedback"></div>
     <div class="mobile-canvas" aria-label="썸네일 미리보기"></div>
-    <nav class="mobile-tabs" role="tablist" aria-label="썸네일 편집 도구">
+    <div class="mobile-panel-bar"><nav class="mobile-tabs" role="tablist" aria-label="썸네일 편집 도구">
       <button type="button" id="mobile-text-tab" role="tab" aria-controls="mobile-text-panel" aria-selected="true">텍스트</button>
       <button type="button" id="mobile-marks-tab" role="tab" aria-controls="mobile-marks-panel" aria-selected="false" tabindex="-1">성공 문제</button>
       <button type="button" id="mobile-image-tab" role="tab" aria-controls="mobile-image-panel" aria-selected="false" tabindex="-1">이미지</button>
-    </nav><div class="mobile-tools">
+    </nav><button type="button" id="mobile-panel-toggle" aria-label="편집 패널 접기" aria-expanded="true" aria-controls="mobile-tools">접기</button></div><div class="mobile-tools" id="mobile-tools">
       <section id="mobile-text-panel" class="mobile-panel text-section" role="tabpanel" aria-labelledby="mobile-text-tab"></section>
       <section id="mobile-marks-panel" class="mobile-panel text-section" role="tabpanel" aria-labelledby="mobile-marks-tab" hidden></section>
       <section id="mobile-image-panel" class="mobile-panel" role="tabpanel" aria-labelledby="mobile-image-tab" hidden></section>
     </div>`;
   document.body.append(shell);
   const header=shell.querySelector('.mobile-header'),canvas=shell.querySelector('.mobile-canvas'),tools=shell.querySelector('.mobile-tools');
+  const bar=shell.querySelector('.mobile-panel-bar'),feedback=shell.querySelector('.mobile-feedback'),toggle=$('mobile-panel-toggle');
   const panels=['text','marks','image'].map(name=>$(`mobile-${name}-panel`));
   const tabs=Array.from(shell.querySelectorAll('[role=tab]'));
   const styleControls=document.createElement('div');styleControls.className='mobile-style';
   const frame=document.querySelector('.preview-frame');
-  mobileWorkspace={shell,canvas,frame,measure:document.createElement('canvas').getContext('2d'),active:false};
+  mobileWorkspace={shell,canvas,frame,header,bar,feedback,collapsed:false,measure:document.createElement('canvas').getContext('2d'),active:false};
   const moves=[];
   function move(node,parent){const anchor=document.createComment('desktop position');node.before(anchor);moves.push({node,anchor});parent.append(node);}
+  function collapsePanel(collapsed){
+    mobileWorkspace.collapsed=collapsed;
+    shell.classList.toggle('panel-collapsed',collapsed);tools.hidden=collapsed;
+    toggle.setAttribute('aria-expanded',String(!collapsed));
+    toggle.setAttribute('aria-label',collapsed?'편집 패널 펼치기':'편집 패널 접기');
+    toggle.textContent=collapsed?'펼치기':'접기';
+    shell.scrollTop=0;
+    fitMobilePreview();
+  }
+  toggle.addEventListener('click',()=>collapsePanel(!mobileWorkspace.collapsed));
   function selectTab(index){
     tabs.forEach((tab,i)=>{tab.setAttribute('aria-selected',String(i===index));tab.tabIndex=i===index?0:-1;panels[i].hidden=i!==index;});
+    if(mobileWorkspace.collapsed)collapsePanel(false);
   }
   window.addEventListener('editorreset',()=>{if(mobileWorkspace.active){selectTab(0);shell.scrollTop=0;}});
   tabs.forEach((tab,index)=>{
@@ -86,7 +100,7 @@ function setupMobileWorkspace(){
       panels[0].append(styleControls);move(document.querySelector('main .color-controls'),styleControls);
       move(document.querySelector('main .success-controls'),panels[1]);
       move(document.querySelector('main .photo-tools'),panels[2]);
-      move($('fontStatus'),tools);move($('status'),tools);tools.prepend($('fontStatus'),$('status'));
+      move($('fontStatus'),feedback);move($('status'),feedback);
       selectTab(0);viewport();
     }else{
       for(const {node,anchor} of moves.reverse()){anchor.replaceWith(node);}moves.length=0;
@@ -98,7 +112,8 @@ function setupMobileWorkspace(){
   }
   query.addEventListener('change',apply);
   window.addEventListener('resize',viewport);window.visualViewport?.addEventListener('resize',viewport);window.visualViewport?.addEventListener('scroll',viewport);
-  new ResizeObserver(()=>shell.style.setProperty('--mobile-header-height',header.offsetHeight+'px')).observe(header);
+  new ResizeObserver(()=>{shell.style.setProperty('--mobile-header-height',header.offsetHeight+'px');fitMobilePreview();}).observe(header);
+  const chromeObserver=new ResizeObserver(fitMobilePreview);chromeObserver.observe(bar);chromeObserver.observe(feedback);
   new ResizeObserver(fitMobilePreview).observe(canvas);
   apply();
 }
