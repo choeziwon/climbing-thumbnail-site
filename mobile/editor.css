@@ -2,7 +2,7 @@ body.mobile-editing{overflow:hidden}
  body.mobile-editing>main,body.mobile-editing>.site-header{display:none}
  .mobile-editor{position:fixed;inset:0;top:var(--mobile-top,0px);height:var(--mobile-height,100dvh);z-index:30;background:#fff;display:flex;flex-direction:column;overflow:hidden}
  .mobile-header{position:sticky;top:0;z-index:3;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 16px;border-bottom:1px solid #e7e8eb;flex:none}
- .mobile-header h1{font:30px/1.3 Wave,system-ui;margin:0;white-space:nowrap}
+ .mobile-header h1{font:30px/1.3 Wave,"Pretendard",system-ui;margin:0;white-space:nowrap}
  .mobile-header #saveResult{align-self:center;margin:0;font-size:13px;min-height:44px;padding:8px 10px;flex:none}
  .mobile-canvas{flex:none;background:#e5e7eb;padding:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
  .mobile-canvas .preview-frame{position:relative;flex:none;margin:0;border:0;border-radius:0;background:#e5e7eb;max-width:none;overflow:hidden}
@@ -113,3 +113,220 @@ body{background:#f4f5f7}
 /* Mobile editing uses touch scrolling without desktop scrollbar chrome. */
 body.mobile-editing,body.mobile-editing *{scrollbar-width:none}
 body.mobile-editing::-webkit-scrollbar,body.mobile-editing *::-webkit-scrollbar{display:none;width:0;height:0}
+
+.mobile-panel .color-field-title,.mobile-panel .align-control>span{display:none}
+.mobile-panel label:has(>.range-control){display:flex;flex-direction:row;align-items:center;gap:12px;width:100%}
+.mobile-panel label:has(>.range-control)>span:first-child{flex:0 0 auto;white-space:nowrap}
+.mobile-panel label>.range-control{flex:1;min-width:0;width:auto}
+
+/* Two compact rows for photo actions and aspect ratios. */
+.mobile-photo-icon,.mobile-photo-caption,.mobile-photo-empty{display:none}
+.mobile-panel .photo-input-tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 8px}
+.mobile-panel .photo-details:not([hidden]),.mobile-panel .photo-attachment{display:contents}
+.mobile-panel #photoName,.mobile-panel .photo-desktop-caption{display:none}
+.mobile-panel .mobile-photo-icon{display:block;width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.mobile-panel .mobile-photo-caption{display:block;font-size:12px}
+.mobile-panel .photo-input-tools>.file-button,.mobile-panel #adjustPhoto,.mobile-panel .photo-tools #removePhoto{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:64px;padding:8px;border:0;border-radius:4px;background:transparent;font-size:12px}
+.mobile-panel .photo-input-tools>.file-button{grid-column:1;grid-row:1}
+.mobile-panel #adjustPhoto{grid-column:2;grid-row:1}
+.mobile-panel #removePhoto{grid-column:3;grid-row:1}
+.mobile-panel .photo-input-tools>.file-button:hover,.mobile-panel #adjustPhoto:hover,.mobile-panel #removePhoto:hover{background:#f5f6f8}
+.mobile-panel .ratio-control{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mobile-panel .ratio-control button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border:0;border-radius:4px;background:#f5f6f8;font-size:12px}
+.mobile-panel .ratio-control button[aria-pressed=true]{background:#111;color:#fff}
+.mobile-panel .photo-input-tools:has(#photoDetails[hidden])>.file-button{grid-column:1/-1;min-height:72px;background:#f5f6f8}
+.mobile-panel .photo-input-tools:has(#photoDetails[hidden])>.file-button>.mobile-photo-icon,.mobile-panel .photo-input-tools:has(#photoDetails[hidden]) .mobile-photo-caption{display:none}
+.mobile-panel .photo-input-tools:has(#photoDetails[hidden]) .mobile-photo-empty{display:flex;align-items:center;gap:8px;font-size:14px}
+.mobile-photo-empty>span{font-size:24px}
+
+/* Keep navigation quiet and photo tools consistent with compact controls. */
+.mobile-menu button{min-height:44px;padding:8px 0}
+.mobile-menu svg{display:none}
+.mobile-panel .photo-input-tools{gap:12px 8px}
+.mobile-panel .photo-input-tools>.file-button,.mobile-panel #adjustPhoto,.mobile-panel .photo-tools #removePhoto{flex-direction:row;gap:6px;min-height:44px;padding:8px 4px;background:#f5f6f8}
+.mobile-panel .photo-input-tools .mobile-photo-icon{width:18px;height:18px}
+.mobile-panel .photo-input-tools:has(#photoDetails[hidden])>.file-button{grid-column:1/-1;justify-self:start;min-height:44px;padding:8px 16px}
+.mobile-panel .photo-input-tools:has(#photoDetails[hidden]) .mobile-photo-empty{gap:6px;font-size:13px}
+.mobile-photo-empty>span{font-size:20px}
+
+/* Flat segmented controls and borderless slider tracks. */
+.mobile-panel .order-options,.mobile-panel .align-options,.mobile-panel .range-control{border:0;box-shadow:none}
+body.mobile-editing input[type=range]{appearance:none;-webkit-appearance:none;height:24px;border:0;border-radius:0;box-shadow:none;background:transparent;cursor:pointer}
+body.mobile-editing input[type=range]::-webkit-slider-runnable-track{height:4px;border:0;border-radius:2px;box-shadow:none;background:#e5e7eb}
+body.mobile-editing input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;margin-top:-6px;border:0;border-radius:50%;box-shadow:none;background:#111}
+body.mobile-editing input[type=range]::-moz-range-track{height:4px;border:0;border-radius:2px;box-shadow:none;background:#e5e7eb}
+body.mobile-editing input[type=range]::-moz-range-progress{height:4px;border:0;border-radius:2px;background:#111}
+body.mobile-editing input[type=range]::-moz-range-thumb{width:16px;height:16px;border:0;border-radius:50%;box-shadow:none;background:#111}
+
+/* Main navigation returns when the current editing task is completed. */
+.mobile-menu button{min-height:64px;padding:6px 0}
+.mobile-menu svg{display:block}
+.mobile-editor.editing-tool .mobile-panel-heading:not([hidden]){display:flex;position:sticky;top:0;z-index:6;background:#fff;min-height:44px;margin:0 0 12px}
+.mobile-edit-done,.mobile-text-tabs .mobile-edit-done{display:flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;min-height:44px;border:0;padding:10px;background:#fff;color:#111;border-radius:4px}
+.mobile-text-tabs:has(.mobile-edit-done){align-items:center}
+.mobile-text-tabs .mobile-edit-done:hover,.mobile-edit-done:hover{background:#f5f6f8}
+
+.mobile-panel .photo-input-tools:has(#photoDetails[hidden])>.file-button{justify-self:stretch;width:100%;min-height:44px;padding:8px 16px}
+
+/* Give completion controls breathing room and keep mark editing beside colors. */
+.mobile-editor.editing-tool .mobile-panel-heading:not([hidden]){padding:8px 0}
+.mobile-text-tabs:has(.mobile-edit-done){padding-top:8px;padding-bottom:8px}
+.mobile-edit-done,.mobile-text-tabs .mobile-edit-done{flex-basis:48px;width:48px;font-size:13px;font-weight:600;padding:10px 6px}
+.mark-key-mobile{display:none}
+.mobile-panel .mark-key-desktop{display:none}
+.mobile-panel .mark-key-mobile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;line-height:11px;white-space:nowrap}
+.mobile-panel .mark-key-mobile svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.mobile-panel .heart-palette .mark-edit-key{width:44px;height:44px;min-height:44px;flex:0 0 44px;padding:3px;border:0;border-radius:9px;background:#f5f6f8}
+.mobile-panel .heart-toolbar:empty{display:none}
+
+/* Compact panel headers and a consistent mobile control type scale. */
+.mobile-text-tabs:has(.mobile-edit-done){padding-top:0;padding-bottom:0}
+.mobile-editor.editing-tool .mobile-panel-heading:not([hidden]){height:32px;min-height:32px;padding:0;justify-content:flex-end;margin-bottom:12px}
+.mobile-panel-heading h2{display:none}
+.mobile-panel-heading .mobile-edit-done{height:32px;min-height:32px;padding:4px 6px}
+.mobile-edit-done:hover,.mobile-text-tabs .mobile-edit-done:hover,.mobile-text-tabs button:hover{background:#fff}
+.mobile-editor button,.mobile-editor .file-button,.mobile-editor .mobile-photo-caption,.mobile-editor .mobile-photo-empty,.mobile-editor .mark-key-mobile{font-size:14px!important}
+.mobile-panel .photo-input-tools .mobile-photo-icon{width:20px;height:20px}
+.mobile-photo-empty>span{font-size:22px}
+.mobile-panel #adjustPhoto .mobile-photo-caption{display:none}
+.mobile-panel .ratio-control{gap:0;border-bottom:1px solid #e7e8eb}
+.mobile-panel .ratio-control button{border:0;border-radius:0;background:#fff;color:#737780;box-shadow:none}
+.mobile-panel .ratio-control button[aria-pressed=true]{background:#fff;color:#111;font-weight:700;box-shadow:inset 0 -2px #111}
+.mobile-panel .ratio-control button:hover{background:#fff}
+.mobile-panel .heart-palette .mark-edit-key{width:auto;flex:0 0 auto;padding:6px 8px}
+.mobile-panel .mark-key-mobile{flex-direction:row;gap:4px;line-height:20px}
+
+/* Shared panel-bar height and segmented aspect-ratio choices. */
+.mobile-editor.editing-tool .mobile-panel-heading:not([hidden]){height:44px;min-height:44px;margin:0 -16px 12px;padding:0 8px 0 16px;justify-content:space-between;border-bottom:1px solid #e7e8eb}
+.mobile-panel-heading h2{display:block;font-size:14px;font-weight:600}
+.mobile-panel-heading .mobile-edit-done{height:44px;min-height:44px;padding:10px 6px}
+.mobile-panel #adjustPhoto .mobile-photo-caption{display:block}
+.mobile-panel .ratio-control{gap:4px;padding:3px;border:0;border-radius:10px;background:#f5f6f8;min-height:44px}
+.mobile-panel .ratio-control button{min-height:36px;height:36px;padding:6px 10px;background:transparent;color:#111;border-radius:9px;box-shadow:none;font-weight:400}
+.mobile-panel .ratio-control button[aria-pressed=true]{background:#111;color:#fff;box-shadow:none;font-weight:400}
+.mobile-panel .ratio-control button:hover{background:transparent}
+.mobile-panel .ratio-control button[aria-pressed=true]:hover{background:#111}
+.mobile-panel .heart-palette .mark-edit-key{width:44px;height:44px;flex:0 0 44px;padding:9px;border-radius:9px}
+.mobile-panel .mark-key-mobile>span{display:none}
+.mobile-panel .mark-key-mobile svg{width:24px;height:24px}
+
+/* Neutral photo actions for the black-and-white palette. */
+.mobile-panel .photo-input-tools>.file-button,.mobile-panel #adjustPhoto,.mobile-panel .photo-tools #removePhoto,.mobile-panel .photo-input-tools:has(#photoDetails[hidden])>.file-button{background:#fff;color:#111}
+.mobile-panel .photo-input-tools>.file-button:hover,.mobile-panel #adjustPhoto:hover,.mobile-panel #removePhoto:hover{background:#fff}
+.mobile-text-tabs:has(.mobile-edit-done){align-items:stretch}
+.mobile-text-tabs button{height:44px;min-height:44px}
+.mobile-text-tabs button[aria-selected=true]{position:relative;box-shadow:none}
+.mobile-text-tabs button[aria-selected=true]::after{content:"";position:absolute;bottom:-1px;left:0;right:0;height:2px;background:#111}
+body.mobile-editing .photo-adjust-actions{gap:12px;padding-top:8px;border-top:1px solid #e7e8eb}
+body.mobile-editing .photo-adjust-actions button{font-size:14px;min-height:44px;border:0;border-radius:4px;padding:8px 12px;background:transparent;color:#737780}
+body.mobile-editing .photo-adjust-actions #applyPhotoAdjust{background:#111;color:#fff;min-width:72px;font-weight:600}
+body.mobile-editing .photo-adjust-actions #cancelPhotoAdjust{color:#111}
+
+.mobile-panel .photo-input-tools:has(#photoDetails[hidden])>.file-button,
+.mobile-panel .photo-input-tools:has(#photoDetails[hidden])>.file-button:hover{background:#fff;color:#111;border:1px solid #111}
+
+/* Editor-only surround, distinct from the exported thumbnail surface. */
+.mobile-canvas{background-color:#cdd0d4;background-image:repeating-linear-gradient(135deg,transparent 0,transparent 6px,rgba(0,0,0,.035) 6px,rgba(0,0,0,.035) 7px)}
+.mobile-panel .mark-outline-settings{margin:12px 0;display:flex;flex-direction:column;gap:12px;font-size:14px}
+.mobile-panel #markOutlineCustom{display:flex;flex-direction:column;gap:12px}
+.mobile-editor .mobile-font-cards button{font-size:24px!important;border-color:#e5e5e5}
+.mobile-editor .mobile-font-cards button[aria-pressed=true]{border-color:#aaa;box-shadow:inset 0 0 0 1px #aaa}
+.mobile-panel .photo-input-tools:has(#photoDetails[hidden])>.file-button,.mobile-panel .photo-input-tools:has(#photoDetails[hidden])>.file-button:hover{border-color:#e5e5e5}
+.mark-link-options{display:none}
+.mobile-panel .mark-link-checkbox{display:none}
+.mobile-panel .mark-link-options{display:flex;gap:4px;padding:3px;border-radius:10px;background:#f5f6f8}
+.mobile-panel .mark-link-options button{flex:1;border:0;background:transparent;min-height:36px;padding:6px;border-radius:9px}
+.mobile-panel .mark-link-options button[aria-pressed=true]{background:#111;color:#fff}
+
+.mobile-panel .photo-input-tools>.file-button,
+.mobile-panel #adjustPhoto,
+.mobile-panel .photo-tools #removePhoto{background:#fff;color:#111;border:1px solid #e5e5e5;border-radius:4px;min-height:44px}
+
+/* Match photo action corners to the aspect-ratio options. */
+.mobile-panel .photo-input-tools>.file-button,
+.mobile-panel #adjustPhoto,
+.mobile-panel .photo-tools #removePhoto{border-radius:9px}
+
+.mark-link-switch-row{display:none}
+.mobile-panel .mark-link-switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;font-size:14px}
+.mobile-panel .mark-link-switch{position:relative;width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border:0;background:transparent;border-radius:0}
+.mobile-panel .mark-link-switch::before{content:"";position:absolute;left:0;top:10px;width:44px;height:24px;border-radius:12px;background:#d8d8d8;transition:background .15s}
+.mobile-panel .mark-link-switch::after{content:"";position:absolute;left:3px;top:13px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s}
+.mobile-panel .mark-link-switch[aria-checked=true]::before{background:#111}
+.mobile-panel .mark-link-switch[aria-checked=true]::after{transform:translateX(20px)}
+
+/* Group independent mark styling with an even three-row rhythm. */
+.mobile-panel #markOutlineCustom{gap:12px;padding:12px;border:0;border-radius:12px;background:#f8f9fc}
+.mobile-panel #markOutlineCustom>label{margin:0;min-height:44px;width:100%;gap:12px}
+.mobile-panel #markOutlineCustom .range-control{height:44px;min-height:44px;margin:0;padding:0;background:transparent;border:0}
+.mobile-panel #markOutlineCustom .color-picker-row{margin:0;min-height:44px;align-items:center}
+
+.mobile-panel .mark-link-switch-row{min-height:24px;padding:0}
+.mobile-panel .mark-link-switch{height:24px;min-height:24px}
+.mobile-panel .mark-link-switch::before{top:0}
+.mobile-panel .mark-link-switch::after{top:3px}
+
+.mobile-panel #markOutlineCustom{background:#f5f5f5}
+.mobile-panel #markOutlineCustom .color-none,
+.mobile-panel #markOutlineCustom .color-drop{background:#fff}
+
+body.mobile-editing .photo-adjust-actions button{border-radius:9px}
+.mobile-editor .mobile-font-cards button.font-card-small-glyphs{font-size:30px!important}
+
+/* Crop ratios are selected together with framing in the photo adjustment dialog. */
+.mobile-panel #ratioControls{display:none}
+
+.mobile-panel #adjustPhoto{display:none}
+.mobile-panel .photo-input-tools{grid-template-columns:repeat(2,minmax(0,1fr))}
+.mobile-image-group{display:grid;gap:12px;padding-top:16px}
+.mobile-image-group[hidden],.mobile-image-group.image-empty{display:none}
+.image-range{display:flex;align-items:center;gap:12px;min-height:44px;font-size:14px;margin:0}
+.image-range>span{min-width:42px}.image-range input{min-width:0;flex:1}.image-range output{width:44px;text-align:right;font-variant-numeric:tabular-nums}
+.image-geometry-actions{display:flex;gap:8px}.image-geometry-actions button{flex:1;border:1px solid #e5e5e5;border-radius:9px;background:white;min-height:44px;font-size:14px}
+.image-settings-reset{justify-self:end;border:0;background:transparent;color:#737780;font-size:14px;padding:8px}
+.mobile-image-tabs{margin-bottom:12px}
+.mobile-canvas:has(+.mobile-tools #mobile-image-panel:not([hidden])){touch-action:none}
+.mobile-panel #removePhoto{grid-column:2}
+
+.mobile-framing-guide{display:none}
+.mobile-editor.editing-tool:has(#mobile-image-panel:not([hidden]) #mobile-image-group-0:not([hidden]):not(.image-empty)) .mobile-framing-guide{display:block}
+
+.mobile-panel .photo-input-tools{grid-template-columns:repeat(3,minmax(0,1fr))}
+.mobile-panel #resetImageSettings{grid-column:3;grid-row:1;display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:8px;border:1px solid #e5e5e5;border-radius:9px;background:white;color:#111;font:inherit;font-size:14px}
+.mobile-panel #resetImageSettings[hidden]{display:none}
+.image-geometry-actions button,.mobile-image-group .photo-crop-ratios button{display:flex;align-items:center;justify-content:center;gap:6px}
+.image-geometry-actions svg,.mobile-image-group .photo-crop-ratios svg,#resetImageSettings svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.mobile-image-group{gap:4px;padding-top:8px}
+.image-range{min-height:40px;gap:10px}
+body.mobile-editing input.centered-range{background:linear-gradient(#969ba3,#969ba3) center/1px 12px no-repeat}
+
+#mobile-image-panel{padding-top:0}
+.mobile-tools:has(#mobile-image-panel:not([hidden])){padding-top:0}
+.mobile-image-tabs{margin-top:0;padding-top:0!important}
+.image-geometry-actions{gap:0;margin:4px 0;padding:2px 0;border-bottom:1px solid #eceef0}
+.image-geometry-actions button{border:0;border-radius:0;background:transparent;min-height:40px;padding:6px}
+.image-geometry-actions button+button{border-left:1px solid #eceef0}
+.image-range>.image-range-track{position:relative;display:flex;align-items:center;flex:1;min-width:0;height:24px}
+.image-range-track::before{content:"";position:absolute;left:50%;top:4px;width:2px;height:16px;background:#7c828b;transform:translateX(-50%);pointer-events:none}
+.image-range-track input{width:100%;position:relative;z-index:1}
+body.mobile-editing input.centered-range{background:transparent}
+
+.image-tool-strip{display:flex;align-items:center;gap:6px;overflow-x:auto;min-width:0;padding:4px 0 8px;scrollbar-width:none}
+.image-ratio-tools{display:flex;gap:6px;flex:none}
+.image-tool-strip button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;flex:0 0 48px;min-width:48px;min-height:58px;padding:5px 3px;border:0;border-radius:9px;background:transparent;font-size:12px;white-space:nowrap}
+.image-tool-strip svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.image-tool-strip button[aria-pressed=true]{background:#f0f1f3;color:#111;font-weight:600}
+.image-tool-divider{width:1px;height:28px;background:#dfe1e5;margin:0 4px;flex:none}
+.image-free-ratio{display:flex;align-items:center;gap:8px;padding:4px 0 8px;font-size:13px}
+.image-free-ratio label{min-width:0;flex:1;gap:6px}.image-free-ratio input{width:100%;min-width:0;max-width:80px;border:1px solid #e5e5e5;border-radius:6px;padding:8px;font:inherit}
+.image-free-ratio button{font-size:13px}
+
+.mobile-photo-empty .photo-add-plus{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
+
+.mobile-canvas{position:relative}
+.free-crop-frame{position:absolute;z-index:4;border:1px solid white;box-shadow:0 0 0 1px #1116;pointer-events:none}
+.mobile-editor:not(.editing-tool) .free-crop-frame,.mobile-editor:has(#mobile-image-panel[hidden]) .free-crop-frame,.mobile-editor:has(#mobile-image-group-0[hidden]) .free-crop-frame{display:none}
+.free-crop-frame button{position:absolute;width:32px;height:32px;min-height:32px;padding:0;border:0;background:transparent;pointer-events:auto;touch-action:none;border-radius:0}
+.free-crop-frame button::after{content:"";position:absolute;inset:10px;border:2px solid white;box-shadow:0 0 1px #111;background:#1115}
+.free-crop-frame [data-crop-edge=nw]{left:-8px;top:-8px;cursor:nwse-resize}.free-crop-frame [data-crop-edge=ne]{right:-8px;top:-8px;cursor:nesw-resize}.free-crop-frame [data-crop-edge=sw]{left:-8px;bottom:-8px;cursor:nesw-resize}.free-crop-frame [data-crop-edge=se]{right:-8px;bottom:-8px;cursor:nwse-resize}
+.free-crop-frame [data-crop-edge=n]{left:calc(50% - 16px);top:-8px;cursor:ns-resize}.free-crop-frame [data-crop-edge=s]{left:calc(50% - 16px);bottom:-8px;cursor:ns-resize}.free-crop-frame [data-crop-edge=w]{left:-8px;top:calc(50% - 16px);cursor:ew-resize}.free-crop-frame [data-crop-edge=e]{right:-8px;top:calc(50% - 16px);cursor:ew-resize}

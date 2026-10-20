@@ -45,3 +45,5 @@ SHA256: a38e12e2ac376034f13def6d1548686e8becfd411c349a264d39da66b0848beb
 
 느좋체·한굴림체·Covendard·히피체의 WOFF2는 눈누가 제공하는 Project-Noonnu/2610081905 저장소의 원본 파일입니다. 느좋체는 Pretendard에서 파생되었습니다. Covendard 및 Mona의 상위 프로젝트 이용 조건도 함께 보존합니다.
 한굴림체는 완성형 한글 7,800자, HS활공명조는 2,781자를 수록합니다. 지원하지 않는 글자는 브라우저의 기본 글꼴로 표시될 수 있습니다. 다른 6종은 현대 한글 11,172자를 수록합니다.
+
+Pretendard UI variable v1.3.9: https://github.com/orioncactus/pretendard (SIL OFL; Pretendard-LICENSE.txt)

@@ -31,6 +31,8 @@ const markSize=$('markSize');
 const letterSpace=$('letterSpace'),lineSpace=$('lineSpace'),outlineWidth=$('outlineWidth'),shadowColor=$('shadowColor'),shadowWidth=$('shadowWidth');
 function letterGap(){return Number(size.value)*Number(letterSpace.value)/100;}
 function rowGap(baseSize){return baseSize*Number(lineSpace.value)/100;}
+const shadowOpacity=$('shadowOpacity'),shadowDistance=$('shadowDistance'),shadowAngle=$('shadowAngle');
+function shadowGeometry(){const distance=Number(size.value)*Number(shadowDistance.value)/100,angle=Number(shadowAngle.value)*Math.PI/180;return {x:distance*Math.sin(angle),y:distance*Math.cos(angle),color:shadowColor.value+Math.round(Number(shadowOpacity.value)*2.55).toString(16).padStart(2,'0')};}
 function shadowRadius(){return Number(size.value)*Number(shadowWidth.value)/100;}
 const size=$('size'),shadow=$('shadow'),outline=$('outline'),fillColor=$('fillColor'),strokeColor=$('strokeColor');
 const heartPreview=$('heartPreview'),clearHearts=$('clearHearts'),breakHearts=$('breakHearts'),removeHeart=$('removeHeart');
@@ -42,8 +44,8 @@ const palette=Array.from(document.querySelectorAll('[data-heart]'));
 // Keep immutable color templates so later shape changes never rewrite placed marks.
 const shapeSelect=$('shapeSelect');
 const markShapes={
-  heart:{label:'하트'},
   hold:{label:'홀드',fillRule:'evenodd',path:'M39 34 C22 52 20 83 32 108 C43 131 44 159 64 178 C86 199 113 201 137 187 C157 177 183 174 195 152 C208 128 195 107 190 85 C184 59 188 36 164 20 C137 1 113 12 89 9 C67 6 50 17 39 34 Z M129 108 C129 100 124 95 117 96 C110 96 105 102 106 109 C106 117 111 122 118 121 C125 121 130 115 129 108 Z'},
+  heart:{label:'하트'},
   hand:{label:'손',details:'M84 141 Q94 132 94 119 M122 152 Q132 140 131 126 M159 148 Q166 137 163 126',path:'M82 40 C62 44 48 57 35 72 L22 86 C14 94 18 106 30 108 C42 109 54 99 65 96 Q73 93 71 104 C67 117 57 128 46 135 C36 142 40 153 52 153 C66 154 76 147 84 141 C80 152 86 162 98 162 C108 163 116 158 122 152 C124 163 134 167 145 162 C153 159 157 153 159 148 C167 158 180 155 186 144 C197 124 190 87 174 65 C159 42 126 32 101 36 Q90 37 82 40 Z'},
   lightning:{label:'번개',path:'M113 193 Q118 201 130 199 L177 193 Q193 191 184 177 L140 117 Q137 112 145 112 L179 115 Q196 116 184 101 L87 8 Q74 -4 81 17 L100 76 Q102 82 94 81 L51 77 Q35 76 44 91 Z'},
   star:{label:'별',path:'M107 190 Q115 207 123 189 L144 145 Q147 136 157 136 L198 134 Q216 133 204 120 L174 87 Q168 81 171 71 L181 24 Q185 8 171 17 L128 43 Q120 48 112 43 L73 16 Q57 5 61 24 L68 72 Q70 81 62 87 L29 117 Q15 130 34 132 L78 137 Q87 138 91 149 Z'},
@@ -367,6 +369,14 @@ function renderPosition(){
   editorViewport.afterRender?.();
 }
 function schedulePosition(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;renderPosition();});}
+function markOutlineStyle(){return $('markOutlineLinked').checked?{enabled:outline.checked,color:strokeColor.value,width:Number(outlineWidth.value)}:{enabled:$('markOutlineEnabled').checked,color:$('markStrokeColor').value,width:Number($('markOutlineWidth').value)};}
+$('markOutlineLinked').addEventListener('change',()=>{
+ if(!$('markOutlineLinked').checked){$('markOutlineEnabled').checked=outline.checked;$('markStrokeColor').value=strokeColor.value;$('markOutlineWidth').value=outlineWidth.value;}
+ $('markOutlineCustom').hidden=$('markOutlineLinked').checked;
+ $('markStrokeColor').dispatchEvent(new Event('input'));update();
+});
+for(const id of ['markOutlineEnabled','markStrokeColor','markOutlineWidth'])$(id).addEventListener('input',update);
+window.addEventListener('editorreset',()=>{$('markOutlineLinked').checked=true;$('markOutlineCustom').hidden=true;update();});
 function updateHearts(marks=arrangedMarks(state.hearts,state.problemOrder)){
   problemOrderButtons.forEach((button,index)=>button.setAttribute('aria-pressed',String(state.problemOrder===(index===0?'color':'added'))));
   heartPreview.replaceChildren();
@@ -381,8 +391,9 @@ function updateHearts(marks=arrangedMarks(state.hearts,state.problemOrder)){
     if(key==='\n'){row=addRow();return;}
     const svg=markSVG(key);
     const path=svg.querySelector('path');
-    path.setAttribute('stroke',strokeColor.value);
-    path.setAttribute('stroke-width',outline.checked?outlineWidth.value:'0');
+    const effect=markOutlineStyle();path.setAttribute('stroke',effect.color);
+    path.setAttribute('stroke-width',effect.enabled?String(2*Number(markSize.value)*effect.width/100):'0');
+    path.setAttribute('stroke-linejoin','round');
     path.setAttribute('vector-effect','non-scaling-stroke');
     row.append(svg);
   });
@@ -423,6 +434,8 @@ function updateLineSpacing(){
   preview.style.marginTop=-spacing.top+'px';preview.style.marginBottom=-spacing.bottom+'px';
 }
 function update(){
+  if($('markOutlineLinked').checked)markSize.value=String(Math.round(Number(size.value)*.48));
+  $('markOutlineWidthValue').value=$('markOutlineWidth').value+'%';
   const hasCaption=Boolean(text.value.trim());
   if(hasCaption&&!state.captionPresent){state.x=50;state.y=50;}
   state.captionPresent=hasCaption;
@@ -435,12 +448,14 @@ function update(){
   preview.style.color=fillColor.value;
   preview.style.webkitTextStroke=outline.checked?`${2*textOutlineRadius(parseFloat(preview.style.fontSize))}px ${strokeColor.value}`:'0px transparent';
   preview.style.textShadow='none';
-  layer.style.filter=shadow.checked?`drop-shadow(0 ${shadowRadius()}px ${shadowRadius()}px ${shadowColor.value}80)`:'none';
+  shadowOpacity.nextElementSibling.value=shadowOpacity.value+'%';shadowDistance.nextElementSibling.value=shadowDistance.value+'%';shadowAngle.nextElementSibling.value=(Number(shadowAngle.value)<0?'왼 ':Number(shadowAngle.value)>0?'우 ':'')+Math.abs(Number(shadowAngle.value))+'°';
+  const shadowStyle=shadowGeometry();
+  layer.style.filter=shadow.checked?`drop-shadow(${shadowStyle.x}px ${shadowStyle.y}px ${shadowRadius()}px ${shadowStyle.color})`:'none';
   layer.style.textAlign=state.alignment;
   alignmentButtons.forEach(button=>button.setAttribute('aria-pressed',String(state.writingMode==='horizontal'&&button.dataset.align===state.alignment)));
   updateLineSpacing();updateHearts();schedulePosition();
 }
-[text,size,markSize,fillColor,strokeColor,letterSpace,lineSpace,outlineWidth,shadowColor,shadowWidth].forEach(input=>input.addEventListener('input',update));
+[text,size,markSize,fillColor,strokeColor,letterSpace,lineSpace,outlineWidth,shadowColor,shadowWidth,shadowOpacity,shadowDistance,shadowAngle].forEach(input=>input.addEventListener('input',update));
 outline.addEventListener('change',update);
 shadow.addEventListener('change',update);
 alignmentButtons.forEach(button=>button.addEventListener('click',()=>{
@@ -502,7 +517,7 @@ resetDialog.addEventListener('close',()=>{
   try{localStorage.removeItem(problemOrderStorageKey);}catch{}
   fontPending=Promise.resolve();
   text.value=text.defaultValue;
-  for(const input of [size,markSize,fillColor,strokeColor,letterSpace,lineSpace,outlineWidth,shadowColor,shadowWidth])input.value=input.defaultValue;
+  for(const input of [size,markSize,fillColor,strokeColor,letterSpace,lineSpace,outlineWidth,shadowColor,shadowWidth,shadowOpacity,shadowDistance,shadowAngle])input.value=input.defaultValue;
   outline.checked=outline.defaultChecked;shadow.checked=shadow.defaultChecked;
   fontSelect.value='Wave';syncFontPicker();closeFontPicker();fontStatus('');
   shapeSelect.value='heart';shapePickerUI.sync();updateShapePalette();
@@ -588,7 +603,7 @@ function explicitExportLayout(ctx,caption,hearts,baseSize,letterSpacing,alignmen
   const heartHeight=heartSize-2*heartInset;
   const heartItems=[];
   heartRows.forEach((row,index)=>row.forEach((key,i)=>heartItems.push({key,x:(width-heartWidths[index])*align+i*(heartSize+columnGap),y:heartTop+index*(heartHeight+gap)-heartInset,width:heartSize,height:heartSize})));
-  return {lines,marks:heartRows.flatMap((row,i)=>i?['\n',...row]:row),width,height:heartRows.length?heartTop+heartRows.length*heartHeight+(heartRows.length-1)*gap:textHeight,glyphs,hearts:heartItems};
+  return {textWidth:width,textHeight,lines,marks:heartRows.flatMap((row,i)=>i?['\n',...row]:row),width,height:heartRows.length?heartTop+heartRows.length*heartHeight+(heartRows.length-1)*gap:textHeight,glyphs,hearts:heartItems};
 }
 function verticalExportLayout(ctx,caption,hearts,baseSize,letterSpacing,maxWidth){
   const gap=rowGap(baseSize),fontSize=baseSize*fontDisplayScale(state.fontFamily);
@@ -607,7 +622,6 @@ function verticalExportLayout(ctx,caption,hearts,baseSize,letterSpacing,maxWidth
   return {lines:caption.split('\n'),marks:marks.marks,width:Math.max(1,textWidth,marks.width),height:hearts.length?markTop+marks.height:textHeight,textWidth,textHeight,glyphs,hearts:marks.hearts.map(h=>({...h,y:h.y+markTop}))};
 }
 function renderVerticalPreview(layout){
-  if(state.writingMode!=='vertical')return;
   const ctx=document.createElement('canvas').getContext('2d');ctx.font=getComputedStyle(preview).font;
   layout=layout||explicitExportLayout(ctx,text.value,arrangedMarks(state.hearts,state.problemOrder),Number(size.value),letterGap(),state.alignment);
   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
@@ -664,12 +678,12 @@ $('saveResult').addEventListener('click',async()=>{
     const frame=exportFrame(box,layout,hasPhoto);
     const origin=offsetFromPosition(frame.bounds,state.x,state.y);
     const factor=Math.min(2,4096/Math.max(frame.width,frame.height));
-    const crop=hasPhoto?exportCrop(photo.naturalWidth,photo.naturalHeight,state.ratio):{width:Math.max(1,Math.round(frame.width*factor)),height:Math.max(1,Math.round(frame.height*factor))};
+    const crop=hasPhoto?exportCrop(photoDimensions().width,photoDimensions().height,state.ratio):{width:Math.max(1,Math.round(frame.width*factor)),height:Math.max(1,Math.round(frame.height*factor))};
     const canvas=document.createElement('canvas');canvas.width=crop.width;canvas.height=crop.height;
     const ctx=canvas.getContext('2d');if(!ctx)throw new Error('canvas');
     const scaleX=canvas.width/frame.width,scaleY=canvas.height/frame.height;
     ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-    if(hasPhoto)ctx.drawImage(photo,crop.sx,crop.sy,crop.sw,crop.sh,0,0,canvas.width,canvas.height);
+    if(hasPhoto)ctx.drawImage(photoSource(),crop.sx,crop.sy,crop.sw,crop.sh,0,0,canvas.width,canvas.height);
     const overlay=document.createElement('canvas');overlay.width=canvas.width;overlay.height=canvas.height;
     const ink=overlay.getContext('2d');if(!ink)throw new Error('canvas');
     ink.scale(scaleX,scaleY);ink.translate(origin.left,origin.top);ink.scale(frame.fit,frame.fit);
@@ -687,15 +701,15 @@ $('saveResult').addEventListener('click',async()=>{
       const clone=markSVG(rect.key);
       clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
       clone.setAttribute('width',String(rect.width*scaleX*frame.fit));clone.setAttribute('height',String(rect.height*scaleY*frame.fit));
-      const path=clone.querySelector('path');path.setAttribute('stroke',strokeColor.value);
-      path.setAttribute('vector-effect','non-scaling-stroke');path.setAttribute('stroke-width',outline.checked?String(Number(outlineWidth.value)*scaleX*frame.fit):'0');
+      const path=clone.querySelector('path'),effect=markOutlineStyle();path.setAttribute('stroke',effect.color);path.setAttribute('stroke-linejoin','round');
+      path.setAttribute('vector-effect','non-scaling-stroke');path.setAttribute('stroke-width',effect.enabled?String(2*rect.width*effect.width/100*scaleX*frame.fit):'0');
       const src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(clone));
       return loadExportImage(src).then(image=>({image,rect}));
     });
     const withShadow=shadow.checked;
     for(const {image,rect} of await Promise.all(heartJobs))ink.drawImage(image,rect.x,rect.y,rect.width,rect.height);
     if(version!==state.loadVersion||fontVersion!==state.fontVersion)throw new Error('changed');
-    if(withShadow){ctx.shadowColor=shadowColor.value+'80';ctx.shadowOffsetY=shadowRadius()*scaleY*frame.fit;ctx.shadowBlur=2*shadowRadius()*scaleX*frame.fit;}
+    if(withShadow){const effect=shadowGeometry();ctx.shadowColor=effect.color;ctx.shadowOffsetX=effect.x*scaleX*frame.fit;ctx.shadowOffsetY=effect.y*scaleY*frame.fit;ctx.shadowBlur=2*shadowRadius()*scaleX*frame.fit;}
     ctx.drawImage(overlay,0,0);
     const blob=await canvasBlob(canvas);
     if(version!==state.loadVersion||fontVersion!==state.fontVersion)throw new Error('changed');
@@ -706,12 +720,36 @@ $('saveResult').addEventListener('click',async()=>{
     setTimeout(()=>URL.revokeObjectURL(url),60000);
     showStatus('PNG 저장을 시작했어요. 다운로드 폴더를 확인해 주세요.');
   }catch(error){
-    showStatus(error.message==='changed'?'사진이나 폰트가 변경됐어요. 결과물 저장을 다시 눌러 주세요.':'저장하지 못했어요. 이미지를 다시 확인하고 결과물 저장을 눌러 주세요.');
+    showStatus(error.message==='changed'?'사진이나 폰트가 변경됐어요. 저장을 다시 눌러 주세요.':'저장하지 못했어요. 이미지를 다시 확인하고 저장을 눌러 주세요.');
   }finally{
-    exporting=false;$('resetEditor').disabled=false;$('saveResult').textContent='결과물 저장';$('saveResult').disabled=state.fontLoading;
+    exporting=false;$('resetEditor').disabled=false;$('saveResult').textContent='저장';$('saveResult').disabled=state.fontLoading;
   }
 });
 
+// Rotate the source once per image/orientation; crop coordinates stay in visual axes.
+let rotatedPhotoCache=null;
+function photoDimensions(view=state.photoView){const swap=(view.rotation||0)%180!==0;return {width:swap?photo.naturalHeight:photo.naturalWidth,height:swap?photo.naturalWidth:photo.naturalHeight};}
+function photoTiltScale(view){const {width:w,height:h}=photoDimensions(view),a=Math.abs(view.tilt||0)*Math.PI/180;return Math.max((w*Math.cos(a)+h*Math.sin(a))/w,(h*Math.cos(a)+w*Math.sin(a))/h);}
+// A shared convolution filter sharpens edges in both CSS preview and canvas output.
+function photoSharpnessFilter(amount){
+  amount=Math.round(clamp(amount||0,0,100));if(!amount)return '';
+  const id='photo-sharpness-'+amount;
+  if(!document.getElementById(id)){
+    let defs=document.getElementById('photo-filter-defs');
+    if(!defs){const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('width','0');svg.setAttribute('height','0');svg.setAttribute('aria-hidden','true');svg.style.position='absolute';defs=document.createElementNS(svg.namespaceURI,'defs');defs.id='photo-filter-defs';svg.append(defs);document.body.append(svg);}
+    const filter=document.createElementNS(defs.namespaceURI,'filter');filter.id=id;filter.setAttribute('color-interpolation-filters','sRGB');const convolution=document.createElementNS(defs.namespaceURI,'feConvolveMatrix'),a=amount/100;
+    convolution.setAttribute('order','3');convolution.setAttribute('kernelMatrix',`0 ${-a} 0 ${-a} ${1+4*a} ${-a} 0 ${-a} 0`);convolution.setAttribute('preserveAlpha','true');convolution.setAttribute('edgeMode','duplicate');filter.append(convolution);defs.append(filter);
+  }
+  return ' url(#'+id+')';
+}
+function photoFilter(view=state.photoView){const warmth=view.warmth||0;return `brightness(${1+(view.brightness||0)/100}) contrast(${1+(view.contrast||0)/100}) saturate(${1+(view.saturation||0)/100}) sepia(${Math.max(0,warmth)/200}) hue-rotate(${warmth<0?-warmth*.2:0}deg)`+photoSharpnessFilter(view.sharpness);}
+function photoSource(view=state.photoView){
+  const rotation=view.rotation||0,tilt=view.tilt||0,flip=!!view.flip;if(!rotation&&!tilt&&!flip&&![view.brightness,view.contrast,view.saturation,view.warmth,view.sharpness].some(Boolean))return photo;
+  const key=[state.photoURL,rotation,tilt,flip,photoFilter(view)].join('|');if(rotatedPhotoCache?.key===key)return rotatedPhotoCache.canvas;
+  const canvas=document.createElement('canvas'),dims=photoDimensions(view);canvas.width=dims.width;canvas.height=dims.height;
+  const ctx=canvas.getContext('2d'),scale=photoTiltScale(view);ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(tilt*Math.PI/180);ctx.scale(scale,scale);ctx.scale(flip?-1:1,1);ctx.rotate(rotation*Math.PI/180);ctx.filter=photoFilter(view);ctx.drawImage(photo,-photo.naturalWidth/2,-photo.naturalHeight/2);
+  rotatedPhotoCache={key,canvas};return canvas;
+}
 // One normalized source crop drives CSS preview, the adjustment canvas and PNG.
 function photoCrop(width,height,ratio,view){
   const [rw,rh]=ratio.split(':').map(Number),aspect=rw/rh;
@@ -720,32 +758,34 @@ function photoCrop(width,height,ratio,view){
 }
 function renderPhotoView(){
   if(!state.photoURL||!photo.naturalWidth||!photo.naturalHeight)return;
-  const crop=photoCrop(photo.naturalWidth,photo.naturalHeight,state.ratio,state.photoView);
-  photo.style.width=(photo.naturalWidth/crop.sw*100)+'%';
-  photo.style.height=(photo.naturalHeight/crop.sh*100)+'%';
-  photo.style.left=(-crop.sx/crop.sw*100)+'%';
-  photo.style.top=(-crop.sy/crop.sh*100)+'%';
-  photo.style.right='auto';photo.style.bottom='auto';
-  photo.style.objectFit='fill';
+  const dims=photoDimensions(),crop=photoCrop(dims.width,dims.height,state.ratio,state.photoView);
+  photo.style.width=(photo.naturalWidth/crop.sw*100)+'%';photo.style.height=(photo.naturalHeight/crop.sh*100)+'%';
+  photo.style.left=((dims.width/2-crop.sx)/crop.sw*100)+'%';photo.style.top=((dims.height/2-crop.sy)/crop.sh*100)+'%';
+  photo.style.transform='translate(-50%,-50%) rotate('+(state.photoView.tilt||0)+'deg) scale('+photoTiltScale(state.photoView)+') scaleX('+(state.photoView.flip?-1:1)+') rotate('+(state.photoView.rotation||0)+'deg)';
+  photo.style.filter=photoFilter();photo.style.right='auto';photo.style.bottom='auto';photo.style.objectFit='fill';
 }
 const photoAdjustDialog=$('photoAdjustDialog'),photoAdjustCanvas=$('photoAdjustCanvas');
 const photoZoom=$('photoZoom'),photoPointers=new Map();
 let photoDraft=null,photoGesture=null,photoAdjustVersion=0;
 function boundPhotoDraft(){
   photoDraft.zoom=clamp(photoDraft.zoom,1,4);
-  const crop=photoCrop(photo.naturalWidth,photo.naturalHeight,state.ratio,photoDraft);
-  photoDraft.cx=(crop.sx+crop.sw/2)/photo.naturalWidth;
-  photoDraft.cy=(crop.sy+crop.sh/2)/photo.naturalHeight;
+  const crop=photoCrop(photoDimensions(photoDraft).width,photoDimensions(photoDraft).height,(photoDraft.ratio||state.ratio),photoDraft);
+  photoDraft.cx=(crop.sx+crop.sw/2)/photoDimensions(photoDraft).width;
+  photoDraft.cy=(crop.sy+crop.sh/2)/photoDimensions(photoDraft).height;
 }
 function drawPhotoAdjustment(){
   if(!photoAdjustDialog.open||!photoDraft)return;
+  const [rw,rh]=(photoDraft.ratio||state.ratio).split(':').map(Number);photoAdjustDialog.style.setProperty('--photo-aspect',String(rw/rh));
   boundPhotoDraft();
+  $('photoTilt').value=photoDraft.tilt||0;$('photoTiltValue').value=(photoDraft.tilt||0)+'°';
+  $('flipPhoto').setAttribute('aria-pressed',String(!!photoDraft.flip));
+  document.querySelectorAll('[data-crop-ratio]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.cropRatio===photoDraft.ratio)));
   const rect=photoAdjustCanvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,3);
   photoAdjustCanvas.width=Math.max(1,Math.round(rect.width*dpr));
   photoAdjustCanvas.height=Math.max(1,Math.round(rect.height*dpr));
-  const crop=photoCrop(photo.naturalWidth,photo.naturalHeight,state.ratio,photoDraft);
+  const crop=photoCrop(photoDimensions(photoDraft).width,photoDimensions(photoDraft).height,(photoDraft.ratio||state.ratio),photoDraft);
   const ctx=photoAdjustCanvas.getContext('2d');
-  ctx.drawImage(photo,crop.sx,crop.sy,crop.sw,crop.sh,0,0,photoAdjustCanvas.width,photoAdjustCanvas.height);
+  ctx.drawImage(photoSource(photoDraft),crop.sx,crop.sy,crop.sw,crop.sh,0,0,photoAdjustCanvas.width,photoAdjustCanvas.height);
   photoZoom.value=String(photoDraft.zoom);$('photoZoomValue').value=Math.round(photoDraft.zoom*100)+'%';
 }
 $('adjustPhoto').addEventListener('click',async()=>{
@@ -753,7 +793,7 @@ $('adjustPhoto').addEventListener('click',async()=>{
   const version=state.loadVersion;
   try{await photo.decode();}catch{return;}
   if(version!==state.loadVersion||!state.photoURL||photoAdjustDialog.open)return;
-  photoAdjustVersion=version;photoDraft={...state.photoView};
+  photoAdjustVersion=version;photoDraft={...state.photoView,ratio:state.ratio};
   photoPointers.clear();photoGesture=null;
   const [rw,rh]=state.ratio.split(':').map(Number);
   photoAdjustDialog.style.setProperty('--photo-aspect',String(rw/rh));
@@ -762,12 +802,12 @@ $('adjustPhoto').addEventListener('click',async()=>{
 $('cancelPhotoAdjust').addEventListener('click',()=>photoAdjustDialog.close());
 $('applyPhotoAdjust').addEventListener('click',()=>{
   if(photoDraft&&photoAdjustVersion===state.loadVersion){
-    state.photoView={...photoDraft};state.loadVersion++;renderPhotoView();
+    state.ratio=photoDraft.ratio||state.ratio;state.photoView={...photoDraft};state.loadVersion++;updateRatio();renderPhotoView();
   }
   photoAdjustDialog.close();
 });
 photoAdjustDialog.addEventListener('close',()=>{photoDraft=null;photoPointers.clear();photoGesture=null;});
-$('resetPhotoAdjust').addEventListener('click',()=>{photoDraft={zoom:1,cx:.5,cy:.5};drawPhotoAdjustment();});
+$('resetPhotoAdjust').addEventListener('click',()=>{photoDraft={zoom:1,cx:.5,cy:.5,ratio:state.ratio};drawPhotoAdjustment();});
 photoZoom.addEventListener('input',()=>{if(photoDraft){photoDraft.zoom=Number(photoZoom.value);drawPhotoAdjustment();}});
 function beginPhotoGesture(){
   if(!photoDraft)return;
@@ -785,20 +825,20 @@ photoAdjustCanvas.addEventListener('pointermove',event=>{
   if(!photoPointers.has(event.pointerId)||!photoGesture||!photoDraft)return;
   photoPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
   const points=[...photoPointers.values()],start=photoGesture.points,rect=photoGesture.rect;
-  const before=photoCrop(photo.naturalWidth,photo.naturalHeight,state.ratio,photoGesture.view);
+  const before=photoCrop(photoDimensions(photoDraft).width,photoDimensions(photoDraft).height,(photoDraft.ratio||state.ratio),photoGesture.view);
   if(points.length===1){
-    photoDraft.cx=photoGesture.view.cx-(points[0].x-start[0].x)/rect.width*before.sw/photo.naturalWidth;
-    photoDraft.cy=photoGesture.view.cy-(points[0].y-start[0].y)/rect.height*before.sh/photo.naturalHeight;
+    photoDraft.cx=photoGesture.view.cx-(points[0].x-start[0].x)/rect.width*before.sw/photoDimensions(photoDraft).width;
+    photoDraft.cy=photoGesture.view.cy-(points[0].y-start[0].y)/rect.height*before.sh/photoDimensions(photoDraft).height;
   }else{
     const distance=p=>Math.hypot(p[1].x-p[0].x,p[1].y-p[0].y);
     const midpoint=p=>({x:(p[0].x+p[1].x)/2,y:(p[0].y+p[1].y)/2});
     const old=midpoint(start),now=midpoint(points);
     photoDraft.zoom=clamp(photoGesture.view.zoom*distance(points)/Math.max(1,distance(start)),1,4);
-    const after=photoCrop(photo.naturalWidth,photo.naturalHeight,state.ratio,photoDraft);
+    const after=photoCrop(photoDimensions(photoDraft).width,photoDimensions(photoDraft).height,(photoDraft.ratio||state.ratio),photoDraft);
     const anchorX=before.sx+(old.x-rect.left)/rect.width*before.sw;
     const anchorY=before.sy+(old.y-rect.top)/rect.height*before.sh;
-    photoDraft.cx=(anchorX+(.5-(now.x-rect.left)/rect.width)*after.sw)/photo.naturalWidth;
-    photoDraft.cy=(anchorY+(.5-(now.y-rect.top)/rect.height)*after.sh)/photo.naturalHeight;
+    photoDraft.cx=(anchorX+(.5-(now.x-rect.left)/rect.width)*after.sw)/photoDimensions(photoDraft).width;
+    photoDraft.cy=(anchorY+(.5-(now.y-rect.top)/rect.height)*after.sh)/photoDimensions(photoDraft).height;
   }
   drawPhotoAdjustment();
 });
@@ -810,15 +850,24 @@ for(const type of ['pointerup','pointercancel','lostpointercapture'])photoAdjust
 photoAdjustCanvas.addEventListener('keydown',event=>{
   if(!photoDraft||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;
   event.preventDefault();
-  const crop=photoCrop(photo.naturalWidth,photo.naturalHeight,state.ratio,photoDraft),step=event.shiftKey ? .1 : .02;
-  if(event.key==='ArrowLeft')photoDraft.cx+=crop.sw/photo.naturalWidth*step;
-  if(event.key==='ArrowRight')photoDraft.cx-=crop.sw/photo.naturalWidth*step;
-  if(event.key==='ArrowUp')photoDraft.cy+=crop.sh/photo.naturalHeight*step;
-  if(event.key==='ArrowDown')photoDraft.cy-=crop.sh/photo.naturalHeight*step;
+  const crop=photoCrop(photoDimensions(photoDraft).width,photoDimensions(photoDraft).height,(photoDraft.ratio||state.ratio),photoDraft),step=event.shiftKey ? .1 : .02;
+  if(event.key==='ArrowLeft')photoDraft.cx+=crop.sw/photoDimensions(photoDraft).width*step;
+  if(event.key==='ArrowRight')photoDraft.cx-=crop.sw/photoDimensions(photoDraft).width*step;
+  if(event.key==='ArrowUp')photoDraft.cy+=crop.sh/photoDimensions(photoDraft).height*step;
+  if(event.key==='ArrowDown')photoDraft.cy-=crop.sh/photoDimensions(photoDraft).height*step;
   drawPhotoAdjustment();
 });
 new ResizeObserver(()=>{if(photoAdjustDialog.open){drawPhotoAdjustment();beginPhotoGesture();}}).observe(photoAdjustCanvas);
 
+for(const [id,delta] of [['rotatePhotoLeft',-90],['rotatePhotoRight',90]])$(id).addEventListener('click',()=>{
+  if(!photoDraft)return;
+  const {cx,cy}=photoDraft;photoDraft.rotation=((photoDraft.rotation||0)+delta+360)%360;
+  photoDraft.cx=delta>0?1-cy:cy;photoDraft.cy=delta>0?cx:1-cx;
+  photoPointers.clear();photoGesture=null;drawPhotoAdjustment();
+});
+$('photoTilt').addEventListener('input',()=>{if(photoDraft){photoDraft.tilt=Number($('photoTilt').value);drawPhotoAdjustment();}});
+$('flipPhoto').addEventListener('click',()=>{if(photoDraft){photoDraft.flip=!photoDraft.flip;photoDraft.cx=1-photoDraft.cx;drawPhotoAdjustment();}});
+document.querySelectorAll('[data-crop-ratio]').forEach(button=>button.addEventListener('click',()=>{if(photoDraft){photoDraft.ratio=button.dataset.cropRatio;drawPhotoAdjustment();}}));
 // One color control for text, outline and shadow; palette derives from marks.
 function setupColorControls(){
   const colors=Array.from(markTemplates.values(),item=>({name:item.label,value:item.svg.querySelector('path').getAttribute('fill').toLowerCase()}));
@@ -830,7 +879,7 @@ function setupColorControls(){
   function hsvHex(){const c=v*s,x=c*(1-Math.abs((h/60)%2-1)),m=v-c;const a=h<60?[c,x,0]:h<120?[x,c,0]:h<180?[0,c,x]:h<240?[0,x,c]:h<300?[x,0,c]:[c,0,x];return '#'+a.map(n=>Math.round((n+m)*255).toString(16).padStart(2,'0')).join('');}
   function fromHex(value){const [r,g,b]=value.slice(1).match(/../g).map(n=>parseInt(n,16)/255),max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min;v=max;s=max?d/max:0;if(d)h=((max===r?(g-b)/d:max===g?(b-r)/d+2:(r-g)/d+4)*60+360)%360;}
   function paint(){draft=hsvHex();sv.style.backgroundColor=`hsl(${h} 100% 50%)`;sv.firstElementChild.style.left=(s*100)+'%';sv.firstElementChild.style.top=((1-v)*100)+'%';hue.value=h;hex.value=draft;dialog.querySelector('.color-sample').style.background=draft;dialog.querySelector('.color-error').hidden=true;}
-  function commit(input,value){const effect=input===strokeColor?outline:input===shadowColor?shadow:null;if(effect)effect.checked=true;input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}));}
+  function commit(input,value){const effect=input===strokeColor?outline:input===shadowColor?shadow:input.id==='markStrokeColor'?$('markOutlineEnabled'):null;if(effect)effect.checked=true;input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}));}
   function pointer(e){const r=sv.getBoundingClientRect();s=clamp((e.clientX-r.left)/r.width,0,1);v=1-clamp((e.clientY-r.top)/r.height,0,1);paint();}
   sv.addEventListener('pointerdown',e=>{sv.setPointerCapture(e.pointerId);pointer(e);});sv.addEventListener('pointermove',e=>{if(sv.hasPointerCapture(e.pointerId))pointer(e);});
   sv.addEventListener('keydown',e=>{const step=e.shiftKey?.1:.01;if(e.key==='ArrowLeft')s-=step;else if(e.key==='ArrowRight')s+=step;else if(e.key==='ArrowUp')v+=step;else if(e.key==='ArrowDown')v-=step;else return;e.preventDefault();s=clamp(s,0,1);v=clamp(v,0,1);paint();});
@@ -840,18 +889,18 @@ function setupColorControls(){
   eyedrop.innerHTML='<h2>사진에서 색 고르기</h2><p>사진에서 원하는 색을 눌러 주세요.</p><canvas class="eyedrop-canvas" tabindex="0" aria-label="사진의 색 선택. 방향키로 이동, Enter로 적용"></canvas><div class="eyedrop-value"><span class="color-sample"></span><output></output></div><div class="color-actions"><button type="button" data-cancel>취소</button><button type="button" data-apply>적용</button></div>';
   document.body.append(eyedrop);const ec=eyedrop.querySelector('canvas'),ctx=ec.getContext('2d',{willReadFrequently:true});let ex=0,ey=0,picked='#ffffff';
   function sample(){const a=ctx.getImageData(ex,ey,1,1).data;picked='#'+Array.from(a).slice(0,3).map(n=>n.toString(16).padStart(2,'0')).join('');eyedrop.querySelector('output').value=picked;eyedrop.querySelector('.color-sample').style.background=picked;}
-  function samplePointer(e){const r=ec.getBoundingClientRect();ex=clamp(Math.floor((e.clientX-r.left)/r.width*ec.width),0,ec.width-1);ey=clamp(Math.floor((e.clientY-r.top)/r.height*ec.height),0,ec.height-1);sample();}
+  function samplePointer(e){const r=ec.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)return;ex=clamp(Math.floor((e.clientX-r.left)/r.width*ec.width),0,ec.width-1);ey=clamp(Math.floor((e.clientY-r.top)/r.height*ec.height),0,ec.height-1);sample();}
   ec.addEventListener('pointerdown',e=>{ec.setPointerCapture(e.pointerId);samplePointer(e);});ec.addEventListener('pointermove',e=>{if(ec.hasPointerCapture(e.pointerId))samplePointer(e);});
   ec.addEventListener('keydown',e=>{const d={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];if(d){e.preventDefault();ex=clamp(ex+d[0],0,ec.width-1);ey=clamp(ey+d[1],0,ec.height-1);sample();}else if(e.key==='Enter'){commit(target,picked);eyedrop.close();}});
   eyedrop.querySelector('[data-cancel]').onclick=()=>eyedrop.close();eyedrop.querySelector('[data-apply]').onclick=()=>{commit(target,picked);eyedrop.close();};
-  for(const input of [fillColor,strokeColor,shadowColor]){
-    const effect=input===strokeColor?outline:input===shadowColor?shadow:null;
+  for(const input of [fillColor,strokeColor,shadowColor,$('markStrokeColor')]){
+    const effect=input===strokeColor?outline:input===shadowColor?shadow:input.id==='markStrokeColor'?$('markOutlineEnabled'):null;
     if(effect)effect.closest('label').hidden=true;
-    input.hidden=true;const row=document.createElement('div');row.className='color-picker-row';row.setAttribute('role','group');row.setAttribute('aria-label',input.id==='fillColor'?'글자색 선택':input.id==='strokeColor'?'테두리 색 선택':'그림자 색 선택');
+    input.hidden=true;const row=document.createElement('div');row.className='color-picker-row';row.setAttribute('role','group');row.setAttribute('aria-label',input.id==='fillColor'?'글자색 선택':input.id==='strokeColor'?'테두리 색 선택':input.id==='markStrokeColor'?'완등 표시 테두리 색 선택':'그림자 색 선택');
     let none;
     if(effect){none=document.createElement('button');none.type='button';none.className='color-none';none.setAttribute('aria-label',input===strokeColor?'테두리 없음':'그림자 없음');none.title='없음';none.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="m6.4 6.4 11.2 11.2"/></svg>';none.onclick=()=>{effect.checked=false;effect.dispatchEvent(new Event('change'));sync();};row.append(none);effect.addEventListener('change',sync);}
     const drop=document.createElement('button');drop.type='button';drop.className='color-drop';drop.setAttribute('aria-label','스포이드');drop.title='스포이드';drop.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5 5 5M4 20l4-1L20 7a2 2 0 0 0-3-3L5 16l-1 4Z"/></svg>';
-    drop.onclick=async()=>{target=input;if(state.photoURL){const crop=photoCrop(photo.naturalWidth,photo.naturalHeight,state.ratio,state.photoView);ec.width=480;ec.height=Math.round(480*crop.sh/crop.sw);ctx.drawImage(photo,crop.sx,crop.sy,crop.sw,crop.sh,0,0,ec.width,ec.height);ex=Math.floor(ec.width/2);ey=Math.floor(ec.height/2);sample();eyedrop.showModal();}else if(window.EyeDropper){try{const result=await new EyeDropper().open();commit(input,result.sRGBHex);}catch{}}else{showStatus('스포이드는 이미지를 추가한 뒤 사용할 수 있어요.');}};
+    drop.onclick=async()=>{target=input;if(state.photoURL){const crop=photoCrop(photoDimensions().width,photoDimensions().height,state.ratio,state.photoView);ec.width=480;ec.height=Math.round(480*crop.sh/crop.sw);ctx.drawImage(photoSource(),crop.sx,crop.sy,crop.sw,crop.sh,0,0,ec.width,ec.height);ex=Math.floor(ec.width/2);ey=Math.floor(ec.height/2);sample();eyedrop.showModal();}else{showStatus('스포이드는 이미지를 추가한 뒤 사용할 수 있어요.');}};
     const custom=document.createElement('button');custom.type='button';custom.className='color-custom';custom.setAttribute('aria-label','색 직접 고르기');custom.title='색 직접 고르기';custom.onclick=()=>{target=input;fromHex(input.value);paint();dialog.showModal();};row.append(drop,custom);
     for(const color of colors){const button=document.createElement('button');button.type='button';button.className='color-preset';button.style.setProperty('--swatch',color.value);button.dataset.color=color.value;button.title=color.name;button.setAttribute('aria-label',color.name);button.onclick=()=>commit(input,color.value);row.append(button);}
     function sync(){if(none)none.setAttribute('aria-pressed',String(!effect.checked));for(const button of row.querySelectorAll('[data-color]'))button.setAttribute('aria-pressed',String((!effect||effect.checked)&&button.dataset.color===input.value.toLowerCase()));custom.style.setProperty('--chosen',input.value);}
