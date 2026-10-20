@@ -35,22 +35,26 @@ function renderMobileCanvas(){
 function setupMobileWorkspace(){
   const shell=document.createElement('div');shell.className='mobile-editor';shell.hidden=true;
   shell.innerHTML=`<header class="mobile-header"><h1>완등 한 컷</h1></header>
+    <div class="mobile-content">
     <div class="mobile-feedback"></div>
     <div class="mobile-canvas" aria-label="썸네일 미리보기"></div>
-    <div class="mobile-panel-bar"><nav class="mobile-tabs" role="tablist" aria-label="썸네일 편집 도구">
-      <button type="button" id="mobile-text-tab" role="tab" aria-controls="mobile-text-panel" aria-selected="true">텍스트</button>
-      <button type="button" id="mobile-marks-tab" role="tab" aria-controls="mobile-marks-panel" aria-selected="false" tabindex="-1">성공 문제</button>
-      <button type="button" id="mobile-image-tab" role="tab" aria-controls="mobile-image-panel" aria-selected="false" tabindex="-1">이미지</button>
-    </nav><button type="button" id="mobile-panel-toggle" aria-label="편집 패널 접기" aria-expanded="true" aria-controls="mobile-tools">접기</button></div><div class="mobile-tools" id="mobile-tools">
-      <section id="mobile-text-panel" class="mobile-panel text-section" role="tabpanel" aria-labelledby="mobile-text-tab"></section>
-      <section id="mobile-marks-panel" class="mobile-panel text-section" role="tabpanel" aria-labelledby="mobile-marks-tab" hidden></section>
-      <section id="mobile-image-panel" class="mobile-panel" role="tabpanel" aria-labelledby="mobile-image-tab" hidden></section>
-    </div>`;
+    <div class="mobile-tools" id="mobile-tools">
+      <div class="mobile-panel-heading"><h2 id="mobile-panel-title">텍스트</h2><button type="button" id="mobile-panel-toggle" aria-label="편집 패널 접기" aria-controls="mobile-tools">접기</button></div>
+      <section id="mobile-text-panel" class="mobile-panel text-section" role="region" aria-labelledby="mobile-text-tab"></section>
+      <section id="mobile-marks-panel" class="mobile-panel text-section" role="region" aria-labelledby="mobile-marks-tab" hidden></section>
+      <section id="mobile-image-panel" class="mobile-panel" role="region" aria-labelledby="mobile-image-tab" hidden></section>
+    </div></div>
+    <nav class="mobile-panel-bar mobile-menu" aria-label="썸네일 편집 메뉴">
+      <button type="button" id="mobile-text-tab" aria-controls="mobile-text-panel" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6V4h14v2M12 4v16M8 20h8"/></svg><span>텍스트</span></button>
+      <button type="button" id="mobile-marks-tab" aria-controls="mobile-marks-panel" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3c2-1 8 1 11 3s2 7 0 12-7 3-12 2-5-4-4-8 3-8 5-9Z"/><circle cx="12" cy="11" r="2"/></svg><span>성공 문제</span></button>
+      <button type="button" id="mobile-image-tab" aria-controls="mobile-image-panel" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/></svg><span>이미지</span></button>
+    </nav>`;
   document.body.append(shell);
   const header=shell.querySelector('.mobile-header'),canvas=shell.querySelector('.mobile-canvas'),tools=shell.querySelector('.mobile-tools');
   const bar=shell.querySelector('.mobile-panel-bar'),feedback=shell.querySelector('.mobile-feedback'),toggle=$('mobile-panel-toggle');
   const panels=['text','marks','image'].map(name=>$(`mobile-${name}-panel`));
-  const tabs=Array.from(shell.querySelectorAll('[role=tab]'));
+  const tabs=Array.from(bar.querySelectorAll('button'));
+  const content=shell.querySelector('.mobile-content');let selected=0;
   const styleControls=document.createElement('div');styleControls.className='mobile-style';
   const frame=document.querySelector('.preview-frame');
   mobileWorkspace={shell,canvas,frame,header,bar,feedback,collapsed:false,measure:document.createElement('canvas').getContext('2d'),active:false};
@@ -59,18 +63,21 @@ function setupMobileWorkspace(){
   function collapsePanel(collapsed){
     mobileWorkspace.collapsed=collapsed;
     shell.classList.toggle('panel-collapsed',collapsed);tools.hidden=collapsed;
+    tabs.forEach((tab,i)=>tab.setAttribute('aria-expanded',String(!collapsed&&i===selected)));
     toggle.setAttribute('aria-expanded',String(!collapsed));
-    toggle.setAttribute('aria-label',collapsed?'편집 패널 펼치기':'편집 패널 접기');
-    toggle.textContent=collapsed?'펼치기':'접기';
-    shell.scrollTop=0;
+    content.scrollTop=0;
+    if(collapsed&&tools.contains(document.activeElement))tabs[selected].focus({preventScroll:true});
     fitMobilePreview();
   }
   toggle.addEventListener('click',()=>collapsePanel(!mobileWorkspace.collapsed));
   function selectTab(index){
-    tabs.forEach((tab,i)=>{tab.setAttribute('aria-selected',String(i===index));tab.tabIndex=i===index?0:-1;panels[i].hidden=i!==index;});
-    if(mobileWorkspace.collapsed)collapsePanel(false);
+    selected=index;
+    panels.forEach((panel,i)=>{panel.hidden=i!==index;});
+    $('mobile-panel-title').textContent=['텍스트','성공 문제','이미지'][index];
+    collapsePanel(false);
+    content.scrollTop=tools.offsetTop;
   }
-  window.addEventListener('editorreset',()=>{if(mobileWorkspace.active){selectTab(0);shell.scrollTop=0;}});
+  window.addEventListener('editorreset',()=>{if(mobileWorkspace.active){selectTab(0);}});
   tabs.forEach((tab,index)=>{
     tab.addEventListener('click',()=>selectTab(index));
     tab.addEventListener('keydown',event=>{
