@@ -100,7 +100,7 @@ function arrangedMarks(marks,mode){
   flush();return result;
 }
 const problemOrderButtons=[$('orderByColor'),$('orderByAdded')];
-const state={problemOrder:readProblemOrder(),alignment:'left',x:0,y:0,hearts:[],shape:'heart',photoURL:null,loadVersion:0,ratio:'3:4',fontFamily:'Wave',fontVersion:0,fontLoading:false};
+const state={problemOrder:readProblemOrder(),alignment:'left',x:0,y:0,hearts:[],shape:'heart',photoURL:null,photoView:{zoom:1,cx:.5,cy:.5},loadVersion:0,ratio:'3:4',fontFamily:'Wave',fontVersion:0,fontLoading:false};
 let queued=false,drag=null;
 fontSelect.value='Wave';
 let fontPending=Promise.resolve();
@@ -352,6 +352,7 @@ function renderPosition(){
     if(!state.photoURL)stage.style.height=Math.max(260,layer.offsetHeight+60)+'px';
     else stage.style.height='auto';
   }
+  renderPhotoView();
   const point=offsetFromPosition(currentBounds(),state.x,state.y);
   layer.style.left=point.left+'px';layer.style.top=point.top+'px';
   editorViewport.afterRender?.();
@@ -454,7 +455,7 @@ photoInput.addEventListener('change',()=>{
   showStatus('이미지를 불러오는 중이에요.');
   candidate.onload=()=>{
     if(version!==state.loadVersion){URL.revokeObjectURL(url);return;}
-    const previous=state.photoURL;state.photoURL=url;
+    const previous=state.photoURL;state.photoURL=url;state.photoView={zoom:1,cx:.5,cy:.5};
     photo.src=url;photo.hidden=false;photo.alt=file.name;stage.classList.add('has-photo');
     stage.style.height='auto';removePhoto.disabled=false;$('saveResult').disabled=exporting||state.fontLoading;$('photoName').textContent=file.name;$('photoName').title=file.name;
     state.x={left:0,center:50,right:100}[state.alignment];state.y=8;
@@ -469,7 +470,7 @@ photoInput.addEventListener('change',()=>{
 });
 photo.addEventListener('load',schedulePosition);
 removePhoto.addEventListener('click',()=>{
-  state.loadVersion++;if(state.photoURL)URL.revokeObjectURL(state.photoURL);state.photoURL=null;
+  state.loadVersion++;if(state.photoURL)URL.revokeObjectURL(state.photoURL);state.photoURL=null;state.photoView={zoom:1,cx:.5,cy:.5};
   photo.hidden=true;photo.removeAttribute('src');stage.classList.remove('has-photo');
   removePhoto.disabled=true;$('saveResult').disabled=exporting||state.fontLoading;photoInput.value='';$('photoName').textContent='';$('photoName').title='';showStatus('');state.y=0;updateRatio();photoInput.focus();
 });
@@ -482,7 +483,7 @@ resetDialog.addEventListener('close',()=>{
   if(state.photoURL)URL.revokeObjectURL(state.photoURL);
   if(drag&&layer.hasPointerCapture(drag.id))layer.releasePointerCapture(drag.id);
   drag=null;
-  Object.assign(state,{problemOrder:'color',alignment:'left',x:0,y:0,hearts:[],shape:'heart',photoURL:null,ratio:'3:4',fontFamily:'Wave',fontLoading:false});
+  Object.assign(state,{problemOrder:'color',alignment:'left',x:0,y:0,hearts:[],shape:'heart',photoURL:null,photoView:{zoom:1,cx:.5,cy:.5},ratio:'3:4',fontFamily:'Wave',fontLoading:false});
   try{localStorage.removeItem(problemOrderStorageKey);}catch{}
   fontPending=Promise.resolve();
   text.value=text.defaultValue;
@@ -580,11 +581,11 @@ function exportFrame(box,layout,hasPhoto){
   const bounds=positionBounds(width,height,layout.width*fit,layout.height*fit);
   return {width,height,fit,bounds};
 }
-function exportCrop(width,height,ratio){
+function exportCrop(width,height,ratio,view=state.photoView){
   const [rw,rh]=ratio.split(':').map(Number),aspect=rw/rh;
   const sw=Math.min(width,height*aspect),sh=sw/aspect;
   const factor=Math.min(1,4096/Math.max(sw,sh));
-  return {sx:(width-sw)/2,sy:(height-sh)/2,sw,sh,width:Math.max(1,Math.round(sw*factor)),height:Math.max(1,Math.round(sh*factor))};
+  return {...photoCrop(width,height,ratio,view),width:Math.max(1,Math.round(sw*factor)),height:Math.max(1,Math.round(sh*factor))};
 }
 function loadExportImage(src){return new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('image'));image.src=src;});}
 function canvasBlob(canvas){return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('encode')),'image/png'));}
@@ -666,3 +667,110 @@ $('saveResult').addEventListener('click',async()=>{
     exporting=false;$('resetEditor').disabled=false;$('saveResult').textContent='결과물 저장';$('saveResult').disabled=state.fontLoading;
   }
 });
+
+// One normalized source crop drives CSS preview, the adjustment canvas and PNG.
+function photoCrop(width,height,ratio,view){
+  const [rw,rh]=ratio.split(':').map(Number),aspect=rw/rh;
+  const sw=Math.min(width,height*aspect)/clamp(view.zoom,1,4),sh=sw/aspect;
+  return {sx:clamp(view.cx*width-sw/2,0,width-sw),sy:clamp(view.cy*height-sh/2,0,height-sh),sw,sh};
+}
+function renderPhotoView(){
+  if(!state.photoURL||!photo.naturalWidth||!photo.naturalHeight)return;
+  const crop=photoCrop(photo.naturalWidth,photo.naturalHeight,state.ratio,state.photoView);
+  photo.style.width=(photo.naturalWidth/crop.sw*100)+'%';
+  photo.style.height=(photo.naturalHeight/crop.sh*100)+'%';
+  photo.style.left=(-crop.sx/crop.sw*100)+'%';
+  photo.style.top=(-crop.sy/crop.sh*100)+'%';
+  photo.style.right='auto';photo.style.bottom='auto';
+  photo.style.objectFit='fill';
+}
+const photoAdjustDialog=$('photoAdjustDialog'),photoAdjustCanvas=$('photoAdjustCanvas');
+const photoZoom=$('photoZoom'),photoPointers=new Map();
+let photoDraft=null,photoGesture=null,photoAdjustVersion=0;
+function boundPhotoDraft(){
+  photoDraft.zoom=clamp(photoDraft.zoom,1,4);
+  const crop=photoCrop(photo.naturalWidth,photo.naturalHeight,state.ratio,photoDraft);
+  photoDraft.cx=(crop.sx+crop.sw/2)/photo.naturalWidth;
+  photoDraft.cy=(crop.sy+crop.sh/2)/photo.naturalHeight;
+}
+function drawPhotoAdjustment(){
+  if(!photoAdjustDialog.open||!photoDraft)return;
+  boundPhotoDraft();
+  const rect=photoAdjustCanvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,3);
+  photoAdjustCanvas.width=Math.max(1,Math.round(rect.width*dpr));
+  photoAdjustCanvas.height=Math.max(1,Math.round(rect.height*dpr));
+  const crop=photoCrop(photo.naturalWidth,photo.naturalHeight,state.ratio,photoDraft);
+  const ctx=photoAdjustCanvas.getContext('2d');
+  ctx.drawImage(photo,crop.sx,crop.sy,crop.sw,crop.sh,0,0,photoAdjustCanvas.width,photoAdjustCanvas.height);
+  photoZoom.value=String(photoDraft.zoom);$('photoZoomValue').value=Math.round(photoDraft.zoom*100)+'%';
+}
+$('adjustPhoto').addEventListener('click',async()=>{
+  if(!state.photoURL||exporting)return;
+  const version=state.loadVersion;
+  try{await photo.decode();}catch{return;}
+  if(version!==state.loadVersion||!state.photoURL||photoAdjustDialog.open)return;
+  photoAdjustVersion=version;photoDraft={...state.photoView};
+  photoPointers.clear();photoGesture=null;
+  const [rw,rh]=state.ratio.split(':').map(Number);
+  photoAdjustDialog.style.setProperty('--photo-aspect',String(rw/rh));
+  photoAdjustDialog.showModal();drawPhotoAdjustment();
+});
+$('cancelPhotoAdjust').addEventListener('click',()=>photoAdjustDialog.close());
+$('applyPhotoAdjust').addEventListener('click',()=>{
+  if(photoDraft&&photoAdjustVersion===state.loadVersion){
+    state.photoView={...photoDraft};state.loadVersion++;renderPhotoView();
+  }
+  photoAdjustDialog.close();
+});
+photoAdjustDialog.addEventListener('close',()=>{photoDraft=null;photoPointers.clear();photoGesture=null;});
+$('resetPhotoAdjust').addEventListener('click',()=>{photoDraft={zoom:1,cx:.5,cy:.5};drawPhotoAdjustment();});
+photoZoom.addEventListener('input',()=>{if(photoDraft){photoDraft.zoom=Number(photoZoom.value);drawPhotoAdjustment();}});
+function beginPhotoGesture(){
+  if(!photoDraft)return;
+  const points=[...photoPointers.values()];
+  photoGesture=points.length?{points,view:{...photoDraft},rect:photoAdjustCanvas.getBoundingClientRect()}:null;
+}
+photoAdjustCanvas.addEventListener('pointerdown',event=>{
+  if(event.button!==0)return;
+  event.preventDefault();photoAdjustCanvas.focus({preventScroll:true});
+  if(photoPointers.size>=2)return;
+  photoPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  photoAdjustCanvas.setPointerCapture(event.pointerId);beginPhotoGesture();
+});
+photoAdjustCanvas.addEventListener('pointermove',event=>{
+  if(!photoPointers.has(event.pointerId)||!photoGesture||!photoDraft)return;
+  photoPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  const points=[...photoPointers.values()],start=photoGesture.points,rect=photoGesture.rect;
+  const before=photoCrop(photo.naturalWidth,photo.naturalHeight,state.ratio,photoGesture.view);
+  if(points.length===1){
+    photoDraft.cx=photoGesture.view.cx-(points[0].x-start[0].x)/rect.width*before.sw/photo.naturalWidth;
+    photoDraft.cy=photoGesture.view.cy-(points[0].y-start[0].y)/rect.height*before.sh/photo.naturalHeight;
+  }else{
+    const distance=p=>Math.hypot(p[1].x-p[0].x,p[1].y-p[0].y);
+    const midpoint=p=>({x:(p[0].x+p[1].x)/2,y:(p[0].y+p[1].y)/2});
+    const old=midpoint(start),now=midpoint(points);
+    photoDraft.zoom=clamp(photoGesture.view.zoom*distance(points)/Math.max(1,distance(start)),1,4);
+    const after=photoCrop(photo.naturalWidth,photo.naturalHeight,state.ratio,photoDraft);
+    const anchorX=before.sx+(old.x-rect.left)/rect.width*before.sw;
+    const anchorY=before.sy+(old.y-rect.top)/rect.height*before.sh;
+    photoDraft.cx=(anchorX+(.5-(now.x-rect.left)/rect.width)*after.sw)/photo.naturalWidth;
+    photoDraft.cy=(anchorY+(.5-(now.y-rect.top)/rect.height)*after.sh)/photo.naturalHeight;
+  }
+  drawPhotoAdjustment();
+});
+function endPhotoGesture(event){
+  if(!photoPointers.delete(event.pointerId))return;
+  beginPhotoGesture();
+}
+for(const type of ['pointerup','pointercancel','lostpointercapture'])photoAdjustCanvas.addEventListener(type,endPhotoGesture);
+photoAdjustCanvas.addEventListener('keydown',event=>{
+  if(!photoDraft||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;
+  event.preventDefault();
+  const crop=photoCrop(photo.naturalWidth,photo.naturalHeight,state.ratio,photoDraft),step=event.shiftKey ? .1 : .02;
+  if(event.key==='ArrowLeft')photoDraft.cx+=crop.sw/photo.naturalWidth*step;
+  if(event.key==='ArrowRight')photoDraft.cx-=crop.sw/photo.naturalWidth*step;
+  if(event.key==='ArrowUp')photoDraft.cy+=crop.sh/photo.naturalHeight*step;
+  if(event.key==='ArrowDown')photoDraft.cy-=crop.sh/photo.naturalHeight*step;
+  drawPhotoAdjustment();
+});
+new ResizeObserver(()=>{if(photoAdjustDialog.open){drawPhotoAdjustment();beginPhotoGesture();}}).observe(photoAdjustCanvas);
