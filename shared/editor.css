@@ -170,3 +170,36 @@ main>.text-section:first-child{margin-top:0}
 .photo-adjust-actions button{min-height:44px;border-radius:10px;white-space:nowrap}
 #applyPhotoAdjust{color:white;background:#111;border-color:#111}
 @media(max-width:600px){#photoAdjustDialog{padding:16px}.photo-adjust-actions button{padding:8px 12px}}
+
+.alignment-options svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:square;display:block;margin:auto}
+.alignment-options button{padding:6px 4px}
+.align-control{max-width:none}
+.mark-size-control{display:flex;flex-direction:column;align-items:stretch;gap:8px;margin:0 0 16px;font-size:14px}
+.mark-size-control input{width:100%;min-width:0;flex:1}
+.mark-size-control output{min-width:48px;font-size:14px;text-align:right}
+
+.text-section .range-control{border:0;background:transparent;padding-inline:0}
+.typography-controls .extra-control{display:flex;flex-direction:column;align-items:stretch;flex:1 1 160px;gap:8px}
+.color-picker-row{display:flex;align-items:center;gap:8px;width:100%;min-width:0;overflow-x:auto;padding:4px;overscroll-behavior-x:contain}
+.color-picker-row button{flex:0 0 36px;width:36px;height:36px;min-height:36px;border-radius:50%;padding:0;border:1px solid #d2d5db;position:relative}
+.color-preset{background:var(--swatch)!important}
+.color-preset[aria-pressed=true]{outline:2px solid #111;outline-offset:2px;box-shadow:inset 0 0 0 3px #fff}
+.color-custom{background:conic-gradient(red,#ff0,#0f0,#0ff,#00f,#f0f,red)!important}
+.color-custom::after{content:'';position:absolute;inset:10px;border-radius:50%;background:var(--chosen);border:1px solid #fff}
+.color-drop svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round}
+.color-dialog{width:min(420px,calc(100vw - 32px));max-height:85dvh;overflow:auto;border:1px solid #ddd;border-radius:16px;padding:20px;color:#111;background:#fff}
+.color-dialog::backdrop{background:#0006}.color-dialog h2{font-size:18px;margin:0 0 16px}.color-dialog p{font-size:14px;margin:0 0 12px}
+.color-sv{height:200px;position:relative;border-radius:8px;touch-action:none;background-image:linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,transparent);overflow:hidden}
+.color-sv span{position:absolute;width:18px;height:18px;border:2px solid white;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 2px #000;pointer-events:none}
+.color-hue-label,.color-hex-label{display:flex;gap:12px;margin:16px 0;width:100%;font-size:14px}
+.color-hue{flex:1;min-width:0;appearance:none;height:20px;border-radius:12px;background:linear-gradient(to right,red,#ff0,#0f0,#0ff,#00f,#f0f,red)}
+.color-hex{width:120px;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:16px}.color-sample{display:inline-block;width:32px;height:32px;border:1px solid #ccc;border-radius:50%;flex:none}
+.color-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.color-actions [data-apply]{background:#111;color:#fff}
+.eyedrop-canvas{display:block;max-width:100%;max-height:50dvh;margin:auto;touch-action:none;cursor:crosshair;object-fit:contain}
+.eyedrop-value{display:flex;gap:12px;align-items:center;margin-top:12px}
+
+.color-picker-row button{border:0}
+.color-preset[aria-pressed=true]{outline:1.5px solid #111;outline-offset:2px;box-shadow:none}
+.color-none,.color-drop{background:#f0f1f3}
+.color-none svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7}
+.color-none[aria-pressed=true]{outline:1.5px solid #111;outline-offset:2px}

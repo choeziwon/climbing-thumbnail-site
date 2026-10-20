@@ -3,15 +3,13 @@
 var mobileWorkspace;
 function fitMobilePreview(){
   if(!mobileWorkspace?.active)return;
-  const {canvas,frame,shell,header,bar,feedback,collapsed}=mobileWorkspace;
-  // Keep the image full-width; the workspace scrolls instead of shrinking
-  // portrait images to reserve space for every editing control.
-  const availableHeight=Math.max(1,shell.clientHeight-header.offsetHeight-bar.offsetHeight-feedback.offsetHeight);
-  const scale=Math.min(canvas.clientWidth/stage.offsetWidth,collapsed?availableHeight/stage.offsetHeight:Infinity,1);
+  const {canvas,frame,shell}=mobileWorkspace;
+  const previewHeight=Math.max(100,shell.clientHeight*.7-(mobileWorkspace.panelInset||0));
+  const scale=Math.min(canvas.clientWidth/stage.offsetWidth,previewHeight/stage.offsetHeight,1);
   stage.style.transform=`scale(${scale})`;
   frame.style.width=(stage.offsetWidth*scale)+'px';
   frame.style.height=(stage.offsetHeight*scale)+'px';
-  canvas.style.height=(collapsed?availableHeight:stage.offsetHeight*scale)+'px';
+  canvas.style.height=previewHeight+'px';
 }
 function renderMobileCanvas(){
   if(!mobileWorkspace?.active)return false;
@@ -19,12 +17,13 @@ function renderMobileCanvas(){
   const canvasWidth=1032; // Match the desktop editor content width.
   const measure=mobileWorkspace.measure;
   measure.font=getComputedStyle(preview).font;
-  const layout=explicitExportLayout(measure,text.value,arrangedMarks(state.hearts,state.problemOrder),Number(size.value),0,state.alignment,canvasWidth-40);
+  const layout=explicitExportLayout(measure,text.value,arrangedMarks(state.hearts,state.problemOrder),Number(size.value),letterGap(),state.alignment,canvasWidth-40);
   const wrappedText=layout.lines.join('\n');
-  if(preview.textContent!==wrappedText)preview.textContent=wrappedText;
+  if(state.writingMode==='vertical')renderVerticalPreview(layout);
+  else if(preview.textContent!==wrappedText)preview.textContent=wrappedText;
   updateHearts(layout.marks);
   const [rw,rh]=state.ratio.split(':').map(Number);
-  const frame=exportFrame({width:canvasWidth,height:canvasWidth*rh/rw},layout,Boolean(state.photoURL));
+  const frame=exportFrame({width:canvasWidth,height:state.photoURL?canvasWidth*rh/rw:Math.max(260,mobileWorkspace.shell.clientHeight*.7*canvasWidth/mobileWorkspace.canvas.clientWidth)},layout,Boolean(state.photoURL));
   mobileWorkspace.bounds=frame.bounds;editorViewport.bounds=frame.bounds;
   stage.style.width=frame.width+'px';stage.style.height=frame.height+'px';
   layer.style.width=layout.width+'px';layer.style.maxWidth='none';
@@ -39,7 +38,7 @@ function setupMobileWorkspace(){
     <div class="mobile-feedback"></div>
     <div class="mobile-canvas" aria-label="썸네일 미리보기"></div>
     <div class="mobile-tools" id="mobile-tools">
-      <div class="mobile-panel-heading"><h2 id="mobile-panel-title">텍스트</h2><button type="button" id="mobile-panel-toggle" aria-label="편집 패널 접기" aria-controls="mobile-tools">접기</button></div>
+      <div class="mobile-panel-heading"><h2 id="mobile-panel-title">텍스트</h2></div>
       <section id="mobile-text-panel" class="mobile-panel text-section" role="region" aria-labelledby="mobile-text-tab"></section>
       <section id="mobile-marks-panel" class="mobile-panel text-section" role="region" aria-labelledby="mobile-marks-tab" hidden></section>
       <section id="mobile-image-panel" class="mobile-panel" role="region" aria-labelledby="mobile-image-tab" hidden></section>
@@ -51,35 +50,92 @@ function setupMobileWorkspace(){
     </nav>`;
   document.body.append(shell);
   const header=shell.querySelector('.mobile-header'),canvas=shell.querySelector('.mobile-canvas'),tools=shell.querySelector('.mobile-tools');
-  const bar=shell.querySelector('.mobile-panel-bar'),feedback=shell.querySelector('.mobile-feedback'),toggle=$('mobile-panel-toggle');
+  const bar=shell.querySelector('.mobile-panel-bar'),feedback=shell.querySelector('.mobile-feedback');
   const panels=['text','marks','image'].map(name=>$(`mobile-${name}-panel`));
   const tabs=Array.from(bar.querySelectorAll('button'));
   const content=shell.querySelector('.mobile-content');let selected=0;
-  const styleControls=document.createElement('div');styleControls.className='mobile-style';
+  const textTabs=document.createElement('div');textTabs.className='mobile-text-tabs';textTabs.setAttribute('role','tablist');textTabs.setAttribute('aria-label','텍스트 편집 항목');
+  const textGroups=['글자','폰트','정렬','테두리','그림자'].map((name,i)=>{
+    const panel=document.createElement('div');panel.id='mobile-text-group-'+i;panel.className='mobile-text-group';panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby','mobile-text-option-'+i);
+    const button=document.createElement('button');button.type='button';button.id='mobile-text-option-'+i;button.textContent=name;button.setAttribute('role','tab');button.setAttribute('aria-controls',panel.id);
+    button.addEventListener('click',()=>{scrollingUp=false;expandTools();selectTextGroup(i);});button.addEventListener('keydown',e=>{let n;if(e.key==='ArrowRight')n=(i+1)%5;if(e.key==='ArrowLeft')n=(i+4)%5;if(n!==undefined){e.preventDefault();selectTextGroup(n);textTabs.children[n].focus();}});
+    textTabs.append(button);return panel;
+  });
+  panels[0].append(textTabs,...textGroups);
+  function selectTextGroup(index){textGroups.forEach((panel,i)=>{panel.hidden=i!==index;textTabs.children[i].setAttribute('aria-selected',String(i===index));textTabs.children[i].tabIndex=i===index?0:-1;});tools.scrollTop=0;}
+  selectTextGroup(0);
+  function setToolsExpanded(expanded){
+    if(shell.classList.contains('tools-expanded')===expanded)return;
+    shell.classList.toggle('tools-expanded',expanded);
+    cancelAnimationFrame(mobileWorkspace.panelAnimation);
+    const from=mobileWorkspace.panelInset||0,to=expanded?110:0,start=performance.now();
+    const duration=matchMedia('(prefers-reduced-motion: reduce)').matches?0:280;
+    function tick(now){
+      const progress=duration?Math.min(1,(now-start)/duration):1;
+      const eased=1-Math.pow(1-progress,3);
+      mobileWorkspace.panelInset=from+(to-from)*eased;fitMobilePreview();
+      if(progress<1)mobileWorkspace.panelAnimation=requestAnimationFrame(tick);
+    }
+    mobileWorkspace.panelAnimation=requestAnimationFrame(tick);
+  }
+  function expandTools(){setToolsExpanded(true);}
+  let scrollingUp=false,touchY=0,scrollGesture=false,touchStartedAtTop=false;
+  let lastWheelAt=-Infinity,wheelStartedAtTop=false,wheelDirection=0;
+  tools.addEventListener('wheel',event=>{
+    if(Math.abs(event.deltaY)<=Math.abs(event.deltaX)||event.deltaY===0)return;
+    const now=performance.now(),direction=Math.sign(event.deltaY);
+    // A wheel/trackpad burst is one gesture, including its momentum tail.
+    if(now-lastWheelAt>240||direction!==wheelDirection)wheelStartedAtTop=tools.scrollTop<=1;
+    lastWheelAt=now;wheelDirection=direction;scrollingUp=direction<0;
+    if(direction>0)expandTools();
+    else if(wheelStartedAtTop&&tools.scrollTop<=1)setToolsExpanded(false);
+  },{passive:true});
+  tools.addEventListener('scroll',()=>{if(tools.scrollTop>1)expandTools();},{passive:true});
+  tools.addEventListener('touchstart',e=>{
+    touchY=e.touches[0].clientY;scrollingUp=false;touchStartedAtTop=tools.scrollTop<=1;
+    scrollGesture=!e.target.closest('input,textarea,select,button');
+  },{passive:true});
+  tools.addEventListener('touchmove',e=>{
+    if(!scrollGesture)return;
+    const nextY=e.touches[0].clientY,delta=touchY-nextY;
+    if(Math.abs(delta)<8)return;
+    scrollingUp=delta<0;
+    if(delta>0)expandTools();
+    else if(touchStartedAtTop&&tools.scrollTop<=1)setToolsExpanded(false);
+    touchY=nextY;
+  },{passive:true});
+  const fontCards=document.createElement('div');fontCards.className='mobile-font-cards';fontCards.setAttribute('role','group');fontCards.setAttribute('aria-label','폰트 선택');
+  fontMenuChoices.forEach(font=>{const card=document.createElement('button');card.type='button';card.dataset.fontCard=font.family;card.textContent=font.label;card.style.fontFamily='"'+font.family+'",sans-serif';card.setAttribute('aria-pressed',String(font.family===state.fontFamily));card.addEventListener('click',()=>{fontSelect.value=font.family;fontSelect.dispatchEvent(new Event('change'));});fontCards.append(card);});
+  textGroups[1].append(fontCards);
   const frame=document.querySelector('.preview-frame');
   mobileWorkspace={shell,canvas,frame,header,bar,feedback,collapsed:false,measure:document.createElement('canvas').getContext('2d'),active:false};
+  const shapeRow=document.createElement('div');shapeRow.className='mobile-shape-options';shapeRow.setAttribute('role','group');shapeRow.setAttribute('aria-label','도형 선택');
+  for(const [key,design] of Object.entries(markShapes)){
+    const button=document.createElement('button');button.type='button';button.dataset.shape=key;button.title=design.label;button.setAttribute('aria-label',design.label);
+    const icon=markSVG(markKey(key,'🤍'));icon.setAttribute('aria-hidden','true');button.append(icon);
+    button.addEventListener('click',()=>{shapeSelect.value=key;shapeSelect.dispatchEvent(new Event('change'));syncShapeOptions();});shapeRow.append(button);
+  }
+  document.querySelector('.shape-field').append(shapeRow);
+  function syncShapeOptions(){for(const button of shapeRow.children)button.setAttribute('aria-pressed',String(button.dataset.shape===state.shape));}
+  shapeSelect.addEventListener('change',syncShapeOptions);window.addEventListener('editorreset',syncShapeOptions);syncShapeOptions();
+  const noMarks=document.createElement('button');noMarks.type='button';noMarks.className='mobile-no-marks';noMarks.title='없음';noMarks.setAttribute('aria-label','성공 문제 없음');
+  noMarks.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="m6.4 6.4 11.2 11.2"/></svg>';
+  noMarks.addEventListener('click',()=>{state.hearts=[];updateHearts();schedulePosition();});document.querySelector('.heart-palette').prepend(noMarks);
+  const previousSync=editorViewport.syncCounts;
+  editorViewport.syncCounts=()=>{previousSync?.();noMarks.setAttribute('aria-pressed',String(!state.hearts.length));};editorViewport.syncCounts();
   const moves=[];
   function move(node,parent){const anchor=document.createComment('desktop position');node.before(anchor);moves.push({node,anchor});parent.append(node);}
-  function collapsePanel(collapsed){
-    mobileWorkspace.collapsed=collapsed;
-    shell.classList.toggle('panel-collapsed',collapsed);tools.hidden=collapsed;
-    tabs.forEach((tab,i)=>tab.setAttribute('aria-expanded',String(!collapsed&&i===selected)));
-    toggle.setAttribute('aria-expanded',String(!collapsed));
-    content.scrollTop=0;
-    if(collapsed&&tools.contains(document.activeElement))tabs[selected].focus({preventScroll:true});
-    fitMobilePreview();
-  }
-  toggle.addEventListener('click',()=>collapsePanel(!mobileWorkspace.collapsed));
   function selectTab(index){
     selected=index;
     panels.forEach((panel,i)=>{panel.hidden=i!==index;});
     $('mobile-panel-title').textContent=['텍스트','성공 문제','이미지'][index];
-    collapsePanel(false);
-    content.scrollTop=tools.offsetTop;
+    tools.hidden=false;tools.scrollTop=0;
+    tabs.forEach((tab,i)=>tab.setAttribute('aria-expanded',String(i===selected)));
+    fitMobilePreview();
   }
   window.addEventListener('editorreset',()=>{if(mobileWorkspace.active){selectTab(0);}});
   tabs.forEach((tab,index)=>{
-    tab.addEventListener('click',()=>selectTab(index));
+    tab.addEventListener('click',()=>{scrollingUp=false;expandTools();selectTab(index);});
     tab.addEventListener('keydown',event=>{
       let next;
       if(event.key==='ArrowRight')next=(index+1)%tabs.length;
@@ -103,15 +159,21 @@ function setupMobileWorkspace(){
     document.body.classList.toggle('mobile-editing',query.matches);shell.hidden=!query.matches;
     if(query.matches){
       move(document.querySelector('.editor-actions'),header);move(frame,canvas);
-      move(text,panels[0]);move(document.querySelector('main .gym-picker'),panels[0]);move(document.querySelector('main .position-controls'),panels[0]);
-      panels[0].append(styleControls);move(document.querySelector('main .color-controls'),styleControls);
+      move(text,textGroups[0]);move(document.querySelector('main .gym-picker'),textGroups[0]);
+      move(document.querySelector('main .position-controls .font-field'),textGroups[1]);
+      move(document.querySelector('main label[for=size]'),textGroups[0]);
+      move(document.querySelector('main label[for=fillColor]'),textGroups[0]);
+      move(document.querySelector('main .align-control'),textGroups[2]);
+      for(const id of ['letterSpace','lineSpace'])move(document.querySelector('main label[for='+id+']'),textGroups[2]);
+      for(const id of ['outline','strokeColor','outlineWidth'])move(document.querySelector('main label[for='+id+']'),textGroups[3]);
+      for(const id of ['shadow','shadowColor','shadowWidth'])move(document.querySelector('main label[for='+id+']'),textGroups[4]);
       move(document.querySelector('main .success-controls'),panels[1]);
       move(document.querySelector('main .photo-tools'),panels[2]);
       move($('fontStatus'),feedback);move($('status'),feedback);
-      selectTab(0);collapsePanel(true);viewport();
+      selectTab(0);viewport();
     }else{
       for(const {node,anchor} of moves.reverse()){anchor.replaceWith(node);}moves.length=0;
-      styleControls.remove();preview.textContent=text.value.normalize('NFC');updateHearts();
+      preview.textContent=text.value.normalize('NFC');updateHearts();
       frame.style.width='';frame.style.height='';stage.style.transform='';stage.style.width='';
       layer.style.width='';layer.style.maxWidth='';layer.style.transform='';layer.style.transformOrigin='';mobileWorkspace.bounds=null;editorViewport.bounds=null;
     }

@@ -7,7 +7,7 @@ const textOutlineOffsets=Array.from({length:8},(_,i)=>{
 });
 // Radius is 1% of the rendered font size, including each font's display scale.
 // Preview and PNG export use the same ratio before canvas/viewport scaling.
-function textOutlineRadius(fontSize){return fontSize*.01;}
+function textOutlineRadius(fontSize){return fontSize*Number($('outlineWidth').value)/100;}
 // Eight masks overlap; keep their opacity low for smooth, unobtrusive edges.
 const textOutlineOpacity=89/255;
 function textOutlineShadow(color,fontSize){
@@ -27,6 +27,11 @@ const $=id=>document.getElementById(id);
 const text=$('text'),preview=$('preview'),stage=$('previewStage'),layer=$('textLayer');
 const fontSelect=$('fontSelect');
 const fontChoices=[{"family": "Tteoksang", "label": "떡상체"}, {"family": "Neujoh", "label": "느좋체"}, {"family": "HanGulim", "label": "한굴림체"}, {"family": "Covendard", "label": "Covendard"}, {"family": "Hippie", "label": "히피체"}, {"family": "Mona12", "label": "Mona12"}, {"family": "Mona8x12", "label": "Mona8×12"}, {"family": "HSHwalkongSerif", "label": "HS활공명조"}];
+const markSize=$('markSize');
+const letterSpace=$('letterSpace'),lineSpace=$('lineSpace'),outlineWidth=$('outlineWidth'),shadowColor=$('shadowColor'),shadowWidth=$('shadowWidth');
+function letterGap(){return Number(size.value)*Number(letterSpace.value)/100;}
+function rowGap(baseSize){return baseSize*Number(lineSpace.value)/100;}
+function shadowRadius(){return Number(size.value)*Number(shadowWidth.value)/100;}
 const size=$('size'),shadow=$('shadow'),outline=$('outline'),fillColor=$('fillColor'),strokeColor=$('strokeColor');
 const heartPreview=$('heartPreview'),clearHearts=$('clearHearts'),breakHearts=$('breakHearts'),removeHeart=$('removeHeart');
 const photo=$('photo'),photoInput=$('photoInput'),removePhoto=$('removePhoto');
@@ -100,7 +105,7 @@ function arrangedMarks(marks,mode){
   flush();return result;
 }
 const problemOrderButtons=[$('orderByColor'),$('orderByAdded')];
-const state={problemOrder:readProblemOrder(),alignment:'left',x:0,y:0,hearts:[],shape:'heart',photoURL:null,photoView:{zoom:1,cx:.5,cy:.5},loadVersion:0,ratio:'3:4',fontFamily:'Wave',fontVersion:0,fontLoading:false};
+const state={problemOrder:readProblemOrder(),alignment:'left',writingMode:'horizontal',verticalAlign:'top',captionPresent:false,x:50,y:50,hearts:[],shape:'heart',photoURL:null,photoView:{zoom:1,cx:.5,cy:.5},loadVersion:0,ratio:'3:4',fontFamily:'Wave',fontVersion:0,fontLoading:false};
 let queued=false,drag=null;
 fontSelect.value='Wave';
 let fontPending=Promise.resolve();
@@ -129,6 +134,7 @@ fontSelect.addEventListener('change',()=>{
 const fontMenuChoices=[{family:'Wave',label:'한컷체'},...fontChoices];
 let activeFont=0;
 function syncFontPicker(){
+  document.querySelectorAll('[data-font-card]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.fontCard===fontSelect.value)));
   $('fontTrigger').textContent=fontMenuChoices.find(font=>font.family===fontSelect.value)?.label||'한컷체';
   Array.from($('fontList').children).forEach((item,i)=>item.setAttribute('aria-selected',String(fontMenuChoices[i].family===fontSelect.value)));
 }
@@ -347,8 +353,11 @@ function currentBounds(){
   if(editorViewport.bounds)return editorViewport.bounds;
   return positionBounds(stage.clientWidth,stage.clientHeight,layer.offsetWidth,layer.offsetHeight);
 }
+document.querySelectorAll('[data-valign]').forEach(button=>button.addEventListener('click',()=>{state.writingMode='vertical';state.verticalAlign=button.dataset.valign;update();}));
 function renderPosition(){
+  document.querySelectorAll('[data-valign]').forEach(button=>button.setAttribute('aria-pressed',String(state.writingMode==='vertical'&&state.verticalAlign===button.dataset.valign)));
   if(!editorViewport.render?.()){
+    renderVerticalPreview();
     if(!state.photoURL)stage.style.height=Math.max(260,layer.offsetHeight+60)+'px';
     else stage.style.height='auto';
   }
@@ -364,7 +373,7 @@ function updateHearts(marks=arrangedMarks(state.hearts,state.problemOrder)){
   function addRow(){
     const row=document.createElement('div');
     row.className='heart-row';
-    row.style.justifyContent={left:'flex-start',center:'center',right:'flex-end'}[state.alignment];
+    row.style.justifyContent=state.writingMode==='vertical'?'flex-start':{left:'flex-start',center:'center',right:'flex-end'}[state.alignment];
     heartPreview.append(row);return row;
   }
   let row=state.hearts.length?addRow():null;
@@ -373,7 +382,7 @@ function updateHearts(marks=arrangedMarks(state.hearts,state.problemOrder)){
     const svg=markSVG(key);
     const path=svg.querySelector('path');
     path.setAttribute('stroke',strokeColor.value);
-    path.setAttribute('stroke-width',outline.checked?'1':'0');
+    path.setAttribute('stroke-width',outline.checked?outlineWidth.value:'0');
     path.setAttribute('vector-effect','non-scaling-stroke');
     row.append(svg);
   });
@@ -393,10 +402,12 @@ function lineSpacing(metrics,fontSize,gap=fontSize*.16){
 }
 function markColumnGap(baseSize){return baseSize/14;}
 function updateLineSpacing(){
-  const baseSize=Number(size.value),fontSize=baseSize*fontDisplayScale(state.fontFamily),gap=baseSize*.16;
+  const baseSize=Number(size.value),fontSize=baseSize*fontDisplayScale(state.fontFamily),gap=rowGap(baseSize);
   // SVG hearts have 12 units of transparent padding at both vertical ends.
-  const heartInset=baseSize*.48*12/224;
-  layer.style.setProperty('--heart-column-gap',markColumnGap(baseSize)+'px');
+  const heartInset=Number(markSize.value)*12/224;
+  heartPreview.style.fontSize=markSize.value+'px';
+  $('markSizeValue').value=markSize.value+'px';
+  layer.style.setProperty('--heart-column-gap',markColumnGap(Number(markSize.value)/.48)+'px');
   layer.style.setProperty('--heart-row-gap',(gap-2*heartInset)+'px');
   layer.style.setProperty('--text-heart-gap',(gap-heartInset)+'px');
   preview.style.lineHeight=(fontSize+gap)+'px';
@@ -412,24 +423,28 @@ function updateLineSpacing(){
   preview.style.marginTop=-spacing.top+'px';preview.style.marginBottom=-spacing.bottom+'px';
 }
 function update(){
-  preview.textContent=text.value.normalize('NFC');
+  const hasCaption=Boolean(text.value.trim());
+  if(hasCaption&&!state.captionPresent){state.x=50;state.y=50;}
+  state.captionPresent=hasCaption;
+  preview.replaceChildren(document.createTextNode(text.value.normalize('NFC')));preview.style.width='';preview.style.height='';
   preview.style.fontFamily='"'+state.fontFamily+'", sans-serif';
   preview.style.fontSize=(Number(size.value)*fontDisplayScale(state.fontFamily))+'px';
-  preview.style.letterSpacing='0px';
+  preview.style.letterSpacing=letterGap()+'px';
+  for(const input of [letterSpace,lineSpace,outlineWidth,shadowWidth])$(input.id+'Value').value=input.value+'%';
   layer.style.fontSize=size.value+'px';$('value').value=size.value+'px';
   preview.style.color=fillColor.value;
-  preview.style.webkitTextStroke='0px transparent';
-  preview.style.textShadow=outline.checked?textOutlineShadow(strokeColor.value,parseFloat(preview.style.fontSize)):'none';
-  layer.style.filter=shadow.checked?'drop-shadow(0 3px 4px rgba(0,0,0,0.32))':'none';
+  preview.style.webkitTextStroke=outline.checked?`${2*textOutlineRadius(parseFloat(preview.style.fontSize))}px ${strokeColor.value}`:'0px transparent';
+  preview.style.textShadow='none';
+  layer.style.filter=shadow.checked?`drop-shadow(0 ${shadowRadius()}px ${shadowRadius()}px ${shadowColor.value}80)`:'none';
   layer.style.textAlign=state.alignment;
-  alignmentButtons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.align===state.alignment)));
+  alignmentButtons.forEach(button=>button.setAttribute('aria-pressed',String(state.writingMode==='horizontal'&&button.dataset.align===state.alignment)));
   updateLineSpacing();updateHearts();schedulePosition();
 }
-[text,size,fillColor,strokeColor].forEach(input=>input.addEventListener('input',update));
+[text,size,markSize,fillColor,strokeColor,letterSpace,lineSpace,outlineWidth,shadowColor,shadowWidth].forEach(input=>input.addEventListener('input',update));
 outline.addEventListener('change',update);
 shadow.addEventListener('change',update);
 alignmentButtons.forEach(button=>button.addEventListener('click',()=>{
-  state.alignment=button.dataset.align;state.x={left:0,center:50,right:100}[state.alignment];update();
+  state.writingMode='horizontal';state.alignment=button.dataset.align;state.x={left:0,center:50,right:100}[state.alignment];update();
 }));
 problemOrderButtons.forEach((button,index)=>button.addEventListener('click',()=>{
   state.problemOrder=index===0?'color':'added';
@@ -458,7 +473,7 @@ photoInput.addEventListener('change',()=>{
     const previous=state.photoURL;state.photoURL=url;state.photoView={zoom:1,cx:.5,cy:.5};
     photo.src=url;photo.hidden=false;photo.alt=file.name;stage.classList.add('has-photo');
     stage.style.height='auto';removePhoto.disabled=false;$('saveResult').disabled=exporting||state.fontLoading;$('photoName').textContent=file.name;$('photoName').title=file.name;
-    state.x={left:0,center:50,right:100}[state.alignment];state.y=8;
+    if(!state.captionPresent){state.x=50;state.y=50;}
     if(previous)URL.revokeObjectURL(previous);
     showStatus('');photoInput.value='';updateRatio();
   };
@@ -483,11 +498,11 @@ resetDialog.addEventListener('close',()=>{
   if(state.photoURL)URL.revokeObjectURL(state.photoURL);
   if(drag&&layer.hasPointerCapture(drag.id))layer.releasePointerCapture(drag.id);
   drag=null;
-  Object.assign(state,{problemOrder:'color',alignment:'left',x:0,y:0,hearts:[],shape:'heart',photoURL:null,photoView:{zoom:1,cx:.5,cy:.5},ratio:'3:4',fontFamily:'Wave',fontLoading:false});
+  Object.assign(state,{problemOrder:'color',alignment:'left',writingMode:'horizontal',verticalAlign:'top',captionPresent:false,x:50,y:50,hearts:[],shape:'heart',photoURL:null,photoView:{zoom:1,cx:.5,cy:.5},ratio:'3:4',fontFamily:'Wave',fontLoading:false});
   try{localStorage.removeItem(problemOrderStorageKey);}catch{}
   fontPending=Promise.resolve();
   text.value=text.defaultValue;
-  for(const input of [size,fillColor,strokeColor])input.value=input.defaultValue;
+  for(const input of [size,markSize,fillColor,strokeColor,letterSpace,lineSpace,outlineWidth,shadowColor,shadowWidth])input.value=input.defaultValue;
   outline.checked=outline.defaultChecked;shadow.checked=shadow.defaultChecked;
   fontSelect.value='Wave';syncFontPicker();closeFontPicker();fontStatus('');
   shapeSelect.value='heart';shapePickerUI.sync();updateShapePalette();
@@ -524,7 +539,8 @@ window.addEventListener('pagehide',event=>{if(!event.persisted&&state.photoURL)U
 syncGymSelection();updateRatio();update();
 
 // Desktop retains authored breaks; mobile shares bounded wrapping with export.
-function explicitExportLayout(ctx,caption,hearts,baseSize,letterSpacing,alignment,maxWidth=Infinity){
+function explicitExportLayout(ctx,caption,hearts,baseSize,letterSpacing,alignment,maxWidth=Infinity,forceHorizontal=false){
+  if(state.writingMode==='vertical'&&!forceHorizontal)return verticalExportLayout(ctx,caption,hearts,baseSize,letterSpacing,maxWidth);
   const lines=[];
   for(const paragraph of caption.normalize('NFC').replace(/\r\n?/g,'\n').split('\n')){
     let line='',count=0;
@@ -539,7 +555,7 @@ function explicitExportLayout(ctx,caption,hearts,baseSize,letterSpacing,alignmen
     lines.push(line);
   }
   if(!caption)lines.length=0;
-  const gap=baseSize*.16,heartSize=baseSize*.48,heartInset=heartSize*12/224,columnGap=markColumnGap(baseSize);
+  const gap=rowGap(baseSize),heartSize=Number(markSize.value),heartInset=heartSize*12/224,columnGap=markColumnGap(heartSize/.48);
   const metrics=ctx.measureText(lines.join('')||'한글');
   const ascent=Math.max(0,metrics.actualBoundingBoxAscent??metrics.fontBoundingBoxAscent??baseSize*.85);
   const descent=Math.max(0,metrics.actualBoundingBoxDescent??metrics.fontBoundingBoxDescent??baseSize*.15);
@@ -574,9 +590,34 @@ function explicitExportLayout(ctx,caption,hearts,baseSize,letterSpacing,alignmen
   heartRows.forEach((row,index)=>row.forEach((key,i)=>heartItems.push({key,x:(width-heartWidths[index])*align+i*(heartSize+columnGap),y:heartTop+index*(heartHeight+gap)-heartInset,width:heartSize,height:heartSize})));
   return {lines,marks:heartRows.flatMap((row,i)=>i?['\n',...row]:row),width,height:heartRows.length?heartTop+heartRows.length*heartHeight+(heartRows.length-1)*gap:textHeight,glyphs,hearts:heartItems};
 }
+function verticalExportLayout(ctx,caption,hearts,baseSize,letterSpacing,maxWidth){
+  const gap=rowGap(baseSize),fontSize=baseSize*fontDisplayScale(state.fontFamily);
+  const metrics=ctx.measureText(caption.replace(/\s/g,'')||'한글');
+  const ascent=Math.max(0,metrics.actualBoundingBoxAscent),inkHeight=Math.max(1,ascent+metrics.actualBoundingBoxDescent);
+  const step=Math.max(1,fontSize+letterSpacing);
+  const columns=caption?caption.normalize('NFC').replace(/\r\n?/g,'\n').split('\n').map(line=>Array.from(new Intl.Segmenter('ko',{granularity:'grapheme'}).segment(line),g=>g.segment)):[];
+  const widths=columns.map(col=>Math.max(fontSize,...col.map(g=>ctx.measureText(g).width)));
+  const heights=columns.map(col=>col.length?inkHeight+(col.length-1)*step:0);
+  const textHeight=Math.max(0,...heights),textWidth=widths.reduce((a,b)=>a+b,0)+Math.max(0,columns.length-1)*gap;
+  const align={top:0,middle:.5,bottom:1}[state.verticalAlign],glyphs=[];
+  let right=textWidth;
+  columns.forEach((column,i)=>{right-=widths[i];column.forEach((g,j)=>glyphs.push({text:g,x:right+(widths[i]-ctx.measureText(g).width)/2,y:ascent+j*step+(textHeight-heights[i])*align}));right-=gap;});
+  const marks=explicitExportLayout(ctx,'',hearts,baseSize,0,'left',maxWidth,true);
+  const markTop=textHeight+(caption&&hearts.length?gap:0);
+  return {lines:caption.split('\n'),marks:marks.marks,width:Math.max(1,textWidth,marks.width),height:hearts.length?markTop+marks.height:textHeight,textWidth,textHeight,glyphs,hearts:marks.hearts.map(h=>({...h,y:h.y+markTop}))};
+}
+function renderVerticalPreview(layout){
+  if(state.writingMode!=='vertical')return;
+  const ctx=document.createElement('canvas').getContext('2d');ctx.font=getComputedStyle(preview).font;
+  layout=layout||explicitExportLayout(ctx,text.value,arrangedMarks(state.hearts,state.problemOrder),Number(size.value),letterGap(),state.alignment);
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('width',Math.max(1,layout.textWidth));svg.setAttribute('height',Math.max(0,layout.textHeight));svg.style.display='block';svg.style.overflow='visible';svg.style.font='inherit';svg.style.letterSpacing='0px';svg.style.webkitTextStroke='0px transparent';svg.setAttribute('stroke',outline.checked?strokeColor.value:'none');svg.setAttribute('stroke-width',2*textOutlineRadius(parseFloat(getComputedStyle(preview).fontSize)));svg.setAttribute('stroke-linejoin','round');svg.style.paintOrder='stroke fill';
+  for(const g of layout.glyphs){const t=document.createElementNS(svg.namespaceURI,'text');t.setAttribute('x',g.x);t.setAttribute('y',g.y);t.setAttribute('fill','currentColor');t.textContent=g.text;svg.append(t);}
+  preview.replaceChildren(svg);preview.style.marginTop='0px';preview.style.marginBottom='0px';preview.style.lineHeight='1';
+}
 function exportFrame(box,layout,hasPhoto){
   const width=hasPhoto?box.width:Math.max(box.width,layout.width+40);
-  const height=hasPhoto?box.height:Math.max(260,layout.height+60);
+  const height=hasPhoto?box.height:Math.max(editorViewport.logical?box.height:260,layout.height+60);
   const fit=hasPhoto?Math.min(1,Math.max(1,width-40)/layout.width,Math.max(1,height-40)/Math.max(1,layout.height)):1;
   const bounds=positionBounds(width,height,layout.width*fit,layout.height*fit);
   return {width,height,fit,bounds};
@@ -619,7 +660,7 @@ $('saveResult').addEventListener('click',async()=>{
     const style=getComputedStyle(preview);
     const measure=document.createElement('canvas').getContext('2d');if(!measure)throw new Error('canvas');
     measure.font=style.font;
-    const layout=explicitExportLayout(measure,text.value,arrangedMarks(state.hearts,state.problemOrder),Number(size.value),0,state.alignment,editorViewport.logical?box.width-40:Infinity);
+    const layout=explicitExportLayout(measure,text.value,arrangedMarks(state.hearts,state.problemOrder),Number(size.value),letterGap(),state.alignment,editorViewport.logical?box.width-40:Infinity);
     const frame=exportFrame(box,layout,hasPhoto);
     const origin=offsetFromPosition(frame.bounds,state.x,state.y);
     const factor=Math.min(2,4096/Math.max(frame.width,frame.height));
@@ -634,24 +675,27 @@ $('saveResult').addEventListener('click',async()=>{
     ink.scale(scaleX,scaleY);ink.translate(origin.left,origin.top);ink.scale(frame.fit,frame.fit);
     ink.font=style.font;ink.textAlign='left';ink.textBaseline='alphabetic';
     ink.fillStyle=fillColor.value;
+    if(outline.checked&&Number(outlineWidth.value)>0){
+      ink.strokeStyle=strokeColor.value;ink.lineWidth=2*textOutlineRadius(parseFloat(style.fontSize));ink.lineJoin='round';
+      if(ink.lineWidth>0)for(const glyph of layout.glyphs)if(glyph.text.trim())ink.strokeText(glyph.text,glyph.x,glyph.y);
+    }
     for(const glyph of layout.glyphs){
       if(!glyph.text.trim())continue;
       ink.fillText(glyph.text,glyph.x,glyph.y);
     }
-    if(outline.checked&&layout.glyphs.some(g=>g.text.trim()))addTextMaskOutline(overlay,ink,strokeColor.value,scaleX*frame.fit,scaleY*frame.fit,parseFloat(style.fontSize));
     const heartJobs=layout.hearts.map(rect=>{
       const clone=markSVG(rect.key);
       clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
       clone.setAttribute('width',String(rect.width*scaleX*frame.fit));clone.setAttribute('height',String(rect.height*scaleY*frame.fit));
       const path=clone.querySelector('path');path.setAttribute('stroke',strokeColor.value);
-      path.setAttribute('vector-effect','non-scaling-stroke');path.setAttribute('stroke-width',outline.checked?String(scaleX*frame.fit):'0');
+      path.setAttribute('vector-effect','non-scaling-stroke');path.setAttribute('stroke-width',outline.checked?String(Number(outlineWidth.value)*scaleX*frame.fit):'0');
       const src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(clone));
       return loadExportImage(src).then(image=>({image,rect}));
     });
     const withShadow=shadow.checked;
     for(const {image,rect} of await Promise.all(heartJobs))ink.drawImage(image,rect.x,rect.y,rect.width,rect.height);
     if(version!==state.loadVersion||fontVersion!==state.fontVersion)throw new Error('changed');
-    if(withShadow){ctx.shadowColor='rgba(0,0,0,0.32)';ctx.shadowOffsetY=3*scaleY*frame.fit;ctx.shadowBlur=8*scaleX*frame.fit;}
+    if(withShadow){ctx.shadowColor=shadowColor.value+'80';ctx.shadowOffsetY=shadowRadius()*scaleY*frame.fit;ctx.shadowBlur=2*shadowRadius()*scaleX*frame.fit;}
     ctx.drawImage(overlay,0,0);
     const blob=await canvasBlob(canvas);
     if(version!==state.loadVersion||fontVersion!==state.fontVersion)throw new Error('changed');
@@ -774,3 +818,44 @@ photoAdjustCanvas.addEventListener('keydown',event=>{
   drawPhotoAdjustment();
 });
 new ResizeObserver(()=>{if(photoAdjustDialog.open){drawPhotoAdjustment();beginPhotoGesture();}}).observe(photoAdjustCanvas);
+
+// One color control for text, outline and shadow; palette derives from marks.
+function setupColorControls(){
+  const colors=Array.from(markTemplates.values(),item=>({name:item.label,value:item.svg.querySelector('path').getAttribute('fill').toLowerCase()}));
+  const dialog=document.createElement('dialog');dialog.className='color-dialog';dialog.setAttribute('aria-label','색 직접 고르기');
+  dialog.innerHTML='<h2>색 직접 고르기</h2><div class="color-sv" role="application" aria-label="채도와 밝기 선택" tabindex="0"><span></span></div><label class="color-hue-label">색상<input class="color-hue" type="range" min="0" max="360" value="0" aria-label="색상"></label><label class="color-hex-label">색 코드<input class="color-hex" type="text" maxlength="7" spellcheck="false" aria-label="색 코드"><span class="color-sample"></span></label><p class="color-error" role="status" hidden>색 코드를 #RRGGBB 형식으로 입력해 주세요.</p><div class="color-actions"><button type="button" data-cancel>취소</button><button type="button" data-apply>적용</button></div>';
+  document.body.append(dialog);
+  let target=null,h=0,s=0,v=1,draft='#ffffff';
+  const sv=dialog.querySelector('.color-sv'),hue=dialog.querySelector('.color-hue'),hex=dialog.querySelector('.color-hex');
+  function hsvHex(){const c=v*s,x=c*(1-Math.abs((h/60)%2-1)),m=v-c;const a=h<60?[c,x,0]:h<120?[x,c,0]:h<180?[0,c,x]:h<240?[0,x,c]:h<300?[x,0,c]:[c,0,x];return '#'+a.map(n=>Math.round((n+m)*255).toString(16).padStart(2,'0')).join('');}
+  function fromHex(value){const [r,g,b]=value.slice(1).match(/../g).map(n=>parseInt(n,16)/255),max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min;v=max;s=max?d/max:0;if(d)h=((max===r?(g-b)/d:max===g?(b-r)/d+2:(r-g)/d+4)*60+360)%360;}
+  function paint(){draft=hsvHex();sv.style.backgroundColor=`hsl(${h} 100% 50%)`;sv.firstElementChild.style.left=(s*100)+'%';sv.firstElementChild.style.top=((1-v)*100)+'%';hue.value=h;hex.value=draft;dialog.querySelector('.color-sample').style.background=draft;dialog.querySelector('.color-error').hidden=true;}
+  function commit(input,value){const effect=input===strokeColor?outline:input===shadowColor?shadow:null;if(effect)effect.checked=true;input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}));}
+  function pointer(e){const r=sv.getBoundingClientRect();s=clamp((e.clientX-r.left)/r.width,0,1);v=1-clamp((e.clientY-r.top)/r.height,0,1);paint();}
+  sv.addEventListener('pointerdown',e=>{sv.setPointerCapture(e.pointerId);pointer(e);});sv.addEventListener('pointermove',e=>{if(sv.hasPointerCapture(e.pointerId))pointer(e);});
+  sv.addEventListener('keydown',e=>{const step=e.shiftKey?.1:.01;if(e.key==='ArrowLeft')s-=step;else if(e.key==='ArrowRight')s+=step;else if(e.key==='ArrowUp')v+=step;else if(e.key==='ArrowDown')v-=step;else return;e.preventDefault();s=clamp(s,0,1);v=clamp(v,0,1);paint();});
+  hue.addEventListener('input',()=>{h=Number(hue.value);paint();});hex.addEventListener('input',()=>{if(/^#[0-9a-f]{6}$/i.test(hex.value)){fromHex(hex.value);paint();}});
+  dialog.querySelector('[data-cancel]').onclick=()=>dialog.close();dialog.querySelector('[data-apply]').onclick=()=>{if(!/^#[0-9a-f]{6}$/i.test(hex.value)){dialog.querySelector('.color-error').hidden=false;return;}commit(target,hex.value);dialog.close();};
+  const eyedrop=document.createElement('dialog');eyedrop.className='color-dialog';eyedrop.setAttribute('aria-label','사진에서 색 추출');
+  eyedrop.innerHTML='<h2>사진에서 색 고르기</h2><p>사진에서 원하는 색을 눌러 주세요.</p><canvas class="eyedrop-canvas" tabindex="0" aria-label="사진의 색 선택. 방향키로 이동, Enter로 적용"></canvas><div class="eyedrop-value"><span class="color-sample"></span><output></output></div><div class="color-actions"><button type="button" data-cancel>취소</button><button type="button" data-apply>적용</button></div>';
+  document.body.append(eyedrop);const ec=eyedrop.querySelector('canvas'),ctx=ec.getContext('2d',{willReadFrequently:true});let ex=0,ey=0,picked='#ffffff';
+  function sample(){const a=ctx.getImageData(ex,ey,1,1).data;picked='#'+Array.from(a).slice(0,3).map(n=>n.toString(16).padStart(2,'0')).join('');eyedrop.querySelector('output').value=picked;eyedrop.querySelector('.color-sample').style.background=picked;}
+  function samplePointer(e){const r=ec.getBoundingClientRect();ex=clamp(Math.floor((e.clientX-r.left)/r.width*ec.width),0,ec.width-1);ey=clamp(Math.floor((e.clientY-r.top)/r.height*ec.height),0,ec.height-1);sample();}
+  ec.addEventListener('pointerdown',e=>{ec.setPointerCapture(e.pointerId);samplePointer(e);});ec.addEventListener('pointermove',e=>{if(ec.hasPointerCapture(e.pointerId))samplePointer(e);});
+  ec.addEventListener('keydown',e=>{const d={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];if(d){e.preventDefault();ex=clamp(ex+d[0],0,ec.width-1);ey=clamp(ey+d[1],0,ec.height-1);sample();}else if(e.key==='Enter'){commit(target,picked);eyedrop.close();}});
+  eyedrop.querySelector('[data-cancel]').onclick=()=>eyedrop.close();eyedrop.querySelector('[data-apply]').onclick=()=>{commit(target,picked);eyedrop.close();};
+  for(const input of [fillColor,strokeColor,shadowColor]){
+    const effect=input===strokeColor?outline:input===shadowColor?shadow:null;
+    if(effect)effect.closest('label').hidden=true;
+    input.hidden=true;const row=document.createElement('div');row.className='color-picker-row';row.setAttribute('role','group');row.setAttribute('aria-label',input.id==='fillColor'?'글자색 선택':input.id==='strokeColor'?'테두리 색 선택':'그림자 색 선택');
+    let none;
+    if(effect){none=document.createElement('button');none.type='button';none.className='color-none';none.setAttribute('aria-label',input===strokeColor?'테두리 없음':'그림자 없음');none.title='없음';none.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="m6.4 6.4 11.2 11.2"/></svg>';none.onclick=()=>{effect.checked=false;effect.dispatchEvent(new Event('change'));sync();};row.append(none);effect.addEventListener('change',sync);}
+    const drop=document.createElement('button');drop.type='button';drop.className='color-drop';drop.setAttribute('aria-label','스포이드');drop.title='스포이드';drop.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5 5 5M4 20l4-1L20 7a2 2 0 0 0-3-3L5 16l-1 4Z"/></svg>';
+    drop.onclick=async()=>{target=input;if(state.photoURL){const crop=photoCrop(photo.naturalWidth,photo.naturalHeight,state.ratio,state.photoView);ec.width=480;ec.height=Math.round(480*crop.sh/crop.sw);ctx.drawImage(photo,crop.sx,crop.sy,crop.sw,crop.sh,0,0,ec.width,ec.height);ex=Math.floor(ec.width/2);ey=Math.floor(ec.height/2);sample();eyedrop.showModal();}else if(window.EyeDropper){try{const result=await new EyeDropper().open();commit(input,result.sRGBHex);}catch{}}else{showStatus('스포이드는 이미지를 추가한 뒤 사용할 수 있어요.');}};
+    const custom=document.createElement('button');custom.type='button';custom.className='color-custom';custom.setAttribute('aria-label','색 직접 고르기');custom.title='색 직접 고르기';custom.onclick=()=>{target=input;fromHex(input.value);paint();dialog.showModal();};row.append(drop,custom);
+    for(const color of colors){const button=document.createElement('button');button.type='button';button.className='color-preset';button.style.setProperty('--swatch',color.value);button.dataset.color=color.value;button.title=color.name;button.setAttribute('aria-label',color.name);button.onclick=()=>commit(input,color.value);row.append(button);}
+    function sync(){if(none)none.setAttribute('aria-pressed',String(!effect.checked));for(const button of row.querySelectorAll('[data-color]'))button.setAttribute('aria-pressed',String((!effect||effect.checked)&&button.dataset.color===input.value.toLowerCase()));custom.style.setProperty('--chosen',input.value);}
+    input.after(row);input.addEventListener('input',sync);window.addEventListener('editorreset',sync);sync();
+  }
+}
+setupColorControls();
