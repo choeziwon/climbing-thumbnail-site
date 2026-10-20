@@ -4,9 +4,9 @@ var mobileWorkspace;
 function fitMobilePreview(){
   if(!mobileWorkspace?.active)return;
   const {canvas,frame}=mobileWorkspace;
-  const maxHeight=Math.max(100,Math.min(320,(window.visualViewport?.height||window.innerHeight)*.34));
-  const availableWidth=canvas.clientWidth,availableHeight=maxHeight;
-  const scale=Math.min(availableWidth/stage.offsetWidth,availableHeight/stage.offsetHeight,1);
+  // Keep the image full-width; the workspace scrolls instead of shrinking
+  // portrait images to reserve space for every editing control.
+  const scale=Math.min(canvas.clientWidth/stage.offsetWidth,1);
   stage.style.transform=`scale(${scale})`;
   frame.style.width=(stage.offsetWidth*scale)+'px';
   frame.style.height=(stage.offsetHeight*scale)+'px';
@@ -55,9 +55,8 @@ function setupMobileWorkspace(){
   function move(node,parent){const anchor=document.createComment('desktop position');node.before(anchor);moves.push({node,anchor});parent.append(node);}
   function selectTab(index){
     tabs.forEach((tab,i)=>{tab.setAttribute('aria-selected',String(i===index));tab.tabIndex=i===index?0:-1;panels[i].hidden=i!==index;});
-    tools.scrollTop=0;
   }
-  window.addEventListener('editorreset',()=>{if(mobileWorkspace.active)selectTab(0);});
+  window.addEventListener('editorreset',()=>{if(mobileWorkspace.active){selectTab(0);shell.scrollTop=0;}});
   tabs.forEach((tab,index)=>{
     tab.addEventListener('click',()=>selectTab(index));
     tab.addEventListener('keydown',event=>{
@@ -99,6 +98,7 @@ function setupMobileWorkspace(){
   }
   query.addEventListener('change',apply);
   window.addEventListener('resize',viewport);window.visualViewport?.addEventListener('resize',viewport);window.visualViewport?.addEventListener('scroll',viewport);
+  new ResizeObserver(()=>shell.style.setProperty('--mobile-header-height',header.offsetHeight+'px')).observe(header);
   new ResizeObserver(fitMobilePreview).observe(canvas);
   apply();
 }

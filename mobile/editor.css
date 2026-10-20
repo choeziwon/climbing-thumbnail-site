@@ -1,19 +1,19 @@
 body.mobile-editing{overflow:hidden}
  body.mobile-editing>main,body.mobile-editing>.site-header{display:none}
- .mobile-editor{position:fixed;inset:0;top:var(--mobile-top,0px);height:var(--mobile-height,100dvh);z-index:30;background:#fff;display:flex;flex-direction:column;overflow:hidden}
- .mobile-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 16px;border-bottom:1px solid #e7e8eb;flex:none}
+ .mobile-editor{position:fixed;inset:0;top:var(--mobile-top,0px);height:var(--mobile-height,100dvh);z-index:30;background:#fff;display:flex;flex-direction:column;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain}
+ .mobile-header{position:sticky;top:0;z-index:3;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 16px;border-bottom:1px solid #e7e8eb;flex:none}
  .mobile-header h1{font:30px/1.3 Wave,system-ui;margin:0;white-space:nowrap}
  .mobile-header #saveResult{align-self:center;margin:0;font-size:13px;min-height:44px;padding:8px 10px;flex:none}
- .mobile-canvas{height:clamp(100px,calc(var(--mobile-height,100dvh) * .34),320px);flex:none;background:#e5e7eb;padding:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+ .mobile-canvas{flex:none;background:#e5e7eb;padding:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
  .mobile-canvas .preview-frame{position:relative;flex:none;margin:0;border:0;border-radius:0;background:#e5e7eb;max-width:none;overflow:hidden}
  .mobile-canvas .stage{width:1000px;max-width:none;position:absolute;top:0;left:0;transform-origin:top left;flex:none}
  .mobile-canvas .preview-hint{display:none}
  .mobile-canvas #preview{white-space:pre;overflow-wrap:normal}
  .mobile-canvas .heart-row{flex-wrap:nowrap}
- .mobile-tabs{display:flex;flex:none;padding:0;border-bottom:1px solid #e7e8eb;gap:0}
+ .mobile-tabs{position:sticky;top:var(--mobile-header-height,61px);z-index:2;background:#fff;display:flex;flex:none;padding:0;border-bottom:1px solid #e7e8eb;gap:0}
  .mobile-tabs button{flex:1;border:0;border-radius:0;background:none;min-height:48px;padding:10px 0;color:#737780;font-size:15px;border-bottom:2px solid transparent}
  .mobile-tabs button[aria-selected=true]{color:#111;font-weight:700;border-bottom-color:#111}
- .mobile-tools{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:18px 16px max(24px,env(safe-area-inset-bottom));scroll-padding-bottom:24px}
+ .mobile-tools{flex:none;min-height:0;padding:18px 16px max(24px,env(safe-area-inset-bottom));scroll-margin-top:calc(var(--mobile-header-height,61px) + 48px)}
  .mobile-panel{margin:0}
  .mobile-panel textarea{min-height:80px;height:80px;resize:vertical;font-size:16px}
  .mobile-panel .gym-picker{display:grid;grid-template-columns:minmax(0,1fr);margin:16px 0;gap:16px}
