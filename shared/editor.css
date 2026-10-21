@@ -216,3 +216,16 @@ main>.text-section:first-child{margin-top:0}
 .photo-crop-ratios button{flex:1;min-height:40px;border:0;background:transparent;border-radius:7px}
 .photo-crop-ratios button[aria-pressed=true],.photo-rotate button[aria-pressed=true]{background:#111;color:white}
 .photo-rotate{flex-wrap:wrap}.photo-rotate button{padding:8px 10px}
+/* Icon-only controls must not inherit inline SVG text-baseline spacing. */
+.color-picker-row .color-none,.color-picker-row .color-drop{display:flex;align-items:center;justify-content:center;line-height:1}
+.color-none svg,.color-drop svg{display:block;flex:none}
+.color-drop svg{transform:translate(-.3px,.3px)}
+
+/* Repeated control taps should activate controls, not browser double-tap zoom.
+   Keep scrolling and pinch zoom available; canvas gestures have their own rules. */
+button,.file-button{touch-action:manipulation}
+
+.independent-marks{position:absolute;transform-origin:top left;cursor:grab;touch-action:none;user-select:none;z-index:1}
+.independent-marks:active{cursor:grabbing}
+.independent-marks:focus-visible{outline:1px dashed #999;outline-offset:7px}
+.independent-marks .preview-hearts{position:relative;margin:0;width:100%;height:100%}

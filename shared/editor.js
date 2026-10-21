@@ -366,17 +366,51 @@ function renderPosition(){
   renderPhotoView();
   const point=offsetFromPosition(currentBounds(),state.x,state.y);
   layer.style.left=point.left+'px';layer.style.top=point.top+'px';
+  renderIndependentMarks();
   editorViewport.afterRender?.();
 }
 function schedulePosition(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;renderPosition();});}
+function marksLinked(){return $('markOutlineLinked').checked;}
+const markLayer=document.createElement('div');
+markLayer.id='markLayer';markLayer.className='independent-marks';markLayer.hidden=true;
+markLayer.tabIndex=0;markLayer.setAttribute('role','group');
+markLayer.setAttribute('aria-label','완등 표시 위치. 끌거나 방향키로 이동');
+stage.append(markLayer);
+let markPosition={x:50,y:60};
+function independentMarkFrame(){
+  const ctx=document.createElement('canvas').getContext('2d');ctx.font=getComputedStyle(preview).font;
+  const layout=explicitExportLayout(ctx,'',arrangedMarks(state.hearts,state.problemOrder),Number(size.value),0,'left',stage.clientWidth-40,true);
+  const fit=Math.min(1,(stage.clientWidth-40)/layout.width,(stage.clientHeight-40)/Math.max(1,layout.height));
+  return {layout,fit,bounds:positionBounds(stage.clientWidth,stage.clientHeight,layout.width*fit,layout.height*fit)};
+}
+function renderIndependentMarks(){
+  if(marksLinked())return;
+  const {layout,fit,bounds}=independentMarkFrame();
+  const point=offsetFromPosition(bounds,markPosition.x,markPosition.y);
+  Object.assign(markLayer.style,{left:point.left+'px',top:point.top+'px',width:layout.width+'px',height:layout.height+'px',transform:`scale(${fit})`});
+  const svgs=Array.from(heartPreview.querySelectorAll('svg'));
+  heartPreview.replaceChildren(...svgs);
+  layout.hearts.forEach((rect,i)=>{const svg=svgs[i];if(svg)Object.assign(svg.style,{position:'absolute',left:rect.x+'px',top:rect.y+'px',width:rect.width+'px',height:rect.height+'px'});});
+  markLayer.hidden=!layout.hearts.length;
+}
 function markOutlineStyle(){return $('markOutlineLinked').checked?{enabled:outline.checked,color:strokeColor.value,width:Number(outlineWidth.value)}:{enabled:$('markOutlineEnabled').checked,color:$('markStrokeColor').value,width:Number($('markOutlineWidth').value)};}
 $('markOutlineLinked').addEventListener('change',()=>{
- if(!$('markOutlineLinked').checked){$('markOutlineEnabled').checked=outline.checked;$('markStrokeColor').value=strokeColor.value;$('markOutlineWidth').value=outlineWidth.value;}
- $('markOutlineCustom').hidden=$('markOutlineLinked').checked;
- $('markStrokeColor').dispatchEvent(new Event('input'));update();
+ const textPoint={left:parseFloat(layer.style.left)||0,top:parseFloat(layer.style.top)||0};
+ const oldRect=heartPreview.getBoundingClientRect(),stageRect=stage.getBoundingClientRect();
+ const scale=stageRect.width/stage.clientWidth||1;
+ if(!marksLinked()){
+   $('markOutlineEnabled').checked=outline.checked;$('markStrokeColor').value=strokeColor.value;$('markOutlineWidth').value=outlineWidth.value;
+   markLayer.append(heartPreview);
+ }else{layer.append(heartPreview);markLayer.hidden=true;}
+ layer.setAttribute('aria-label',marksLinked()?'글자와 완등 표시 위치. 끌거나 방향키로 이동':'글자 위치. 끌거나 방향키로 이동');
+ $('markOutlineCustom').hidden=marksLinked();
+ $('markStrokeColor').dispatchEvent(new Event('input'));update();renderPosition();
+ Object.assign(state,positionFromOffset(currentBounds(),textPoint.left,textPoint.top));
+ if(!marksLinked()&&state.hearts.length){markPosition=positionFromOffset(independentMarkFrame().bounds,(oldRect.left-stageRect.left)/scale,(oldRect.top-stageRect.top)/scale);}
+ renderPosition();
 });
 for(const id of ['markOutlineEnabled','markStrokeColor','markOutlineWidth'])$(id).addEventListener('input',update);
-window.addEventListener('editorreset',()=>{$('markOutlineLinked').checked=true;$('markOutlineCustom').hidden=true;update();});
+window.addEventListener('editorreset',()=>{$('markOutlineLinked').checked=true;$('markOutlineCustom').hidden=true;layer.append(heartPreview);markLayer.hidden=true;markPosition={x:50,y:60};layer.setAttribute('aria-label','글자와 완등 표시 위치. 끌거나 방향키로 이동');update();});
 function updateHearts(marks=arrangedMarks(state.hearts,state.problemOrder)){
   problemOrderButtons.forEach((button,index)=>button.setAttribute('aria-pressed',String(state.problemOrder===(index===0?'color':'added'))));
   heartPreview.replaceChildren();
@@ -548,6 +582,25 @@ layer.addEventListener('keydown',event=>{
   event.preventDefault();const bounds=currentBounds(),point=offsetFromPosition(bounds,state.x,state.y),step=event.shiftKey?20:4;
   const pos=positionFromOffset(bounds,point.left+direction[0]*step,point.top+direction[1]*step);state.x=pos.x;state.y=pos.y;renderPosition();
 });
+let markDrag=null;
+markLayer.addEventListener('pointerdown',event=>{
+  if(event.button!==0||!event.isPrimary||marksLinked())return;
+  event.preventDefault();event.stopPropagation();markLayer.focus({preventScroll:true});
+  const point=offsetFromPosition(independentMarkFrame().bounds,markPosition.x,markPosition.y);
+  markDrag={id:event.pointerId,x:event.clientX,y:event.clientY,...point};markLayer.setPointerCapture(event.pointerId);
+});
+markLayer.addEventListener('pointermove',event=>{
+  if(!markDrag||event.pointerId!==markDrag.id)return;
+  const scale=stage.getBoundingClientRect().width/stage.clientWidth||1;
+  markPosition=positionFromOffset(independentMarkFrame().bounds,markDrag.left+(event.clientX-markDrag.x)/scale,markDrag.top+(event.clientY-markDrag.y)/scale);
+  renderIndependentMarks();
+});
+for(const name of ['pointerup','pointercancel','lostpointercapture'])markLayer.addEventListener(name,()=>{markDrag=null;});
+markLayer.addEventListener('keydown',event=>{
+  const direction={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[event.key];if(!direction)return;
+  event.preventDefault();event.stopPropagation();const bounds=independentMarkFrame().bounds,point=offsetFromPosition(bounds,markPosition.x,markPosition.y),step=event.shiftKey?20:4;
+  markPosition=positionFromOffset(bounds,point.left+direction[0]*step,point.top+direction[1]*step);renderIndependentMarks();
+});
 const resizeObserver=new ResizeObserver(schedulePosition);resizeObserver.observe(stage);resizeObserver.observe(layer);
 document.fonts.ready.then(()=>{updateLineSpacing();schedulePosition();});window.addEventListener('resize',schedulePosition);
 window.addEventListener('pagehide',event=>{if(!event.persisted&&state.photoURL)URL.revokeObjectURL(state.photoURL);});
@@ -623,7 +676,7 @@ function verticalExportLayout(ctx,caption,hearts,baseSize,letterSpacing,maxWidth
 }
 function renderVerticalPreview(layout){
   const ctx=document.createElement('canvas').getContext('2d');ctx.font=getComputedStyle(preview).font;
-  layout=layout||explicitExportLayout(ctx,text.value,arrangedMarks(state.hearts,state.problemOrder),Number(size.value),letterGap(),state.alignment);
+  layout=layout||explicitExportLayout(ctx,text.value,marksLinked()?arrangedMarks(state.hearts,state.problemOrder):[],Number(size.value),letterGap(),state.alignment);
   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.setAttribute('width',Math.max(1,layout.textWidth));svg.setAttribute('height',Math.max(0,layout.textHeight));svg.style.display='block';svg.style.overflow='visible';svg.style.font='inherit';svg.style.letterSpacing='0px';svg.style.webkitTextStroke='0px transparent';svg.setAttribute('stroke',outline.checked?strokeColor.value:'none');svg.setAttribute('stroke-width',2*textOutlineRadius(parseFloat(getComputedStyle(preview).fontSize)));svg.setAttribute('stroke-linejoin','round');svg.style.paintOrder='stroke fill';
   for(const g of layout.glyphs){const t=document.createElementNS(svg.namespaceURI,'text');t.setAttribute('x',g.x);t.setAttribute('y',g.y);t.setAttribute('fill','currentColor');t.textContent=g.text;svg.append(t);}
@@ -674,7 +727,7 @@ $('saveResult').addEventListener('click',async()=>{
     const style=getComputedStyle(preview);
     const measure=document.createElement('canvas').getContext('2d');if(!measure)throw new Error('canvas');
     measure.font=style.font;
-    const layout=explicitExportLayout(measure,text.value,arrangedMarks(state.hearts,state.problemOrder),Number(size.value),letterGap(),state.alignment,editorViewport.logical?box.width-40:Infinity);
+    const layout=explicitExportLayout(measure,text.value,marksLinked()?arrangedMarks(state.hearts,state.problemOrder):[],Number(size.value),letterGap(),state.alignment,editorViewport.logical?box.width-40:Infinity);
     const frame=exportFrame(box,layout,hasPhoto);
     const origin=offsetFromPosition(frame.bounds,state.x,state.y);
     const factor=Math.min(2,4096/Math.max(frame.width,frame.height));
@@ -711,6 +764,20 @@ $('saveResult').addEventListener('click',async()=>{
     if(version!==state.loadVersion||fontVersion!==state.fontVersion)throw new Error('changed');
     if(withShadow){const effect=shadowGeometry();ctx.shadowColor=effect.color;ctx.shadowOffsetX=effect.x*scaleX*frame.fit;ctx.shadowOffsetY=effect.y*scaleY*frame.fit;ctx.shadowBlur=2*shadowRadius()*scaleX*frame.fit;}
     ctx.drawImage(overlay,0,0);
+    if(!marksLinked()){
+      const detached=independentMarkFrame(),point=offsetFromPosition(detached.bounds,markPosition.x,markPosition.y);
+      ctx.save();ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=ctx.shadowOffsetY=0;
+      ctx.scale(scaleX,scaleY);ctx.translate(point.left,point.top);ctx.scale(detached.fit,detached.fit);
+      for(const rect of detached.layout.hearts){
+        const svg=markSVG(rect.key),effect=markOutlineStyle(),path=svg.querySelector('path');
+        svg.setAttribute('xmlns','http://www.w3.org/2000/svg');svg.setAttribute('width',rect.width*scaleX*detached.fit);svg.setAttribute('height',rect.height*scaleY*detached.fit);
+        path.setAttribute('stroke',effect.color);path.setAttribute('stroke-linejoin','round');path.setAttribute('vector-effect','non-scaling-stroke');
+        path.setAttribute('stroke-width',effect.enabled?2*rect.width*effect.width/100*scaleX*detached.fit:0);
+        const image=await loadExportImage('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(svg)));
+        ctx.drawImage(image,rect.x,rect.y,rect.width,rect.height);
+      }
+      ctx.restore();
+    }
     const blob=await canvasBlob(canvas);
     if(version!==state.loadVersion||fontVersion!==state.fontVersion)throw new Error('changed');
     const url=URL.createObjectURL(blob);

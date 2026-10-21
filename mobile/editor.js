@@ -17,10 +17,10 @@ function renderMobileCanvas(){
   const canvasWidth=1032; // Match the desktop editor content width.
   const measure=mobileWorkspace.measure;
   measure.font=getComputedStyle(preview).font;
-  const layout=explicitExportLayout(measure,text.value,arrangedMarks(state.hearts,state.problemOrder),Number(size.value),letterGap(),state.alignment,canvasWidth-40);
+  const layout=explicitExportLayout(measure,text.value,marksLinked()?arrangedMarks(state.hearts,state.problemOrder):[],Number(size.value),letterGap(),state.alignment,canvasWidth-40);
   const wrappedText=layout.lines.join('\n');
   renderVerticalPreview(layout);
-  updateHearts(layout.marks);
+  updateHearts(marksLinked()?layout.marks:arrangedMarks(state.hearts,state.problemOrder));
   const [rw,rh]=state.ratio.split(':').map(Number);
   const frame=exportFrame({width:canvasWidth,height:state.photoURL?canvasWidth*rh/rw:Math.max(260,mobileWorkspace.shell.clientHeight*.7*canvasWidth/mobileWorkspace.canvas.clientWidth)},layout,Boolean(state.photoURL));
   mobileWorkspace.bounds=frame.bounds;editorViewport.bounds=frame.bounds;
@@ -156,11 +156,6 @@ function setupMobileWorkspace(){
   document.querySelector('.shape-field').append(shapeRow);
   function syncShapeOptions(){for(const button of shapeRow.children)button.setAttribute('aria-pressed',String(button.dataset.shape===state.shape));}
   shapeSelect.addEventListener('change',syncShapeOptions);window.addEventListener('editorreset',syncShapeOptions);syncShapeOptions();
-  const noMarks=document.createElement('button');noMarks.type='button';noMarks.className='mobile-no-marks';noMarks.title='없음';noMarks.setAttribute('aria-label','완등 표시 없음');
-  noMarks.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="m6.4 6.4 11.2 11.2"/></svg>';
-  noMarks.addEventListener('click',()=>{state.hearts=[];updateHearts();schedulePosition();});document.querySelector('.heart-palette').append(noMarks);
-  const previousSync=editorViewport.syncCounts;
-  editorViewport.syncCounts=()=>{previousSync?.();noMarks.setAttribute('aria-pressed',String(!state.hearts.length));};editorViewport.syncCounts();
   // Keep descriptive accessible names while shortening mobile visual labels.
   for(const [id,caption] of [['size','크기'],['markSize','크기'],['outlineWidth','두께'],['shadowWidth','두께']]){
     const input=$(id),label=input.closest('label'),title=label.querySelector('span');
@@ -202,7 +197,7 @@ function setupMobileWorkspace(){
   const linked=$('markOutlineLinked'),linkOptions=document.createElement('div');
   linkOptions.className='mark-link-switch-row';
   linked.closest('label').classList.add('mark-link-checkbox');
-  const linkCaption=document.createElement('span');linkCaption.id='mark-link-caption';linkCaption.textContent='글자 스타일 연결';
+  const linkCaption=document.createElement('span');linkCaption.id='mark-link-caption';linkCaption.textContent='글자와 연결';
   const linkSwitch=document.createElement('button');linkSwitch.type='button';linkSwitch.className='mark-link-switch';linkSwitch.setAttribute('role','switch');linkSwitch.setAttribute('aria-labelledby',linkCaption.id);linkSwitch.setAttribute('aria-controls','markOutlineCustom');
   linkSwitch.addEventListener('click',()=>{linked.checked=!linked.checked;linked.dispatchEvent(new Event('change'));});
   linkOptions.append(linkCaption,linkSwitch);linked.closest('label').after(linkOptions);
@@ -267,7 +262,7 @@ function setupMobileWorkspace(){
       for(const id of ['shadow','shadowColor','shadowWidth','shadowOpacity','shadowDistance','shadowAngle'])move(document.querySelector('main label[for='+id+']'),textGroups[4]);
       move(document.querySelector('main .success-controls'),panels[1]);
       const palette=panels[1].querySelector('.heart-palette');
-      move($('breakHearts'),palette);move($('removeHeart'),palette);palette.append(noMarks);
+      move($('breakHearts'),palette);move($('removeHeart'),palette);
       move(document.querySelector('main .photo-tools'),panels[2]);panels[2].append(...imageGroups);panels[2].querySelector('.photo-input-tools').append(imageReset);syncImage();
       move($('fontStatus'),feedback);move($('status'),feedback);
       closeTool(false);viewport();
