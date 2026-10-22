@@ -335,7 +335,7 @@ body.mobile-editing input.centered-range{background:transparent}
 .image-tool-strip>button:first-child svg{transform:translateX(-1px)}
 /* Optical offsets belong to picker icons, not the artwork on the canvas. */
 .mobile-shape-options [data-shape=hold] svg{transform:translate(.2px,.5px)}
-.mobile-shape-options [data-shape=hand] svg{transform:translate(1.2px,.2px)}
+.mobile-shape-options [data-shape=hand] svg{transform:translate(1.2px,.2px) scale(1.22)}
 .mobile-shape-options [data-shape=lightning] svg{transform:translateY(.4px)}
 .mobile-shape-options [data-shape=star] svg{transform:translate(-.2px,.8px)}
 .mobile-shape-options [data-shape=flower] svg{transform:translateY(1.4px)}
@@ -344,13 +344,137 @@ body.mobile-editing input.centered-range{background:transparent}
 #resetImageSettings svg{transform:translateY(.3px)}
 
 /* Keep the existing image tools and range styling in a compact correction picker. */
-.image-correction-tools{gap:8px;padding-bottom:10px}
+.image-correction-tools{gap:6px;padding-bottom:10px}
 .image-correction-tools button{position:relative;flex-basis:64px;min-width:64px}
 .image-correction-tools button.is-adjusted::after{content:"";position:absolute;right:6px;top:5px;width:4px;height:4px;border-radius:50%;background:currentColor}
 .image-range[hidden]{display:none}
-.image-correction-tools+ .image-range{margin-top:2px}
+#mobile-image-group-1>.image-range{margin-top:2px}
 
 .mobile-panel .success-controls>.heart-palette{grid-column:1;grid-row:1}
 .mobile-panel .success-controls>.shape-field{grid-column:1;grid-row:2}
 .mobile-panel .success-controls>.success-order{grid-column:1;grid-row:3}
 .mobile-panel .success-controls>.heart-field{grid-column:1;grid-row:4}
+
+.correction-hint{display:flex;align-items:flex-start;gap:6px}
+.correction-hint svg{width:16px;height:16px;flex:none;margin-top:3px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+
+.mobile-panel .success-controls>.mark-display-control{grid-column:1;grid-row:1}
+.mobile-panel .success-controls>.heart-palette{grid-row:2}
+.mobile-panel .success-controls>.shape-field{grid-row:3}
+.mobile-panel .success-controls>.success-order:not(.mark-display-control){grid-row:4}
+.mobile-panel .success-controls>.heart-field{grid-row:5}
+
+.extra-text-tools{display:grid;gap:12px;margin-top:12px}
+.extra-text-tools>button{width:100%;min-height:44px}
+.extra-text-cards{display:grid;gap:16px}
+.extra-text-card{display:grid;gap:10px;padding-top:12px;border-top:1px solid #e5e5e5}
+.extra-text-heading{display:flex;align-items:center;justify-content:space-between;font-size:14px}
+.extra-text-heading button{min-height:36px;padding:4px 10px}
+.extra-text-card textarea{min-height:72px}
+.extra-text-style{display:flex;align-items:center;gap:10px}
+.extra-text-style select{flex:1;min-width:0;min-height:40px;border:1px solid #e5e5e5;border-radius:9px;padding:8px;background:#fff;color:#111;font:inherit;font-size:14px}
+
+.mobile-text-group .extra-text-style input[type=color]{width:44px;height:40px;flex:0 0 44px}
+
+/* Object actions sit above the main navigation; detailed controls use the full tool area. */
+.text-overview{display:grid;gap:12px}
+.text-action-strip{display:flex;justify-content:space-between;gap:6px;padding:0;overflow:visible}
+.text-action-strip button{flex:1;min-width:0;min-height:66px;padding:6px 2px;font-size:12px}
+.text-action-strip button:disabled{opacity:.3}
+.text-action-strip button:first-child{background:#f0f1f3}
+.text-action-strip>button:first-child svg{transform:none}
+.text-detail-heading{display:flex;align-items:center;justify-content:space-between;min-height:44px;border-bottom:1px solid #e7e8eb;margin:0 -16px 16px;padding:0 16px;font-size:14px;font-weight:600}
+.text-detail-heading button{border:0;padding:6px 0;min-height:40px;background:transparent;font-weight:600}
+.text-object-fields{display:grid;gap:16px;padding-top:4px}
+.text-style-row{display:flex;align-items:center;gap:12px;font-size:14px}
+.text-style-row select{flex:1;min-width:0;min-height:40px;padding:8px;border:1px solid #e5e5e5;border-radius:9px;background:#fff;color:#111;font:inherit}
+.text-style-row input[type=color]{width:44px;height:40px;margin-left:auto}
+.mobile-editor .selected-text-object{outline:2px solid #8e949d;outline-offset:8px;border-radius:2px}
+.mobile-editor.menu-overview-open .mobile-menu button[aria-expanded=true]{background:#fff;position:relative}
+.mobile-editor.menu-overview-open .mobile-menu button[aria-expanded=true]::after{content:"";position:absolute;bottom:2px;left:calc(50% - 10px);width:20px;height:3px;border-radius:2px;background:#111}
+
+/* The text menu shares the title/done header and closed navigation used by other tools. */
+.mobile-editor.menu-overview-open .text-action-strip{padding:4px 0 8px;justify-content:flex-start}
+.mobile-editor.menu-overview-open .text-action-strip button{flex:1;min-height:64px;background:transparent}
+.mobile-editor.menu-overview-open .text-action-strip button:hover:not(:disabled){background:#f5f5f5}
+
+/* Every top-level menu uses the same compact action row above the main tabs. */
+.mobile-editor.menu-overview-open .text-action-strip{padding:0;justify-content:space-between}
+.mobile-editor.menu-overview-open .text-action-strip button{min-height:66px;flex:1;background:transparent}
+.mobile-editor.menu-overview-open .text-action-strip button:first-child:not(:disabled){background:#f0f1f3}
+.menu-overview{display:grid;gap:12px}
+.mobile-panel .success-controls.mark-detail-controls>[class]{grid-row:auto!important;grid-column:1}
+
+/* Shared top-level menu geometry overrides legacy per-panel padding. */
+.mobile-editor.menu-overview-open #mobile-tools.mobile-tools{flex:none;box-sizing:border-box;height:95px;padding:12px 16px 16px;border-top:1px solid #ccd0d7;overflow:hidden}
+.mobile-editor.menu-overview-open #mobile-tools>.mobile-panel{margin:0;padding:0}
+.mobile-editor.menu-overview-open .text-overview,.mobile-editor.menu-overview-open .menu-overview{margin:0;padding:0;gap:0}
+.mobile-editor.menu-overview-open .text-action-strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));height:66px;gap:6px;margin:0;padding:0}
+.mobile-editor.menu-overview-open .text-action-strip button{box-sizing:border-box;width:100%;min-width:0;height:66px;min-height:66px;margin:0;padding:6px 2px;gap:5px}
+
+/* Text-only navigation distinguishes editing categories from the icon action row. */
+.mobile-editor .mobile-panel-bar.mobile-menu{gap:6px;padding:8px 16px max(8px,env(safe-area-inset-bottom));align-items:center}
+.mobile-editor .mobile-menu button{min-height:40px;height:40px;padding:8px 12px;border-radius:20px;flex-direction:row;font-size:14px;line-height:20px;background:transparent}
+.mobile-editor .mobile-menu button svg{display:none}
+.mobile-editor .mobile-menu button[aria-expanded=true],.mobile-editor.menu-overview-open .mobile-menu button[aria-expanded=true]{background:#f0f1f3;color:#111;font-weight:600}
+.mobile-editor .mobile-menu button::after,.mobile-editor.menu-overview-open .mobile-menu button[aria-expanded=true]::after{display:none}
+.mobile-editor.menu-overview-open .text-action-strip button:first-child:not(:disabled),.mobile-editor .text-action-strip button:first-child{background:transparent}
+.mobile-editor.menu-overview-open .text-action-strip button:hover:not(:disabled){background:#f5f5f5}
+
+/* Compact action and navigation rows retain comfortable touch targets. */
+.mobile-editor.menu-overview-open #mobile-tools.mobile-tools{height:65px;padding:6px 16px;border-top:1px solid #e7e8eb}
+.mobile-editor.menu-overview-open .text-action-strip{height:52px}
+.mobile-editor.menu-overview-open .text-action-strip button{height:52px;min-height:52px;padding:4px 2px;gap:3px}
+.mobile-editor.menu-overview-open .text-action-strip svg{width:22px;height:22px}
+.mobile-editor .mobile-panel-bar.mobile-menu{padding:0 16px env(safe-area-inset-bottom);gap:6px}
+.mobile-editor .mobile-menu button{height:44px;min-height:44px;padding:10px 8px;border-radius:0;position:relative}
+.mobile-editor .mobile-menu button[aria-expanded=true],.mobile-editor.menu-overview-open .mobile-menu button[aria-expanded=true]{background:transparent;color:#111;font-weight:600}
+.mobile-editor .mobile-menu button[aria-expanded=true]::after,.mobile-editor.menu-overview-open .mobile-menu button[aria-expanded=true]::after{display:block;content:"";position:absolute;left:calc(50% - 12px);bottom:3px;width:24px;height:2px;border-radius:1px;background:#111}
+
+.image-detail-actions{display:flex;justify-content:flex-end;padding:8px 0}
+.image-detail-actions #resetImageSettings{display:flex;align-items:center;gap:6px;min-height:40px;border:1px solid #e5e5e5;border-radius:9px;padding:8px 12px;background:#fff}
+
+/* Reset belongs to the preview, not a full row of editing controls. */
+.mobile-editor .mobile-canvas>#resetImageSettings{position:absolute;z-index:6;right:12px;bottom:12px;display:flex;align-items:center;justify-content:center;width:32px;height:32px;min-height:32px;padding:7px;border:0;border-radius:50%;background:rgba(100,106,116,.14);color:#4f5661;backdrop-filter:blur(4px);cursor:pointer}
+.mobile-editor .mobile-canvas>#resetImageSettings span{display:none}
+.mobile-editor .mobile-canvas>#resetImageSettings svg{width:18px;height:18px;transform:none}
+.mobile-editor .mobile-canvas>#resetImageSettings:hover{background:rgba(100,106,116,.24)}
+.mobile-editor .mobile-canvas>#resetImageSettings:focus-visible{outline:2px solid #666;outline-offset:3px}
+
+.mobile-editor.template-browser-open #mobile-tools.mobile-tools{flex:none;height:184px;padding:10px 16px 12px;overflow:hidden;border-top:1px solid #e7e8eb}
+.template-header{display:flex;gap:8px;margin-bottom:10px}
+.template-header input{flex:1;min-width:0;height:34px;padding:6px 10px;border:1px solid #e5e5e5;border-radius:9px;font:inherit;font-size:13px;background:#fff;color:#111}
+.template-header button{min-height:34px;padding:6px 10px;font-size:12px;white-space:nowrap}
+.template-list{display:flex;gap:10px;overflow-x:auto;padding:1px 1px 4px}
+.template-card{position:relative;flex:0 0 116px}
+.template-choice{width:100%;padding:0;border:0;border-radius:9px;background:transparent;text-align:left}
+.template-mini{position:relative;display:block;height:86px;overflow:hidden;border:1px solid #e5e5e5;border-radius:9px;background:linear-gradient(155deg,#c2c7cc,#7c858f)}
+.template-choice[aria-pressed=true] .template-mini{border:2px solid #111}
+.template-mini-caption{position:absolute;left:50%;transform:translate(-50%,-50%);white-space:nowrap;color:#fff;font-size:15px;text-shadow:0 1px 2px #333}
+.template-mini-marks{display:block;font:9px/1.4 system-ui;letter-spacing:2px;text-align:center;color:#ffd46c}
+.template-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:20px;padding-top:4px}
+.template-delete{position:absolute;right:4px;top:4px;width:24px;height:24px;min-height:24px;padding:0;border:0;border-radius:50%;background:#fffd;font-size:18px;line-height:24px}
+.mobile-editor.template-browser-open .mobile-menu button[aria-expanded=true]{background:transparent;font-weight:600;color:#111}
+
+/* Detailed panels share a compact start, while overview toolbars retain their common spacing. */
+#mobile-marks-panel{padding-top:4px}
+.mobile-panel .mark-outline-settings{margin:0;gap:12px}
+.mobile-panel .mark-link-switch-row{min-height:40px;margin:0;padding:0}
+.mobile-panel #markOutlineCustom{padding:0;background:transparent;border-radius:0;gap:12px}
+.mobile-panel #markOutlineCustom.is-linked-disabled{opacity:.38}
+.mobile-panel #markOutlineCustom.is-linked-disabled input,.mobile-panel #markOutlineCustom.is-linked-disabled button{opacity:1}
+#mobile-template-panel{padding-top:4px}
+.template-header[hidden],.template-list[hidden]{display:none!important}
+.template-empty{margin:4px 0;font-size:14px;color:#737780}
+.mobile-panel .heart-toolbar:empty{display:none}
+
+.mark-style-tabs{margin:0;flex:none}
+.mark-alignment-panel{display:grid;gap:16px}
+.mark-alignment-panel.is-linked-disabled{opacity:.38}
+.mark-alignment-panel.is-linked-disabled button,.mark-alignment-panel.is-linked-disabled input{opacity:1}
+.mobile-panel .mark-alignment-panel .align-control{margin:0}
+
+.template-filters{margin:0 0 12px;position:sticky;top:0;background:#fff;z-index:1}
+.template-filters[hidden]{display:none!important}
+
+.mobile-shape-options button svg path{stroke-width:1.6px;vector-effect:non-scaling-stroke;stroke-linejoin:round}
