@@ -1,5 +1,7 @@
 # 완등 한 컷
 
+최근 편집기 변경 내용과 확인 항목은 [변경 이력](CHANGELOG.md)을 참고하세요.
+
 현재 정식 버전은 **v1.6.0 (`site-v1.6.0`)**이며, 한컷체 **1.005 (`font-v1.0.5`)**를 사용합니다.
 
 [웹페이지 열기](https://choeziwon.github.io/climbing-thumbnail-site/)

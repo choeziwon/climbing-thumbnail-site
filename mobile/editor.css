@@ -478,3 +478,33 @@ body.mobile-editing input.centered-range{background:transparent}
 .template-filters[hidden]{display:none!important}
 
 .mobile-shape-options button svg path{stroke-width:1.6px;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+
+/* Shared selected-state colors for all mobile editing controls. */
+.mobile-editor{--selection-bg:#e8eaee;--selection-ink:#111111;--selection-border:#111111;--tab-selection-bg:#111111;--tab-selection-ink:#ffffff}
+.mobile-editor .mobile-panel :is(.image-tool-strip,.mobile-font-cards,.mobile-shape-options,.alignment-options,.align-control,.order-options,.ratio-control,.photo-crop-ratios,.photo-rotate,.mark-link-options) button[aria-pressed=true]{background:var(--selection-bg);color:var(--selection-ink);border-color:var(--selection-border)}
+.mobile-editor .mobile-font-cards button[aria-pressed=true]{box-shadow:inset 0 0 0 1px var(--selection-border)}
+.mobile-editor .mobile-shape-options button[aria-pressed=true]{outline-color:var(--selection-border)}
+.mobile-editor .mobile-text-tabs button[aria-selected=true]{color:var(--selection-ink)}
+.mobile-editor .mobile-text-tabs button[aria-selected=true]::after{background:var(--selection-border)}
+.mobile-editor .template-choice[aria-pressed=true] .template-mini{border-color:var(--selection-border)}
+#extra-text-group-1>.font-field{display:none}
+.extra-text-editor>.mobile-text-tabs{margin-top:0}
+
+/* Use the alignment segmented control as the common tab and toggle container. */
+.mobile-editor{--control-surface:#f5f6f8;--control-border:#e0e3e8;--control-radius:10px;--control-item-radius:7px}
+.mobile-editor .mobile-panel :is(.mobile-text-tabs,.order-options,.ratio-control,.photo-crop-ratios,.mark-link-options,.alignment-options){display:flex;align-items:stretch;gap:3px;padding:3px;border:1px solid var(--control-border);border-radius:var(--control-radius);background:var(--control-surface);height:auto;min-height:44px}
+.mobile-editor .mobile-panel .mobile-text-tabs{margin:0 0 12px;top:0;box-shadow:none}
+.mobile-editor .mobile-panel :is(.mobile-text-tabs,.order-options,.ratio-control,.photo-crop-ratios,.mark-link-options,.alignment-options)>button{flex:1;min-width:0;min-height:36px;height:auto;padding:6px 10px;border:0;border-radius:var(--control-item-radius);background:transparent;color:#737780;box-shadow:none}
+.mobile-editor .mobile-panel :is(.mobile-text-tabs,.order-options,.ratio-control,.photo-crop-ratios,.mark-link-options,.alignment-options)>button:is([aria-selected=true],[aria-pressed=true]){background:var(--tab-selection-bg);color:var(--tab-selection-ink);font-weight:600;box-shadow:none}
+.mobile-editor .mobile-panel .mobile-text-tabs button[aria-selected=true]::after{display:none}
+.mobile-editor .mobile-panel .mobile-text-tabs>.mobile-edit-done{flex:0 0 48px;color:#111;font-weight:600}
+.mobile-editor .mobile-panel :is(.mark-link-switch-row,.toggle-control){display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:3px 12px;margin:0;border:1px solid var(--control-border);border-radius:var(--control-radius);background:var(--control-surface)}
+.mobile-editor .mobile-panel .mark-outline-settings{gap:12px}
+
+/* Text editor navigation keeps its original flat header and underline tabs. */
+.mobile-editor .mobile-panel .text-editor-tabs{gap:0;padding:0 8px;margin:0 -16px 12px;border:0;border-bottom:1px solid #e7e8eb;border-radius:0;background:#fff;min-height:44px}
+.mobile-editor .mobile-panel .text-editor-tabs>button{min-height:44px;padding:8px 2px;border:0;border-radius:0;background:#fff;color:#737780}
+.mobile-editor .mobile-panel .text-editor-tabs>button[aria-selected=true]{position:relative;background:#fff;color:#111;font-weight:700;box-shadow:none}
+.mobile-editor .mobile-panel .text-editor-tabs>button[aria-selected=true]::after{display:block;content:"";position:absolute;bottom:-1px;left:0;right:0;height:2px;background:#111}
+
+.mobile-editor #mobile-template-panel:has(.template-filters:not([hidden])){padding-top:0}
