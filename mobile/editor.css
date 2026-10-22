@@ -342,3 +342,15 @@ body.mobile-editing input.centered-range{background:transparent}
 .mobile-shape-options [data-shape=triangle] svg{transform:translateY(.7px)}
 .mobile-panel #removeHeart .mark-key-mobile svg{transform:translateX(.5px)}
 #resetImageSettings svg{transform:translateY(.3px)}
+
+/* Keep the existing image tools and range styling in a compact correction picker. */
+.image-correction-tools{gap:8px;padding-bottom:10px}
+.image-correction-tools button{position:relative;flex-basis:64px;min-width:64px}
+.image-correction-tools button.is-adjusted::after{content:"";position:absolute;right:6px;top:5px;width:4px;height:4px;border-radius:50%;background:currentColor}
+.image-range[hidden]{display:none}
+.image-correction-tools+ .image-range{margin-top:2px}
+
+.mobile-panel .success-controls>.heart-palette{grid-column:1;grid-row:1}
+.mobile-panel .success-controls>.shape-field{grid-column:1;grid-row:2}
+.mobile-panel .success-controls>.success-order{grid-column:1;grid-row:3}
+.mobile-panel .success-controls>.heart-field{grid-column:1;grid-row:4}

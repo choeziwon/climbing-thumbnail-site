@@ -230,7 +230,9 @@ Object.entries(markShapes).forEach(([value,design])=>shapeSelect.append(option(v
 shapeSelect.value='heart';
 shapeSelect.addEventListener('change',()=>{
   if(!markShapes[shapeSelect.value])return;
-  state.shape=shapeSelect.value;updateShapePalette();
+  state.shape=shapeSelect.value;
+  state.hearts=state.hearts.map(key=>key==='\n'?key:markKey(state.shape,key.includes(':')?key.split(':')[1]:key));
+  updateShapePalette();updateHearts();schedulePosition();
 });
 const shapePickerUI=createSelectPicker('shape',shapeSelect);
 const branchPickerUI=createSelectPicker('branch',branchSelect);
@@ -452,7 +454,7 @@ function updateLineSpacing(){
   const heartInset=Number(markSize.value)*12/224;
   heartPreview.style.fontSize=markSize.value+'px';
   $('markSizeValue').value=markSize.value+'px';
-  layer.style.setProperty('--heart-column-gap',markColumnGap(Number(markSize.value)/.48)+'px');
+  layer.style.setProperty('--heart-column-gap',markColumnGap(Number(markSize.value)/.75)+'px');
   layer.style.setProperty('--heart-row-gap',(gap-2*heartInset)+'px');
   layer.style.setProperty('--text-heart-gap',(gap-heartInset)+'px');
   preview.style.lineHeight=(fontSize+gap)+'px';
@@ -468,7 +470,7 @@ function updateLineSpacing(){
   preview.style.marginTop=-spacing.top+'px';preview.style.marginBottom=-spacing.bottom+'px';
 }
 function update(){
-  if($('markOutlineLinked').checked)markSize.value=String(Math.round(Number(size.value)*.48));
+  if($('markOutlineLinked').checked)markSize.value=String(Math.round(Number(size.value)*.75));
   $('markOutlineWidthValue').value=$('markOutlineWidth').value+'%';
   const hasCaption=Boolean(text.value.trim());
   if(hasCaption&&!state.captionPresent){state.x=50;state.y=50;}
@@ -623,7 +625,7 @@ function explicitExportLayout(ctx,caption,hearts,baseSize,letterSpacing,alignmen
     lines.push(line);
   }
   if(!caption)lines.length=0;
-  const gap=rowGap(baseSize),heartSize=Number(markSize.value),heartInset=heartSize*12/224,columnGap=markColumnGap(heartSize/.48);
+  const gap=rowGap(baseSize),heartSize=Number(markSize.value),heartInset=heartSize*12/224,columnGap=markColumnGap(heartSize/.75);
   const metrics=ctx.measureText(lines.join('')||'한글');
   const ascent=Math.max(0,metrics.actualBoundingBoxAscent??metrics.fontBoundingBoxAscent??baseSize*.85);
   const descent=Math.max(0,metrics.actualBoundingBoxDescent??metrics.fontBoundingBoxDescent??baseSize*.15);
@@ -809,9 +811,28 @@ function photoSharpnessFilter(amount){
   }
   return ' url(#'+id+')';
 }
-function photoFilter(view=state.photoView){const warmth=view.warmth||0;return `brightness(${1+(view.brightness||0)/100}) contrast(${1+(view.contrast||0)/100}) saturate(${1+(view.saturation||0)/100}) sepia(${Math.max(0,warmth)/200}) hue-rotate(${warmth<0?-warmth*.2:0}deg)`+photoSharpnessFilter(view.sharpness);}
+// Tone curves preserve the endpoints; temperature balances red and blue without rotating hold hues.
+function photoToneFilter(view){
+  const warmth=clamp(view.warmth||0,-100,100)/100,shadows=clamp(view.shadows||0,-100,100)/100,highlights=clamp(view.highlights||0,-100,100)/100;
+  if(!warmth&&!shadows&&!highlights)return '';
+  const id='photo-tone-'+[warmth,shadows,highlights].map(v=>Math.round(v*100)+100).join('-');
+  if(!document.getElementById(id)){
+    const ns='http://www.w3.org/2000/svg';let defs=document.getElementById('photo-filter-defs');
+    if(!defs){const svg=document.createElementNS(ns,'svg');svg.setAttribute('width','0');svg.setAttribute('height','0');svg.setAttribute('aria-hidden','true');svg.style.position='absolute';defs=document.createElementNS(ns,'defs');defs.id='photo-filter-defs';svg.append(defs);document.body.append(svg);}
+    const filter=document.createElementNS(ns,'filter');filter.id=id;filter.setAttribute('color-interpolation-filters','sRGB');
+    const transfer=document.createElementNS(ns,'feComponentTransfer');
+    for(const [channel,gain] of [['R',1+warmth*.12],['G',1],['B',1-warmth*.12]]){
+      const fn=document.createElementNS(ns,'feFunc'+channel);fn.setAttribute('type','table');
+      fn.setAttribute('tableValues',Array.from({length:257},(_,i)=>{const x=i/256;const shadowWeight=4*x*(1-x)**3,highlightWeight=4*x**3*(1-x);return clamp((x+.65*(shadows*shadowWeight+highlights*highlightWeight))*gain,0,1).toFixed(6);}).join(' '));transfer.append(fn);
+    }
+    filter.append(transfer);defs.append(filter);
+  }
+  return ' url(#'+id+')';
+}
+function photoFilter(view=state.photoView){return `brightness(${1+(view.brightness||0)/100}) contrast(${1+(view.contrast||0)/100}) saturate(${1+(view.saturation||0)/100})`+photoToneFilter(view)+photoSharpnessFilter(view.sharpness);}
+
 function photoSource(view=state.photoView){
-  const rotation=view.rotation||0,tilt=view.tilt||0,flip=!!view.flip;if(!rotation&&!tilt&&!flip&&![view.brightness,view.contrast,view.saturation,view.warmth,view.sharpness].some(Boolean))return photo;
+  const rotation=view.rotation||0,tilt=view.tilt||0,flip=!!view.flip;if(!rotation&&!tilt&&!flip&&![view.brightness,view.contrast,view.saturation,view.warmth,view.shadows,view.highlights,view.sharpness].some(Boolean))return photo;
   const key=[state.photoURL,rotation,tilt,flip,photoFilter(view)].join('|');if(rotatedPhotoCache?.key===key)return rotatedPhotoCache.canvas;
   const canvas=document.createElement('canvas'),dims=photoDimensions(view);canvas.width=dims.width;canvas.height=dims.height;
   const ctx=canvas.getContext('2d'),scale=photoTiltScale(view);ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(tilt*Math.PI/180);ctx.scale(scale,scale);ctx.scale(flip?-1:1,1);ctx.rotate(rotation*Math.PI/180);ctx.filter=photoFilter(view);ctx.drawImage(photo,-photo.naturalWidth/2,-photo.naturalHeight/2);
