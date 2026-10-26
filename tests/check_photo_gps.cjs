@@ -1,0 +1,14 @@
+const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict');
+const src=fs.readFileSync(require('node:path').join(__dirname,'../shared/editor.js'),'utf8'),exifr=require('../shared/vendor/exifr-7.1.3.umd.js');
+const catalog=JSON.parse(src.split('const gymCatalog=')[1].split(';\nconst gyms=')[0]);
+const code=src.slice(src.indexOf('function validPhotoGPS('),src.indexOf('function activateGym('));
+const state={photoGPS:null},index=catalog.gyms.map(gym=>({gym,key:gym.name,detail:''})),context={state,gymSearchIndex:index};vm.createContext(context);vm.runInContext(code,context);
+(async()=>{const gps=await exifr.gps(fs.readFileSync(require('node:path').join(__dirname,'fixtures/gym-gps.jpg')));assert.ok(Math.abs(gps.latitude-37.4975)<.00001);state.photoGPS=gps;
+ const entries=vm.runInContext('findGymMatches("")',context);assert.equal(entries[0].gym.id,'theclimb');assert.equal(entries[0].nearest.branch.label,'강남');assert.ok(entries[0].nearest.distance<.1);
+ for(let i=1;i<entries.length;i++)assert.ok((entries[i-1].nearest?.distance??Infinity)<=(entries[i].nearest?.distance??Infinity));
+ assert.equal(vm.runInContext('gymDistanceKm({latitude:0,longitude:0},{latitude:0,longitude:0})',context),0);
+ state.photoGPS=null;assert.equal(vm.runInContext('findGymMatches("")[0].gym.id',context),index[0].gym.id);
+ state.photoGPS={latitude:NaN,longitude:127};assert.equal(vm.runInContext('nearestGymBranch(gymSearchIndex[0].gym)',context),null);
+ assert.equal(await exifr.gps(fs.readFileSync(require('node:path').join(__dirname,'fixtures/climbing-wall.svg'))).catch(()=>null),null);
+ console.log('PASS: EXIF parsing, nearest branch, stable distance sorting, missing and invalid GPS');
+})().catch(e=>{console.error(e);process.exitCode=1});

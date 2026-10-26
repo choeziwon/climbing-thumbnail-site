@@ -542,3 +542,10 @@ body.mobile-editing input.centered-range{background:transparent}
 .text-layer:not(.is-editor-selected):focus-visible,.independent-marks:not(.is-editor-selected):focus-visible{outline:none}
 
 .editor-history-feedback{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+/* Approved layer-list composition; button, dialog and selected states reuse service components. */
+.editor-layer-list{list-style:none;margin:0 0 16px;padding:0;display:grid;gap:8px}
+.editor-layer-list li{display:flex;align-items:center;gap:8px;min-width:0}
+.editor-layer-list li>button:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.editor-layer-list button[aria-pressed=true]{background:var(--selection-bg);border-color:var(--control-border)}
+.editor-layer-list li>button:not(:first-child){flex:none}
+.mobile-editor.menu-overview-open .text-action-strip:has([data-layer-list]){grid-template-columns:repeat(6,minmax(0,1fr))}
