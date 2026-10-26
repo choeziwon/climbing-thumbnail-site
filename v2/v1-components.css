@@ -1,0 +1,31 @@
+/* Generated declarations copied from actual v1 components. State attributes are bound to existing v2 actions. */
+/* Source: .mobile-editor .mobile-panel :is(.mobile-text-tabs,.order-options,.ratio-control,.photo-crop-ratios,.mark-link-options,.alignment-options) */
+#wandeung-calendar .wc-segment{display:flex;align-items:stretch;gap:3px;padding:3px;border:1px solid var(--control-border);border-radius:var(--control-radius);background:var(--control-surface);height:auto;min-height:44px}
+/* Source: .mobile-editor .mobile-panel :is(.mobile-text-tabs,.order-options,.ratio-control,.photo-crop-ratios,.mark-link-options,.alignment-options)>button */
+#wandeung-calendar .wc-segment>button{flex:1;min-width:0;min-height:36px;height:auto;padding:6px 10px;border:0;border-radius:var(--control-item-radius);background:transparent;color:#737780;box-shadow:none}
+/* Source: .mobile-editor .mobile-panel :is(.mobile-text-tabs,.order-options,.ratio-control,.photo-crop-ratios,.mark-link-options,.alignment-options)>button:is([aria-selected=true],[aria-pressed=true]) */
+#wandeung-calendar .wc-segment>button[aria-pressed=true]{background:var(--tab-selection-bg);color:var(--tab-selection-ink);font-weight:600;box-shadow:none}
+/* Source: .mobile-editor .mobile-panel :is(.mark-link-switch-row,.toggle-control) */
+#wandeung-calendar .wc-toggle-control{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:3px 12px;margin:0;border:1px solid var(--control-border);border-radius:var(--control-radius);background:var(--control-surface)}
+/* Source: .mobile-editor .mobile-panel .text-editor-tabs */
+#wandeung-calendar .wc-tabs{gap:0;padding:0 8px;margin:0 -16px 12px;border:0;border-bottom:1px solid #e7e8eb;border-radius:0;background:#fff;min-height:44px}
+/* Source: .mobile-editor .mobile-panel .text-editor-tabs>button */
+#wandeung-calendar .wc-tabs>button{min-height:44px;padding:8px 2px;border:0;border-radius:0;background:#fff;color:#737780}
+/* Source: .mobile-editor .mobile-panel .text-editor-tabs>button[aria-selected=true] */
+#wandeung-calendar .wc-tabs>button[aria-pressed=true]{position:relative;background:#fff;color:#111;font-weight:700;box-shadow:none}
+/* Source: .mobile-editor .mobile-panel .text-editor-tabs>button[aria-selected=true]::after */
+#wandeung-calendar .wc-tabs>button[aria-pressed=true]::after{display:block;content:"";position:absolute;bottom:-1px;left:0;right:0;height:2px;background:#111}
+/* Source: .mobile-editor .mobile-panel-bar.mobile-menu */
+#wandeung-calendar .wc-nav{padding:0 16px env(safe-area-inset-bottom);gap:6px}
+/* Source: .mobile-editor .mobile-menu button */
+#wandeung-calendar .wc-nav button{height:44px;min-height:44px;padding:10px 8px;border-radius:0;position:relative}
+/* Source: .mobile-editor .mobile-menu button[aria-expanded=true],.mobile-editor.menu-overview-open .mobile-menu button[aria-expanded=true] */
+#wandeung-calendar .wc-nav button[aria-current=page]{background:transparent;color:#111;font-weight:600}
+/* Source: .mobile-editor .mobile-menu button[aria-expanded=true]::after,.mobile-editor.menu-overview-open .mobile-menu button[aria-expanded=true]::after */
+#wandeung-calendar .wc-nav button[aria-current=page]::after{display:block;content:"";position:absolute;left:calc(50% - 12px);bottom:3px;width:24px;height:2px;border-radius:1px;background:#111}
+/* Source: .mobile-editor .mobile-menu button svg */
+#wandeung-calendar .wc-nav svg{display:none}
+#wandeung-calendar .wc-nav{display:flex;flex:none;background:#fff;border-top:1px solid #e7e8eb;align-items:center}
+#wandeung-calendar .wc-nav button{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:row;border:0;color:#737780}
+#wandeung-calendar .wc-segment>button:hover:not(:disabled){background:transparent}
+#wandeung-calendar .wc-segment>button[aria-pressed=true]:hover:not(:disabled){background:var(--tab-selection-bg)}

@@ -1,0 +1,49 @@
+편집기 추가 폰트 / 확인일 2026-10-19
+
+한컷체와 별개인 각 제작자의 원본 폰트입니다. 폰트 바이너리를 수정하거나 서브셋 처리하지 않았습니다.
+원본 권리와 라이선스는 licenses/에 보존합니다. 한컷체의 자체 무료 이용 라이선스는 이 폰트들에 적용되지 않습니다.
+
+떡상체 / AI올컷
+https://blog.naver.com/aiollcut/224410047321
+파일: Tteoksang.ttf
+SHA256: 984961137102f86c9168411400e7af55e845eb051bee0766e8c793fb7fe4d3f0
+
+느좋체 / AI올컷
+https://blog.naver.com/aiollcut/224378366021
+파일: Neujoh.woff2
+SHA256: 5170186ee92ea1b9d4cf1f1ce027256d81ed9f13e0dae9ba41413b6a76c7db1c
+
+한굴림체 / AI올컷
+https://blog.naver.com/aiollcut/224434349338
+파일: HanGulim.woff2
+SHA256: 7248b81633d4e81bc425755746cfcd2309e3ca0418afa5fbf339af4cb0fb036a
+
+Covendard / Jaekook Ahn
+https://github.com/jaekook/covendard
+파일: Covendard.woff2
+SHA256: e4d656fc7244242e774b1cb9b97771be23d09b8067dd98a765d98a0e12b50256
+
+히피체 / AI올컷
+https://blog.naver.com/aiollcut/224424018271
+파일: Hippie.woff2
+SHA256: 21b59fff4c06569e71ac1e115dbd26b91fcb6437d72b86647d2be441db5e7dd2
+
+Mona12 / Monad ABXY
+https://github.com/MonadABXY/mona-font
+파일: Mona12.woff2
+SHA256: c6a8f197ee2c1c65c0d34230e25fb31050286e2b147644a865a31da739c43555
+
+Mona8×12 / Monad ABXY
+https://github.com/MonadABXY/mona-font
+파일: Mona8x12.woff2
+SHA256: b31121826ec1aebac75af9b3d5eb6db94e6ad27a34f2f3998abd0f90cf7cb3e3
+
+HS활공명조 / 토끼네활자공장
+https://blog.naver.com/hp0/224242936430
+파일: HSHwalkongSerif.woff2
+SHA256: a38e12e2ac376034f13def6d1548686e8becfd411c349a264d39da66b0848beb
+
+느좋체·한굴림체·Covendard·히피체의 WOFF2는 눈누가 제공하는 Project-Noonnu/2610081905 저장소의 원본 파일입니다. 느좋체는 Pretendard에서 파생되었습니다. Covendard 및 Mona의 상위 프로젝트 이용 조건도 함께 보존합니다.
+한굴림체는 완성형 한글 7,800자, HS활공명조는 2,781자를 수록합니다. 지원하지 않는 글자는 브라우저의 기본 글꼴로 표시될 수 있습니다. 다른 6종은 현대 한글 11,172자를 수록합니다.
+
+Pretendard UI variable v1.3.9: https://github.com/orioncactus/pretendard (SIL OFL; Pretendard-LICENSE.txt)

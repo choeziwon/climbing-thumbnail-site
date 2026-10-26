@@ -1,0 +1,32 @@
+#wandeung-calendar .wc-gym-logo{position:relative;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;flex:0 0 40px;border-radius:10px;overflow:hidden;background:#fff;color:var(--wc-muted);border:1px solid var(--wc-line);vertical-align:middle}
+#wandeung-calendar .wc-gym-logo>svg{width:22px;height:22px}
+#wandeung-calendar .wc-gym-logo>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff;padding:3px}
+#wandeung-calendar .wc-gym-logo-small{width:21px;height:21px;flex-basis:21px;border-radius:5px}
+#wandeung-calendar .wc-gym-logo-small>svg{width:14px;height:14px}
+#wandeung-calendar .wc-gym-logo-small>img{padding:1px}
+#wandeung-calendar .wc-date{min-height:66px;height:66px!important;gap:3px}
+#wandeung-calendar .wc-day-gyms{display:flex;align-items:center;justify-content:center;gap:2px;height:23px;max-width:100%}
+#wandeung-calendar .wc-day-more{font-size:10px;line-height:12px}
+#wandeung-calendar .wc-day-status{position:relative;display:inline-flex}
+#wandeung-calendar .wc-day-status>.wc-dot{position:absolute;right:-1px;bottom:-1px;background:var(--wc-bg);color:var(--wc-fg);width:6px;height:6px}
+#wandeung-calendar .wc-day-status>.wc-dot.done{background:var(--wc-fg)}
+#wandeung-calendar .wc-gym-input-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+#wandeung-calendar .wc-gym-input-row input{margin-top:0;flex:1;min-width:0}
+#wandeung-calendar .wc-gym-results{margin-top:8px;max-height:240px;overflow:auto;border:1px solid var(--wc-line);border-radius:10px;padding:4px}
+#wandeung-calendar .wc-gym-option{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:transparent;padding:10px 8px;min-height:60px}
+#wandeung-calendar .wc-gym-option>span:last-child{min-width:0;flex:1}
+#wandeung-calendar .wc-gym-option strong{display:block;font-size:15px;line-height:22px;font-weight:500;overflow-wrap:anywhere}
+#wandeung-calendar .wc-gym-option small{display:block;font-size:12px;line-height:18px;color:var(--wc-muted)}
+#wandeung-calendar .wc-gym-option:hover,#wandeung-calendar .wc-gym-option:focus-visible{background:var(--wc-soft)}
+#wandeung-calendar .wc-gym-results>p{padding:12px;margin:0}
+#wandeung-calendar .wc-gym-detail-title{display:flex;align-items:center;gap:12px}
+
+#wandeung-calendar .wc-gym-more{width:100%;min-height:44px;background:var(--wc-soft);border:0;border-radius:8px;font-size:15px;color:var(--wc-fg)}
+
+/* White artwork with original white areas revealing the gym background. */
+#wandeung-calendar .wc-gym-logo{background:var(--gym-accent,#3d424b);color:#fff;border:0}
+#wandeung-calendar .wc-gym-logo>img{background:transparent;filter:url(#wc-white-logo)}
+/* This high-resolution monochrome original already has transparent cutouts. */
+#wandeung-calendar .wc-gym-logo>img[src$="/the-climb-hires.png"]{filter:brightness(0) invert(1);padding:0}
+#wandeung-calendar .wc-gym-location{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;color:var(--wc-muted);font-size:12px;line-height:18px}
+#wandeung-calendar .wc-gym-location>button{flex-shrink:0;min-height:44px;padding:4px 8px;background:transparent;border:0;color:var(--wc-fg);font-size:13px}

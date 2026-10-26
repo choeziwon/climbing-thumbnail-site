@@ -1,0 +1,46 @@
+/* Match v1 UI values without importing its page-layout selectors into the service. */
+html{color-scheme:light}
+body{background:#f4f5f7;color:var(--frame-text);font-family:var(--frame-font-family)}
+#wandeung-calendar{
+  --wc-bg:var(--frame-background);
+  --wc-fg:var(--frame-text);
+  --wc-soft:var(--frame-soft-background);
+  --wc-line:var(--frame-soft-border);
+  --wc-muted:var(--frame-muted);
+  --wc-active:var(--frame-primary);
+  --wc-on:var(--frame-background);
+  box-sizing:border-box;
+  font-family:var(--frame-font-family);
+}
+#wandeung-calendar .wc-info-panel{font-family:var(--frame-font-family)}
+#wandeung-calendar button{font-family:var(--frame-font-family);border-radius:var(--frame-button-radius)}
+#wandeung-calendar button:hover:not(:disabled){background:var(--frame-hover-background)}
+#wandeung-calendar .wc-primary,
+#wandeung-calendar .wc-primary:hover:not(:disabled),
+#wandeung-calendar button[aria-pressed=true],
+#wandeung-calendar button[aria-pressed=true]:hover:not(:disabled){background:var(--frame-primary);color:var(--frame-background);border-color:var(--frame-primary)}
+#wandeung-calendar .wc-info-panel button{font-family:var(--frame-font-family);border-color:var(--frame-button-border);border-radius:var(--frame-button-radius)}
+#wandeung-calendar .wc-info-panel button.wc-primary{border-color:var(--frame-primary)}
+#wandeung-calendar :is(.wc-start button,.wc-actions button,.wc-photo,.wc-count button){border-color:var(--frame-button-border)}
+#wandeung-calendar :is(.wc-start,.wc-actions) button.wc-primary{border-color:var(--frame-primary)}
+#wandeung-calendar .wc-date.wc-today:not([aria-pressed=true]){box-shadow:inset 0 0 0 1px var(--frame-primary)}
+#wandeung-calendar :is(.wc-pad,.wc-agenda){padding:var(--frame-panel-top) var(--frame-page-x) var(--frame-panel-bottom)}
+#wandeung-calendar .wc-header{padding-inline:var(--frame-page-x);border-color:var(--frame-nav-border)}
+#wandeung-calendar .wc-actions{padding:12px var(--frame-page-x);gap:var(--frame-action-gap)}
+#wandeung-calendar .wc-field{font-weight:400;margin-bottom:var(--frame-field-gap)}
+#wandeung-calendar .wc-field :is(input,select),
+#wandeung-calendar .wc-info-field input{height:var(--frame-control-height);border:1px solid var(--frame-control-border);border-radius:var(--frame-control-radius);padding:10px 12px;background:var(--frame-background);color:var(--frame-text);font-family:var(--frame-font-family)}
+#wandeung-calendar .wc-unit-field input{padding-right:40px}
+#wandeung-calendar .wc-field textarea{border-color:var(--frame-control-border);border-radius:var(--frame-textarea-radius);padding:var(--frame-textarea-padding);min-height:var(--frame-textarea-height);font-family:var(--frame-font-family);line-height:1.6}
+#wandeung-calendar :is(input,textarea,select,button):focus-visible{outline:2px solid var(--frame-primary);outline-offset:3px}
+#wandeung-calendar :is(input[type=range],input[type=checkbox]){accent-color:var(--frame-primary)}
+#wandeung-calendar .wc-error{color:var(--frame-danger)}
+#wandeung-calendar :is(.wc-add,.wc-link),#wandeung-calendar .wc-info-panel .wc-section-edit{color:var(--frame-secondary-text);background:transparent;border:0}
+#wandeung-calendar .wc-info-panel .wc-membership-card-actions button{background:transparent;border:0;color:var(--frame-secondary-text)}
+#wandeung-calendar .wc-info-panel .wc-membership-card-actions button[data-membership-action=delete]{color:var(--frame-danger)}
+#wandeung-calendar .wc-membership-status,#wandeung-calendar .wc-badge.done{background:var(--frame-selected-background);color:var(--frame-text)}
+#wandeung-calendar .is-expired .wc-membership-status{color:var(--frame-muted)}
+#wandeung-calendar .wc-info-panel .wc-membership-summary{background:var(--frame-soft-background);color:var(--frame-text);border-radius:var(--frame-control-radius)}
+#wandeung-calendar .wc-info-panel .wc-membership-summary:hover{background:var(--frame-hover-background)}
+#wandeung-calendar :is(.wc-start,.wc-entry,.wc-note){padding:var(--frame-card-padding)}
+/* Gym brand colors remain gym data, not service UI colors. */

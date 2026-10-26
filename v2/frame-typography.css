@@ -1,0 +1,55 @@
+/* Service type hierarchy: page title / main / description / caption.
+   Brand lettering and user-authored thumbnail artwork retain their own scale. */
+#wandeung-calendar{font-size:var(--frame-main-size);line-height:var(--frame-main-line)}
+#wandeung-calendar h2{font-size:var(--frame-title-size);line-height:var(--frame-title-line)}
+#wandeung-calendar h3,
+#wandeung-calendar .wc-info-panel h2,
+#wandeung-calendar .wc-info-panel .wc-membership-summary strong,
+#wandeung-calendar .wc-membership-card-top strong,
+#wandeung-calendar .wc-entry strong{font-size:var(--frame-main-size);line-height:var(--frame-main-line);font-weight:600}
+#wandeung-calendar .wc-info-panel button,
+#wandeung-calendar .wc-start button,
+#wandeung-calendar .wc-actions button,
+#wandeung-calendar .wc-profile-details .wc-profile-name p,
+#wandeung-calendar .wc-profile-details .wc-body-value p,
+#wandeung-calendar .wc-membership-period dd{font-size:var(--frame-main-size);line-height:var(--frame-main-line)}
+#wandeung-calendar .wc-muted,
+#wandeung-calendar .wc-info-panel .wc-section-edit,
+#wandeung-calendar .wc-membership-card-actions button,
+#wandeung-calendar .wc-profile-name>span,
+#wandeung-calendar .wc-body-value>span,
+#wandeung-calendar .wc-membership-kind,
+#wandeung-calendar .wc-membership-period dt,
+#wandeung-calendar .wc-experience-details,
+#wandeung-calendar .wc-error,
+#wandeung-calendar .wc-empty p,
+#wandeung-calendar .wc-info-field,
+#wandeung-calendar .wc-add{font-size:var(--frame-description-size);line-height:var(--frame-description-line)}
+#wandeung-calendar .wc-info-field input{font-size:16px}
+#wandeung-calendar .wc-profile-details .wc-body-value p span,
+#wandeung-calendar .wc-membership-status,
+#wandeung-calendar .wc-weekday,
+#wandeung-calendar .wc-legend,
+#wandeung-calendar .wc-badge,
+#wandeung-calendar .wc-entry small,
+#wandeung-calendar .wc-header>span,
+#wandeung-calendar .wc-optional{font-size:var(--frame-caption-size);line-height:var(--frame-caption-line)}
+#wandeung-calendar .wc-field{font-size:var(--frame-description-size);line-height:var(--frame-description-line)}
+
+/* Match v1 mobile controls (14px), input text (16px), detail text (12px). */
+#wandeung-calendar button,
+#wandeung-calendar .wc-nav button,
+#wandeung-calendar .wc-tabs button,
+#wandeung-calendar .wc-note,
+#wandeung-calendar summary,
+#wandeung-calendar .wc-gym-option strong{font-size:var(--frame-main-size);line-height:var(--frame-main-line)}
+#wandeung-calendar .wc-field{font-size:var(--frame-label-size);line-height:var(--frame-label-line)}
+#wandeung-calendar .wc-field :is(input,textarea,select),
+#wandeung-calendar .wc-info-panel .wc-info-field input{font-size:16px;font-weight:400}
+#wandeung-calendar .wc-info-panel .wc-info-field input{line-height:22px}
+#wandeung-calendar .wc-info-value{font-size:var(--frame-main-size);line-height:var(--frame-main-line)}
+#wandeung-calendar .wc-header #wc-title:not(.wc-brand){font-size:var(--frame-main-size);line-height:var(--frame-main-line);letter-spacing:0}
+#wandeung-calendar .wc-gym-location{font-size:var(--frame-caption-size);line-height:var(--frame-caption-line)}
+#wandeung-calendar .wc-gym-location>button{font-size:var(--frame-main-size);line-height:var(--frame-main-line)}
+#wandeung-calendar .wc-nav button{font-size:var(--frame-tab-size);line-height:20px}
+#wandeung-calendar .wc-header #wc-title.wc-brand{font-size:clamp(20px,calc(12.5vw - 20px),30px)}

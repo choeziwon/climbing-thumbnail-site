@@ -1,0 +1,1253 @@
+function releasePhotoURL(url){if(window.editorHistoryRetainURL)window.editorHistoryRetainURL(url);else URL.revokeObjectURL(url);}
+function clamp(value,min,max){return Math.max(min,Math.min(max,value));}
+// Build the border from the same rendered glyph mask as its fill. Separate
+// text-stroke rasterization can leave dark spikes along small curved glyphs.
+const textOutlineOffsets=Array.from({length:8},(_,i)=>{
+  const angle=i*Math.PI/4;
+  return [Math.round(Math.cos(angle)*1e6)/1e6,Math.round(Math.sin(angle)*1e6)/1e6];
+});
+// Radius is 1% of the rendered font size, including each font's display scale.
+// Preview and PNG export use the same ratio before canvas/viewport scaling.
+function textOutlineRadius(fontSize){return fontSize*Number($('outlineWidth').value)/100;}
+// Eight masks overlap; keep their opacity low for smooth, unobtrusive edges.
+const textOutlineOpacity=89/255;
+function textOutlineShadow(color,fontSize){
+  const radius=textOutlineRadius(fontSize);
+  return textOutlineOffsets.map(([x,y])=>`${x*radius}px ${y*radius}px 0 ${color}59`).join(',');
+}
+function positionBounds(stageWidth,stageHeight,layerWidth,layerHeight){
+  const padX=Math.min(20,Math.max(0,(stageWidth-layerWidth)/2));
+  const padY=Math.min(20,Math.max(0,(stageHeight-layerHeight)/2));
+  return {left:padX,top:padY,travelX:Math.max(0,stageWidth-layerWidth-2*padX),travelY:Math.max(0,stageHeight-layerHeight-2*padY)};
+}
+function offsetFromPosition(bounds,x,y){return {left:bounds.left+bounds.travelX*clamp(x,0,100)/100,top:bounds.top+bounds.travelY*clamp(y,0,100)/100};}
+function positionFromOffset(bounds,left,top){return {x:bounds.travelX?clamp((left-bounds.left)/bounds.travelX*100,0,100):0,y:bounds.travelY?clamp((top-bounds.top)/bounds.travelY*100,0,100):0};}
+// UI
+const editorViewport={render:null,bounds:null,syncCounts:null,logical:false};
+const $=id=>document.getElementById(id);
+const text=$('text'),preview=$('preview'),stage=$('previewStage'),layer=$('textLayer');
+const fontSelect=$('fontSelect');
+const fontChoices=[{"family": "Tteoksang", "label": "떡상체"}, {"family": "Neujoh", "label": "느좋체"}, {"family": "HanGulim", "label": "한굴림체"}, {"family": "Covendard", "label": "Covendard"}, {"family": "Hippie", "label": "히피체"}, {"family": "Mona12", "label": "Mona12"}, {"family": "Mona8x12", "label": "Mona8×12"}, {"family": "HSHwalkongSerif", "label": "HS활공명조"}];
+const markSize=$('markSize');
+const letterSpace=$('letterSpace'),lineSpace=$('lineSpace'),outlineWidth=$('outlineWidth'),shadowColor=$('shadowColor'),shadowWidth=$('shadowWidth');
+function letterGap(){return Number(size.value)*Number(letterSpace.value)/100;}
+function rowGap(baseSize){return baseSize*Number(lineSpace.value)/100;}
+const shadowOpacity=$('shadowOpacity'),shadowDistance=$('shadowDistance'),shadowAngle=$('shadowAngle');
+function shadowGeometry(){const distance=Number(size.value)*Number(shadowDistance.value)/100,angle=Number(shadowAngle.value)*Math.PI/180;return {x:distance*Math.sin(angle),y:distance*Math.cos(angle),color:shadowColor.value+Math.round(Number(shadowOpacity.value)*2.55).toString(16).padStart(2,'0')};}
+function shadowRadius(){return Number(size.value)*Number(shadowWidth.value)/100;}
+const size=$('size'),shadow=$('shadow'),outline=$('outline'),fillColor=$('fillColor'),strokeColor=$('strokeColor');
+const heartPreview=$('heartPreview'),clearHearts=$('clearHearts'),breakHearts=$('breakHearts'),removeHeart=$('removeHeart');
+const photo=$('photo'),photoInput=$('photoInput'),removePhoto=$('removePhoto');
+const photoOverlays=[];let selectedPhotoOverlay=null,photoOverlaySerial=0,backgroundOriginal=null;const photoOverlayNodes=new Map();
+const gymSelect=$('gymSelect'),branchSelect=$('branchSelect'),branchField=$('branchField');
+const gymCatalog={"checkedAt": "2026-10-18", "scope": "전국 17개 시·도 공개 암장 목록. 기존 서울·경기 편집 목록에 타 지역 실내 암장·인공암벽장 공개 목록을 통합했습니다. 자연암벽·빙벽 및 암장 여부가 모호한 시설은 제외했습니다. 사업자등록·현재 영업 여부를 전수 확인한 목록은 아니며 누락·이전·폐점 정보가 있을 수 있습니다.", "sources": {"seoul": "https://holday.rocks/gyms/서울", "gyeonggi": "https://holday.rocks/gyms/경기", "theclimb": "https://linktr.ee/theclimb_life", "theclimb_name": "https://polle.com/place/3wT7QE/더클라임%20클라이밍%20짐앤샵", "ssw": "https://www.sswclimbing.co.kr/", "forest": "https://climbmap.life/places/kr/brands/seoul-forest", "allez": "https://climbmap.life/places/kr/brands/allez", "park": "https://www.daangn.com/kr/local-profile/클라이밍파크-종로-b6542dq5ui8p/", "peakers": "https://cgv.co.kr/csc/frequentlyAskedQuestion", "mongkids": "https://mongkids.co.kr/지점안내/", "plastik": "https://climbing-library.com/magazine/spotlight-10002/", "boulders": "https://www.indpmusic.co.kr/magazine/with-customer-review-1", "koala": "https://www.localgymsandfitness.com/KR/Seoul/266520410139982/코알라클라이밍짐", "together": "https://www.climbtogether.co.kr/climb-together/home-ct", "holday-서울": "https://holday.rocks/gyms/%EC%84%9C%EC%9A%B8", "holday-경기": "https://holday.rocks/gyms/%EA%B2%BD%EA%B8%B0", "holday-부산": "https://holday.rocks/gyms/%EB%B6%80%EC%82%B0", "holday-대구": "https://holday.rocks/gyms/%EB%8C%80%EA%B5%AC", "holday-인천": "https://holday.rocks/gyms/%EC%9D%B8%EC%B2%9C", "holday-광주": "https://holday.rocks/gyms/%EA%B4%91%EC%A3%BC", "holday-대전": "https://holday.rocks/gyms/%EB%8C%80%EC%A0%84", "holday-울산": "https://holday.rocks/gyms/%EC%9A%B8%EC%82%B0", "holday-세종": "https://holday.rocks/gyms/%EC%84%B8%EC%A2%85", "holday-강원": "https://holday.rocks/gyms/%EA%B0%95%EC%9B%90", "holday-충북": "https://holday.rocks/gyms/%EC%B6%A9%EB%B6%81", "holday-충남": "https://holday.rocks/gyms/%EC%B6%A9%EB%82%A8", "holday-전북": "https://holday.rocks/gyms/%EC%A0%84%EB%B6%81", "holday-전남": "https://holday.rocks/gyms/%EC%A0%84%EB%82%A8", "holday-경북": "https://holday.rocks/gyms/%EA%B2%BD%EB%B6%81", "holday-경남": "https://holday.rocks/gyms/%EA%B2%BD%EB%82%A8", "holday-제주": "https://holday.rocks/gyms/%EC%A0%9C%EC%A3%BC"}, "gyms": [{"id": "theclimb", "name": "더클라임", "branches": [{"label": "강남", "region": "서울", "listedName": "더클라임 클라이밍 짐앤샵 강남점"}, {"label": "논현", "region": "서울", "listedName": "더클라임 클라이밍 짐앤샵 논현점"}, {"label": "마곡", "region": "서울", "listedName": "더클라임 클라이밍 짐앤샵 마곡점"}, {"label": "문래", "region": "서울", "listedName": "더클라임 클라이밍 짐앤샵 문래점"}, {"label": "사당", "region": "서울", "listedName": "더클라임 클라이밍 짐앤샵 사당점"}, {"label": "성수", "region": "서울", "listedName": "더클라임 클라이밍 짐앤샵 성수점"}, {"label": "신림", "region": "서울", "listedName": "더클라임 클라이밍 짐앤샵 신림점"}, {"label": "양재", "region": "서울", "listedName": "더클라임 클라이밍 짐앤샵 양재점"}, {"label": "연남", "region": "서울", "listedName": "더클라임 클라이밍 짐앤샵 연남점"}, {"label": "이수", "region": "서울", "listedName": "더클라임 클라이밍 짐앤샵 이수점"}, {"label": "일산", "region": "경기", "listedName": "더클라임 클라이밍 짐앤샵 일산점"}], "sources": ["theclimb", "theclimb_name"]}, {"id": "forest", "name": "서울숲클라이밍", "branches": [{"label": "구로", "region": "서울", "listedName": "서울숲클라이밍 구로점", "city": "구로구", "sourceUrl": "https://holday.rocks/gym/%EC%84%9C%EC%9A%B8%EC%88%B2%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EA%B5%AC%EB%A1%9C%EC%A0%90"}, {"label": "영등포", "region": "서울", "listedName": "서울숲클라이밍 영등포점", "city": "영등포구", "sourceUrl": "https://holday.rocks/gym/%EC%84%9C%EC%9A%B8%EC%88%B2%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%98%81%EB%93%B1%ED%8F%AC%EC%A0%90"}, {"label": "잠실", "region": "서울", "listedName": "서울숲클라이밍 잠실점", "city": "송파구", "sourceUrl": "https://holday.rocks/gym/%EC%84%9C%EC%9A%B8%EC%88%B2%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%9E%A0%EC%8B%A4%EC%A0%90"}, {"label": "종로", "region": "서울", "listedName": "서울숲클라이밍 종로점", "city": "종로구", "sourceUrl": "https://holday.rocks/gym/%EC%84%9C%EC%9A%B8%EC%88%B2%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%A2%85%EB%A1%9C%EC%A0%90"}], "sources": ["forest"]}, {"id": "ssw", "name": "손상원 클라이밍", "branches": [{"label": "강남", "region": "서울", "listedName": "손상원 클라이밍짐 강남점", "city": "서초구", "sourceUrl": "https://holday.rocks/gym/%EC%86%90%EC%83%81%EC%9B%90%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90-%EA%B0%95%EB%82%A8%EC%A0%90"}, {"label": "을지로", "region": "서울", "listedName": "손상원 클라이밍짐 을지로점", "city": "중구", "sourceUrl": "https://holday.rocks/gym/%EC%86%90%EC%83%81%EC%9B%90-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90-%EC%9D%84%EC%A7%80%EB%A1%9C%EC%A0%90"}, {"label": "판교", "region": "경기", "listedName": "손상원 클라이밍짐 판교점", "city": "성남시", "sourceUrl": "https://holday.rocks/gym/%EC%86%90%EC%83%81%EC%9B%90%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90-%ED%8C%90%EA%B5%90%EC%A0%90"}], "sources": ["ssw"]}, {"id": "allez", "name": "알레클라임", "branches": [{"label": "강동", "region": "서울", "listedName": "알레클라임 강동점"}, {"label": "영등포", "region": "서울", "listedName": "알레클라임 영등포점"}, {"label": "혜화", "region": "서울", "listedName": "알레클라임 혜화점"}], "sources": ["allez"]}, {"id": "park", "name": "클라이밍파크", "branches": [{"label": "강남", "region": "서울", "listedName": "클라이밍파크 강남점", "city": "강남구", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%ED%8C%8C%ED%81%AC-%EA%B0%95%EB%82%A8%EC%A0%90"}, {"label": "성수", "region": "서울", "listedName": "클라이밍파크 성수점"}, {"label": "신논현", "region": "서울", "listedName": "클라이밍파크 신논현점", "city": "강남구", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%ED%8C%8C%ED%81%AC-%EC%8B%A0%EB%85%BC%ED%98%84%EC%A0%90"}, {"label": "종로", "region": "서울", "listedName": "클라이밍파크 종로점", "city": "종로구", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%ED%8C%8C%ED%81%AC-%EC%A2%85%EB%A1%9C%EC%A0%90"}, {"label": "한티", "region": "서울", "listedName": "클라이밍파크 한티점"}], "sources": ["park"]}, {"id": "peakers", "name": "피커스", "branches": [{"label": "구로", "region": "서울", "listedName": "피커스 구로점", "city": "구로구", "sourceUrl": "https://holday.rocks/gym/%ED%94%BC%EC%BB%A4%EC%8A%A4%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EA%B5%AC%EB%A1%9C"}, {"label": "신촌", "region": "서울", "listedName": "피커스 신촌점", "city": "서대문구", "sourceUrl": "https://holday.rocks/gym/%ED%94%BC%EC%BB%A4%EC%8A%A4-%EC%8B%A0%EC%B4%8C%EC%A0%90"}, {"label": "종로", "region": "서울", "listedName": "피커스 종로점", "city": "종로구", "sourceUrl": "https://holday.rocks/gym/%ED%94%BC%EC%BB%A4%EC%8A%A4-%EC%A2%85%EB%A1%9C%EC%A0%90"}], "sources": ["peakers"]}, {"id": "boulders", "name": "서울볼더스 클라이밍", "branches": [{"label": "목동", "region": "서울", "listedName": "서울볼더스 클라이밍 목동점"}, {"label": "선유", "region": "서울", "listedName": "서울볼더스 클라이밍 선유점"}], "sources": ["boulders"]}, {"id": "koala", "name": "코알라클라이밍", "branches": [{"label": "상암", "region": "서울", "listedName": "코알라클라이밍짐 상암점", "city": "마포구", "sourceUrl": "https://holday.rocks/gym/%EC%BD%94%EC%95%8C%EB%9D%BC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}, {"label": "킨텍스", "region": "경기", "listedName": "코알라클라이밍짐 킨텍스점"}], "sources": ["koala"]}, {"id": "plastik", "name": "더플라스틱 클라이밍", "branches": [{"label": "문래", "region": "서울", "listedName": "더플라스틱 클라이밍 문래점"}, {"label": "염창", "region": "서울", "listedName": "더플라스틱 클라이밍 염창점"}], "sources": ["plastik"]}, {"id": "damjang", "name": "담장", "branches": [{"label": "신촌", "region": "서울", "listedName": "담장 신촌점", "city": "서대문구", "sourceUrl": "https://holday.rocks/gym/%EC%8B%A0%EC%B4%8C%EB%8B%B4%EC%9E%A5"}, {"label": "을지로", "region": "서울", "listedName": "담장 을지로점", "city": "중구", "sourceUrl": "https://holday.rocks/gym/%EC%9D%84%EC%A7%80%EB%A1%9C-%EB%8B%B4%EC%9E%A5-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["seoul"]}, {"id": "bouldermate", "name": "볼더메이트 클라이밍", "branches": [{"label": "기흥", "region": "경기", "listedName": "볼더메이트 클라이밍 기흥점", "city": "용인시", "sourceUrl": "https://holday.rocks/gym/%EB%B3%BC%EB%8D%94%EB%A9%94%EC%9D%B4%ED%8A%B8-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EA%B8%B0%ED%9D%A5%EC%A0%90"}, {"label": "수지", "region": "경기", "listedName": "볼더메이트 클라이밍 수지점", "city": "용인시", "sourceUrl": "https://holday.rocks/gym/%EB%B3%BC%EB%8D%94%EB%A9%94%EC%9D%B4%ED%8A%B8-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%88%98%EC%A7%80%EC%A0%90"}], "sources": ["gyeonggi"]}, {"id": "climbus", "name": "클라임어스", "branches": [{"label": "모란", "region": "경기", "listedName": "클라임어스 모란점", "city": "성남시", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9E%84-%EC%96%B4%EC%8A%A4-%EB%AA%A8%EB%9E%80%EC%A0%90"}, {"label": "미사", "region": "경기", "listedName": "클라임어스 미사점", "city": "하남시", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9E%84%EC%96%B4%EC%8A%A4-%EB%AF%B8%EC%82%AC%EC%A0%90"}], "sources": ["gyeonggi"]}, {"id": "mongkids", "name": "몽키즈클라이밍", "branches": [{"label": "강서마곡", "region": "서울", "listedName": "몽키즈클라이밍 강서마곡점", "city": "강서구", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88-%EA%B0%95%EC%84%9C%EB%A7%88%EA%B3%A1%EC%A0%90"}, {"label": "답십리", "region": "서울", "listedName": "몽키즈클라이밍 답십리점", "city": "동대문구", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EB%8B%B5%EC%8B%AD%EB%A6%AC%EC%A0%90"}, {"label": "목동", "region": "서울", "listedName": "몽키즈클라이밍 목동점", "city": "양천구", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EB%AA%A9%EB%8F%99%EC%A0%90"}, {"label": "북가좌", "region": "서울", "listedName": "몽키즈클라이밍 북가좌점", "city": "서대문구", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EB%B6%81%EA%B0%80%EC%A2%8C%EC%A0%90"}, {"label": "신내", "region": "서울", "listedName": "몽키즈클라이밍 신내점", "city": "중랑구", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%8B%A0%EB%82%B4%EC%A0%90"}, {"label": "영등포", "region": "서울", "listedName": "몽키즈클라이밍 영등포점", "city": "영등포구", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%98%81%EB%93%B1%ED%8F%AC%EC%A0%90"}, {"label": "중계", "region": "서울", "listedName": "몽키즈클라이밍 중계점", "city": "노원구", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%A4%91%EA%B3%84%EC%A0%90"}, {"label": "고양화정", "region": "경기", "listedName": "몽키즈클라이밍 고양화정점", "city": "고양시", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EA%B3%A0%EC%96%91%ED%99%94%EC%A0%95%EC%A0%90"}, {"label": "광명철산", "region": "경기", "listedName": "몽키즈클라이밍 광명철산점"}, {"label": "경기광주태전", "region": "경기", "listedName": "몽키즈클라이밍 경기광주태전점"}, {"label": "김포운양", "region": "경기", "listedName": "몽키즈클라이밍 김포운양점", "city": "김포시", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}, {"label": "동탄반송", "region": "경기", "listedName": "몽키즈클라이밍 동탄반송점", "city": "화성시", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EB%8F%99%ED%83%84%EB%B0%98%EC%86%A1%EC%A0%90"}, {"label": "부천중동", "region": "경기", "listedName": "몽키즈클라이밍 부천중동점", "city": "부천시", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EB%B6%80%EC%B2%9C%EC%A4%91%EB%8F%99%EC%A0%90"}, {"label": "수원호매실", "region": "경기", "listedName": "몽키즈클라이밍 수원호매실점", "city": "수원시", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%88%98%EC%9B%90%ED%98%B8%EB%A7%A4%EC%8B%A4%EC%A0%90"}, {"label": "수지성복", "region": "경기", "listedName": "몽키즈클라이밍 수지성복점", "city": "용인시", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%88%98%EC%A7%80%EC%84%B1%EB%B3%B5%EC%A0%90"}, {"label": "시흥배곧", "region": "경기", "listedName": "몽키즈클라이밍 시흥배곧점", "city": "시흥시", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%8B%9C%ED%9D%A5%EB%B0%B0%EA%B3%A7%EC%A0%90"}, {"label": "안양평촌", "region": "경기", "listedName": "몽키즈클라이밍 안양평촌점", "city": "안양시", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%95%88%EC%96%91%ED%8F%89%EC%B4%8C%EC%A0%90"}, {"label": "양주옥정", "region": "경기", "listedName": "몽키즈클라이밍 양주옥정점", "city": "양주시", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%96%91%EC%A3%BC%EC%98%A5%EC%A0%95%EC%A0%90"}, {"label": "용인역북", "region": "경기", "listedName": "몽키즈클라이밍 용인역북점", "city": "용인시", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%9A%A9%EC%9D%B8%EC%97%AD%EB%B6%81%EC%A0%90"}, {"label": "위례", "region": "경기", "listedName": "몽키즈클라이밍 위례점", "city": "성남시", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88-%EC%9C%84%EB%A1%80%EC%A0%90"}, {"label": "일산마두", "region": "경기", "listedName": "몽키즈클라이밍 일산마두점", "city": "고양시", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%9D%BC%EC%82%B0%EB%A7%88%EB%91%90%EC%A0%90"}, {"label": "파주운정", "region": "경기", "listedName": "몽키즈클라이밍 파주운정점", "city": "파주시", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%ED%8C%8C%EC%A3%BC%EC%9A%B4%EC%A0%95%EC%A0%90"}, {"label": "하남미사", "region": "경기", "listedName": "몽키즈클라이밍 하남미사점", "city": "하남시", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%ED%95%98%EB%82%A8%EB%AF%B8%EC%82%AC%EC%A0%90"}, {"label": "인천아라", "region": "인천", "city": "검단구", "listedName": "몽키즈클라이밍 인천아라점", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%9D%B8%EC%B2%9C%EC%95%84%EB%9D%BC%EC%A0%90"}], "sources": ["mongkids", "seoul", "gyeonggi", "holday-인천"]}, {"id": "gym-014", "name": "강남스포츠클라이밍센터", "branches": [{"label": "", "region": "서울", "city": "강남구", "listedName": "강남스포츠클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EA%B0%95%EB%82%A8%EC%8A%A4%ED%8F%AC%EC%B8%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["seoul"]}, {"id": "gym-015", "name": "역삼클라이밍랩", "branches": [{"label": "", "region": "서울", "city": "강남구", "listedName": "역삼클라이밍랩", "sourceUrl": "https://holday.rocks/gym/%EC%97%AD%EC%82%BC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EB%9E%A9"}], "sources": ["seoul"]}, {"id": "gym-016", "name": "온세대클라이밍", "branches": [{"label": "", "region": "서울", "city": "강동구", "listedName": "온세대클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%98%A8%EC%84%B8%EB%8C%80%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["seoul"]}, {"id": "gym-018", "name": "쿠키즈클라이밍", "branches": [{"label": "", "region": "서울", "city": "강동구", "listedName": "쿠키즈클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%BF%A0%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["seoul"]}, {"id": "gym-019", "name": "맥클라이밍", "branches": [{"label": "", "region": "서울", "city": "강북구", "listedName": "맥클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%A7%A5%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["seoul"]}, {"id": "gym-020", "name": "북한산국제클라이밍센터", "branches": [{"label": "", "region": "서울", "city": "강북구", "listedName": "북한산국제클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%B6%81%ED%95%9C%EC%82%B0%EA%B5%AD%EC%A0%9C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["seoul"]}, {"id": "gym-021", "name": "블랙야크 야크돔", "branches": [{"label": "", "region": "서울", "city": "강북구", "listedName": "블랙야크 야크돔", "sourceUrl": "https://holday.rocks/gym/%EB%B8%94%EB%9E%99%EC%95%BC%ED%81%AC-%EC%95%BC%ED%81%AC%EB%8F%94"}], "sources": ["seoul"]}, {"id": "gym-022", "name": "강서클라이밍센터", "branches": [{"label": "", "region": "서울", "city": "강서구", "listedName": "강서클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EA%B0%95%EC%84%9C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["seoul"]}, {"id": "gym-023", "name": "어거스트클라이밍", "branches": [{"label": "", "region": "서울", "city": "강서구", "listedName": "어거스트클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%96%B4%EA%B1%B0%EC%8A%A4%ED%8A%B8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["seoul"]}, {"id": "gym-024", "name": "클라이밍88", "branches": [{"label": "", "region": "서울", "city": "강서구", "listedName": "클라이밍88", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D88"}], "sources": ["seoul"]}, {"id": "gym-025", "name": "투이얼즈 클라임 하우스", "branches": [{"label": "", "region": "서울", "city": "강서구", "listedName": "투이얼즈 클라임 하우스", "sourceUrl": "https://holday.rocks/gym/%ED%88%AC%EC%9D%B4%EC%96%BC%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9E%84%ED%95%98%EC%9A%B0%EC%8A%A4"}], "sources": ["seoul"]}, {"id": "gym-026", "name": "보람애스포츠클라이밍", "branches": [{"label": "", "region": "서울", "city": "관악구", "listedName": "보람애스포츠클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%B3%B4%EB%9E%8C%EC%95%A0%EC%8A%A4%ED%8F%AC%EC%B8%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["seoul"]}, {"id": "gym-028", "name": "인클라이밍센터", "branches": [{"label": "", "region": "서울", "city": "관악구", "listedName": "인클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%9D%B8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["seoul"]}, {"id": "gym-029", "name": "레드포인트클라이밍", "branches": [{"label": "", "region": "서울", "city": "광진구", "listedName": "레드포인트클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%A0%88%EB%93%9C%ED%8F%AC%EC%9D%B8%ED%8A%B8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["seoul"]}, {"id": "gym-030", "name": "버티고클라이밍", "branches": [{"label": "", "region": "서울", "city": "광진구", "listedName": "버티고클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EB%B2%84%ED%8B%B0%EA%B3%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["seoul"]}, {"id": "gym-032", "name": "썬클라이밍", "branches": [{"label": "", "region": "서울", "city": "구로구", "listedName": "썬클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EC%8D%AC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["seoul"]}, {"id": "gym-033", "name": "에이스클라이밍센터", "branches": [{"label": "", "region": "서울", "city": "구로구", "listedName": "에이스클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%97%90%EC%9D%B4%EC%8A%A4%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["seoul"]}, {"id": "gym-034", "name": "위클리클라이밍", "branches": [{"label": "", "region": "서울", "city": "구로구", "listedName": "위클리클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%9C%84%ED%81%B4%EB%A6%AC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["seoul"]}, {"id": "gym-035", "name": "바위하는사람들 암장", "branches": [{"label": "", "region": "서울", "city": "금천구", "listedName": "바위하는사람들 암장", "sourceUrl": "https://holday.rocks/gym/%EB%B0%94%EC%9C%84%ED%95%98%EB%8A%94%EC%82%AC%EB%9E%8C%EB%93%A4-%EC%95%94%EC%9E%A5"}], "sources": ["seoul"]}, {"id": "gym-036", "name": "유즈업", "branches": [{"label": "", "region": "서울", "city": "금천구", "listedName": "유즈업", "sourceUrl": "https://holday.rocks/gym/%EC%9C%A0%EC%A6%88%EC%97%85"}], "sources": ["seoul"]}, {"id": "gym-037", "name": "드림캐처클라이밍", "branches": [{"label": "", "region": "서울", "city": "노원구", "listedName": "드림캐처클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EB%93%9C%EB%A6%BC%EC%BA%90%EC%B2%98%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["seoul"]}, {"id": "gym-038", "name": "볼더클라이밍", "branches": [{"label": "", "region": "서울", "city": "노원구", "listedName": "볼더클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EB%B3%BC%EB%8D%94%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["seoul"]}, {"id": "gym-039", "name": "비숍클라이밍", "branches": [{"label": "", "region": "서울", "city": "노원구", "listedName": "비숍클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%B9%84%EC%88%8D%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["seoul"]}, {"id": "gym-040", "name": "스파이더스 클라이밍센터", "branches": [{"label": "", "region": "서울", "city": "노원구", "listedName": "스파이더스 클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%8A%A4%ED%8C%8C%EC%9D%B4%EB%8D%94%EC%8A%A4-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["seoul"]}, {"id": "gym-041", "name": "오름클라이밍", "branches": [{"label": "", "region": "서울", "city": "노원구", "listedName": "오름클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%98%A4%EB%A6%84%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["seoul"]}, {"id": "gym-042", "name": "활바위등반타운암장", "branches": [{"label": "", "region": "서울", "city": "노원구", "listedName": "활바위등반타운암장", "sourceUrl": "https://holday.rocks/gym/%ED%99%9C%EB%B0%94%EC%9C%84%EB%93%B1%EB%B0%98%ED%83%80%EC%9A%B4%EC%95%94%EC%9E%A5"}], "sources": ["seoul"]}, {"id": "gym-043", "name": "도봉파워클라이밍센터", "branches": [{"label": "", "region": "서울", "city": "도봉구", "listedName": "도봉파워클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%8F%84%EB%B4%89%ED%8C%8C%EC%9B%8C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["seoul"]}, {"id": "gym-044", "name": "산타클라이밍", "branches": [{"label": "", "region": "서울", "city": "동대문구", "listedName": "산타클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EC%82%B0%ED%83%80%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["seoul"]}, {"id": "gym-045", "name": "서울클라이밍센터", "branches": [{"label": "", "region": "서울", "city": "동대문구", "listedName": "서울클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%84%9C%EC%9A%B8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["seoul"]}, {"id": "gym-046", "name": "웨어하우스 볼더링", "branches": [{"label": "", "region": "서울", "city": "동대문구", "listedName": "웨어하우스 볼더링", "sourceUrl": "https://holday.rocks/gym/%EC%9B%A8%EC%96%B4%ED%95%98%EC%9A%B0%EC%8A%A4-%EB%B3%BC%EB%8D%94%EB%A7%81"}], "sources": ["seoul"]}, {"id": "gym-048", "name": "망원클라이밍피트니스", "branches": [{"label": "", "region": "서울", "city": "마포구", "listedName": "망원클라이밍피트니스", "sourceUrl": "https://holday.rocks/gym/%EB%A7%9D%EC%9B%90%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%ED%94%BC%ED%8A%B8%EB%8B%88%EC%8A%A4"}], "sources": ["seoul"]}, {"id": "gym-049", "name": "서울시산악문화체험센터", "branches": [{"label": "", "region": "서울", "city": "마포구", "listedName": "서울시산악문화체험센터", "sourceUrl": "https://holday.rocks/gym/%EC%84%9C%EC%9A%B8%EC%8B%9C%EC%82%B0%EC%95%85%EB%AC%B8%ED%99%94%EC%B2%B4%ED%97%98%EC%84%BC%ED%84%B0"}], "sources": ["seoul"]}, {"id": "gym-050", "name": "써미트클라이밍센터", "branches": [{"label": "", "region": "서울", "city": "마포구", "listedName": "써미트클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%8D%A8%EB%AF%B8%ED%8A%B8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["seoul"]}, {"id": "gym-051", "name": "홍대클라이밍", "branches": [{"label": "", "region": "서울", "city": "마포구", "listedName": "홍대클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%99%8D%EB%8C%80%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["seoul"]}, {"id": "gym-052", "name": "더클라이밍", "branches": [{"label": "", "region": "서울", "city": "서초구", "listedName": "더클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EB%8D%94%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["seoul"]}, {"id": "gym-053", "name": "볼더랜드", "branches": [{"label": "", "region": "서울", "city": "서초구", "listedName": "볼더랜드", "sourceUrl": "https://holday.rocks/gym/%EB%B3%BC%EB%8D%94%EB%9E%9C%EB%93%9C"}], "sources": ["seoul"]}, {"id": "gym-055", "name": "손정준 스포츠클라이밍연구소", "branches": [{"label": "", "region": "서울", "city": "성동구", "listedName": "손정준 스포츠클라이밍연구소", "sourceUrl": "https://holday.rocks/gym/%EC%86%90%EC%A0%95%EC%A4%80-%EC%8A%A4%ED%8F%AC%EC%B8%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%97%B0%EA%B5%AC%EC%86%8C"}], "sources": ["seoul"]}, {"id": "gym-059", "name": "루트클라이밍", "branches": [{"label": "", "region": "서울", "city": "송파구", "listedName": "루트클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%A3%A8%ED%8A%B8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["seoul"]}, {"id": "gym-060", "name": "브릭스클라이밍", "branches": [{"label": "", "region": "서울", "city": "송파구", "listedName": "브릭스클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EB%B8%8C%EB%A6%AD%EC%8A%A4%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["seoul"]}, {"id": "gym-061", "name": "클라이밍월", "branches": [{"label": "", "region": "서울", "city": "송파구", "listedName": "클라이밍월", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%9B%94"}], "sources": ["seoul"]}, {"id": "gym-062", "name": "클라임투더문", "branches": [{"label": "", "region": "서울", "city": "송파구", "listedName": "클라임투더문", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9E%84%ED%88%AC%EB%8D%94%EB%AC%B8"}], "sources": ["seoul"]}, {"id": "gym-063", "name": "목동클라이밍센터", "branches": [{"label": "", "region": "서울", "city": "양천구", "listedName": "목동클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%AA%A9%EB%8F%99%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["seoul"]}, {"id": "gym-064", "name": "서종국클라이밍", "branches": [{"label": "", "region": "서울", "city": "영등포구", "listedName": "서종국클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EC%84%9C%EC%A2%85%EA%B5%AD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["seoul"]}, {"id": "gym-065", "name": "클라임러버", "branches": [{"label": "", "region": "서울", "city": "영등포구", "listedName": "클라임러버", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9E%84%EB%9F%AC%EB%B2%84"}], "sources": ["seoul"]}, {"id": "gym-066", "name": "클라임웍스", "branches": [{"label": "", "region": "서울", "city": "영등포구", "listedName": "클라임웍스", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9E%84%EC%9B%8D%EC%8A%A4"}], "sources": ["seoul"]}, {"id": "gym-067", "name": "오프더월클라이밍", "branches": [{"label": "", "region": "서울", "city": "용산구", "listedName": "오프더월클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%98%A4%ED%94%84%EB%8D%94%EC%9B%94%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["seoul"]}, {"id": "gym-068", "name": "써니사이드클라이밍", "branches": [{"label": "", "region": "서울", "city": "은평구", "listedName": "써니사이드클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%8D%A8%EB%8B%88%EC%82%AC%EC%9D%B4%EB%93%9C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["seoul"]}, {"id": "gym-070", "name": "플래시볼더스 클라이밍", "branches": [{"label": "", "region": "서울", "city": "중구", "listedName": "플래시볼더스 클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%94%8C%EB%9E%98%EC%8B%9C%EB%B3%BC%EB%8D%94%EC%8A%A4-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["seoul"]}, {"id": "gym-071", "name": "마스터클라이밍", "branches": [{"label": "", "region": "서울", "city": "중랑구", "listedName": "마스터클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%A7%88%EC%8A%A4%ED%84%B0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["seoul"]}, {"id": "gym-073", "name": "두루봉암장", "branches": [{"label": "", "region": "경기", "city": "고양시", "listedName": "두루봉암장", "sourceUrl": "https://holday.rocks/gym/%EB%91%90%EB%A3%A8%EB%B4%89%EC%95%94%EC%9E%A5"}], "sources": ["gyeonggi"]}, {"id": "gym-074", "name": "일산SK클라이밍", "branches": [{"label": "", "region": "경기", "city": "고양시", "listedName": "일산SK클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%9D%BC%EC%82%B0sk%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-075", "name": "일산클라이밍센터", "branches": [{"label": "", "region": "경기", "city": "고양시", "listedName": "일산클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%9D%BC%EC%82%B0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["gyeonggi"]}, {"id": "gym-077", "name": "클라이밍 하이프렉스", "branches": [{"label": "", "region": "경기", "city": "고양시", "listedName": "클라이밍 하이프렉스", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%ED%95%98%EC%9D%B4%ED%94%84%EB%A0%89%EC%8A%A4"}], "sources": ["gyeonggi"]}, {"id": "gym-078", "name": "페퍼 클라이밍", "branches": [{"label": "", "region": "경기", "city": "고양시", "listedName": "페퍼 클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%8E%98%ED%8D%BC-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-079", "name": "하이포인트 클라이밍", "branches": [{"label": "", "region": "경기", "city": "고양시", "listedName": "하이포인트 클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%95%98%EC%9D%B4%ED%8F%AC%EC%9D%B8%ED%8A%B8-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-080", "name": "마운틴스타 클라이밍", "branches": [{"label": "", "region": "경기", "city": "구리시", "listedName": "마운틴스타 클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EB%A7%88%EC%9A%B4%ED%8B%B4%EC%8A%A4%ED%83%80-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["gyeonggi"]}, {"id": "gym-081", "name": "경기클라이밍센터", "branches": [{"label": "", "region": "경기", "city": "군포시", "listedName": "경기클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EA%B2%BD%EA%B8%B0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["gyeonggi"]}, {"id": "gym-082", "name": "락클라이밍산본", "branches": [{"label": "", "region": "경기", "city": "군포시", "listedName": "락클라이밍산본", "sourceUrl": "https://holday.rocks/gym/%EB%9D%BD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%82%B0%EB%B3%B8"}], "sources": ["gyeonggi"]}, {"id": "gym-083", "name": "산본클라이밍센터", "branches": [{"label": "", "region": "경기", "city": "군포시", "listedName": "산본클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%82%B0%EB%B3%B8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["gyeonggi"]}, {"id": "gym-084", "name": "스파이시 클라이밍", "branches": [{"label": "", "region": "경기", "city": "군포시", "listedName": "스파이시 클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%8A%A4%ED%8C%8C%EC%9D%B4%EC%8B%9C-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-085", "name": "잼클라이밍", "branches": [{"label": "", "region": "경기", "city": "김포시", "listedName": "잼클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%9E%BC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-087", "name": "테키클라이밍", "branches": [{"label": "", "region": "경기", "city": "김포시", "listedName": "테키클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%85%8C%ED%82%A4%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-088", "name": "픽클라이밍", "branches": [{"label": "", "region": "경기", "city": "김포시", "listedName": "픽클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%94%BD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-089", "name": "다이노클라이밍", "branches": [{"label": "", "region": "경기", "city": "남양주시", "listedName": "다이노클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%8B%A4%EC%9D%B4%EB%85%B8-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-090", "name": "무브온클라이밍", "branches": [{"label": "", "region": "경기", "city": "남양주시", "listedName": "무브온클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%AC%B4%EB%B8%8C%EC%98%A8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-091", "name": "엠투클라이밍", "branches": [{"label": "", "region": "경기", "city": "남양주시", "listedName": "엠투클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%97%A0%ED%88%AC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-092", "name": "퍼즐클라이밍", "branches": [{"label": "", "region": "경기", "city": "남양주시", "listedName": "퍼즐클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%8D%BC%EC%A6%90%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-093", "name": "두드림클라이밍센터", "branches": [{"label": "", "region": "경기", "city": "동두천시", "listedName": "두드림클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%91%90%EB%93%9C%EB%A6%BC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["gyeonggi"]}, {"id": "gym-094", "name": "부천 클라이밍센터", "branches": [{"label": "", "region": "경기", "city": "부천시", "listedName": "부천 클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%B6%80%EC%B2%9C-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["gyeonggi"]}, {"id": "gym-095", "name": "월드클라이밍", "branches": [{"label": "", "region": "경기", "city": "부천시", "listedName": "월드클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%9B%94%EB%93%9C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-096", "name": "캐치스톤클라이밍", "branches": [{"label": "", "region": "경기", "city": "부천시", "listedName": "캐치스톤클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EC%BA%90%EC%B9%98%EC%8A%A4%ED%86%A4%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["gyeonggi"]}, {"id": "gym-097", "name": "팍스클라이밍센터", "branches": [{"label": "", "region": "경기", "city": "부천시", "listedName": "팍스클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%ED%8C%8D%EC%8A%A4%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["gyeonggi"]}, {"id": "gym-098", "name": "그립픽클라이밍", "branches": [{"label": "", "region": "경기", "city": "성남시", "listedName": "그립픽클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EA%B7%B8%EB%A6%BD%ED%94%BD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["gyeonggi"]}, {"id": "gym-099", "name": "더볼더", "branches": [{"label": "", "region": "경기", "city": "성남시", "listedName": "더볼더", "sourceUrl": "https://holday.rocks/gym/%EB%8D%94%EB%B3%BC%EB%8D%94"}], "sources": ["gyeonggi"]}, {"id": "gym-100", "name": "락트리클라이밍 분당", "branches": [{"label": "", "region": "경기", "city": "성남시", "listedName": "락트리클라이밍 분당", "sourceUrl": "https://holday.rocks/gym/%EB%9D%BD%ED%8A%B8%EB%A6%AC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EB%B6%84%EB%8B%B9"}], "sources": ["gyeonggi"]}, {"id": "gym-101", "name": "락페이스클라이밍", "branches": [{"label": "", "region": "경기", "city": "성남시", "listedName": "락페이스클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%9D%BD%ED%8E%98%EC%9D%B4%EC%8A%A4%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-102", "name": "비클라이밍", "branches": [{"label": "", "region": "경기", "city": "성남시", "listedName": "비클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%B9%84%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-103", "name": "성남스포츠클라이밍센터", "branches": [{"label": "", "region": "경기", "city": "성남시", "listedName": "성남스포츠클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%84%B1%EB%82%A8%EC%8A%A4%ED%8F%AC%EC%B8%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["gyeonggi"]}, {"id": "gym-104", "name": "스파이더실내암벽클라이밍", "branches": [{"label": "", "region": "경기", "city": "성남시", "listedName": "스파이더실내암벽클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%8A%A4%ED%8C%8C%EC%9D%B4%EB%8D%94%EC%8B%A4%EB%82%B4%EC%95%94%EB%B2%BD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-106", "name": "서수원클라이밍센터", "branches": [{"label": "", "region": "경기", "city": "수원시", "listedName": "서수원클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%84%9C%EC%88%98%EC%9B%90%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["gyeonggi"]}, {"id": "gym-107", "name": "수원라온클라이밍", "branches": [{"label": "", "region": "경기", "city": "수원시", "listedName": "수원라온클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%88%98%EC%9B%90%EB%9D%BC%EC%98%A8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-108", "name": "수원크럭스존클라이밍", "branches": [{"label": "", "region": "경기", "city": "수원시", "listedName": "수원크럭스존클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%88%98%EC%9B%90%ED%81%AC%EB%9F%AD%EC%8A%A4%EC%A1%B4%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-109", "name": "슈퍼비 클라이밍", "branches": [{"label": "", "region": "경기", "city": "수원시", "listedName": "슈퍼비 클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%8A%88%ED%8D%BC%EB%B9%84-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-113", "name": "킹콩클라이밍", "branches": [{"label": "", "region": "경기", "city": "수원시", "listedName": "킹콩클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%82%B9%EC%BD%A9%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%88%98%EC%9B%90%EC%8B%9C"}], "sources": ["gyeonggi"]}, {"id": "gym-114", "name": "포에버클라이밍", "branches": [{"label": "", "region": "경기", "city": "수원시", "listedName": "포에버클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%8F%AC%EC%97%90%EB%B2%84%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-115", "name": "피크닉클라이밍", "branches": [{"label": "", "region": "경기", "city": "수원시", "listedName": "피크닉클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%94%BC%ED%81%AC%EB%8B%89%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-116", "name": "볼더가든", "branches": [{"label": "", "region": "경기", "city": "시흥시", "listedName": "볼더가든", "sourceUrl": "https://holday.rocks/gym/%EB%B3%BC%EB%8D%94%EA%B0%80%EB%93%A0"}], "sources": ["gyeonggi"]}, {"id": "gym-117", "name": "시흥스포츠클라이밍센터", "branches": [{"label": "", "region": "경기", "city": "시흥시", "listedName": "시흥스포츠클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%8B%9C%ED%9D%A5%EC%8A%A4%ED%8F%AC%EC%B8%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["gyeonggi"]}, {"id": "gym-118", "name": "캐치클라이밍", "branches": [{"label": "", "region": "경기", "city": "시흥시", "listedName": "캐치클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EC%BA%90%EC%B9%98%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["gyeonggi"]}, {"id": "gym-120", "name": "안산베이스캠프 클라이밍", "branches": [{"label": "", "region": "경기", "city": "안산시", "listedName": "안산베이스캠프 클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%95%88%EC%82%B0%EB%B2%A0%EC%9D%B4%EC%8A%A4%EC%BA%A0%ED%94%84-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-121", "name": "안산선부클라이밍", "branches": [{"label": "", "region": "경기", "city": "안산시", "listedName": "안산선부클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%95%88%EC%82%B0%EC%84%A0%EB%B6%80%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-122", "name": "클라이밍 트리클", "branches": [{"label": "", "region": "경기", "city": "안산시", "listedName": "클라이밍 트리클", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%ED%8A%B8%EB%A6%AC%ED%81%B4"}], "sources": ["gyeonggi"]}, {"id": "gym-123", "name": "클럽클라이밍", "branches": [{"label": "", "region": "경기", "city": "안산시", "listedName": "클럽클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9F%BD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-124", "name": "안성클라이밍센터", "branches": [{"label": "", "region": "경기", "city": "안성시", "listedName": "안성클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%95%88%EC%84%B1%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["gyeonggi"]}, {"id": "gym-125", "name": "원더월클라이밍", "branches": [{"label": "", "region": "경기", "city": "안성시", "listedName": "원더월클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%9B%90%EB%8D%94%EC%9B%94%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-126", "name": "클라이밍더하기", "branches": [{"label": "", "region": "경기", "city": "안성시", "listedName": "클라이밍더하기", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EB%8D%94%ED%95%98%EA%B8%B0"}], "sources": ["gyeonggi"]}, {"id": "gym-127", "name": "김종헌클라이밍센터", "branches": [{"label": "", "region": "경기", "city": "안양시", "listedName": "김종헌클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EA%B9%80%EC%A2%85%ED%97%8C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["gyeonggi"]}, {"id": "gym-128", "name": "더렛지 클라이밍", "branches": [{"label": "", "region": "경기", "city": "안양시", "listedName": "더렛지 클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%8D%94%EB%A0%9B%EC%A7%80-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-129", "name": "실내암벽클라임홀릭", "branches": [{"label": "", "region": "경기", "city": "안양시", "listedName": "실내암벽클라임홀릭", "sourceUrl": "https://holday.rocks/gym/%EC%8B%A4%EB%82%B4%EC%95%94%EB%B2%BD%ED%81%B4%EB%9D%BC%EC%9E%84%ED%99%80%EB%A6%AD"}], "sources": ["gyeonggi"]}, {"id": "gym-131", "name": "펀클라임", "branches": [{"label": "", "region": "경기", "city": "안양시", "listedName": "펀클라임짐", "sourceUrl": "https://holday.rocks/gym/%ED%8E%80%ED%81%B4%EB%9D%BC%EC%9E%84%EC%A7%90"}], "sources": ["gyeonggi"]}, {"id": "gym-132", "name": "더바이브클라이밍", "branches": [{"label": "", "region": "경기", "city": "양주시", "listedName": "더바이브클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%8D%94%EB%B0%94%EC%9D%B4%EB%B8%8C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-133", "name": "여주클라이밍센터", "branches": [{"label": "", "region": "경기", "city": "여주시", "listedName": "여주클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%97%AC%EC%A3%BC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["gyeonggi"]}, {"id": "gym-134", "name": "경기레포츠클라이밍", "branches": [{"label": "", "region": "경기", "city": "용인시", "listedName": "경기레포츠클라이밍", "sourceUrl": "https://holday.rocks/gym/%EA%B2%BD%EA%B8%B0%EB%A0%88%ED%8F%AC%EC%B8%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-135", "name": "더그릿클라이밍", "branches": [{"label": "", "region": "경기", "city": "용인시", "listedName": "더그릿클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%8D%94%EA%B7%B8%EB%A6%BF%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-136", "name": "에잇픽스클라이밍", "branches": [{"label": "", "region": "경기", "city": "의왕시", "listedName": "에잇픽스클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%97%90%EC%9E%87%ED%94%BD%EC%8A%A4%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-137", "name": "산클암장", "branches": [{"label": "", "region": "경기", "city": "의정부시", "listedName": "산클암장", "sourceUrl": "https://holday.rocks/gym/%EC%82%B0%ED%81%B4%EC%95%94%EC%9E%A5"}], "sources": ["gyeonggi"]}, {"id": "gym-138", "name": "샤모니클라이밍", "branches": [{"label": "", "region": "경기", "city": "의정부시", "listedName": "샤모니클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%83%A4%EB%AA%A8%EB%8B%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-139", "name": "킹클라이밍", "branches": [{"label": "", "region": "경기", "city": "의정부시", "listedName": "킹클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%82%B9%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-140", "name": "이천굿클라이밍", "branches": [{"label": "", "region": "경기", "city": "이천시", "listedName": "이천굿클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%9D%B4%EC%B2%9C%EA%B5%BF%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-142", "name": "클라임원", "branches": [{"label": "", "region": "경기", "city": "이천시", "listedName": "클라임원", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9E%84%EC%9B%90"}], "sources": ["gyeonggi"]}, {"id": "gym-143", "name": "타잔클라이밍", "branches": [{"label": "", "region": "경기", "city": "이천시", "listedName": "타잔클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%83%80%EC%9E%94%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-144", "name": "애스트로맨 클라이밍센터", "branches": [{"label": "", "region": "경기", "city": "파주시", "listedName": "애스트로맨 클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%95%A0%EC%8A%A4%ED%8A%B8%EB%A1%9C%EB%A7%A8-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["gyeonggi"]}, {"id": "gym-145", "name": "운정점핑클라이밍", "branches": [{"label": "", "region": "경기", "city": "파주시", "listedName": "운정점핑클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%9A%B4%EC%A0%95%EC%A0%90%ED%95%91%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-146", "name": "정글 클라이밍센터", "branches": [{"label": "", "region": "경기", "city": "파주시", "listedName": "정글짐 클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%A0%95%EA%B8%80%EC%A7%90-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["gyeonggi"]}, {"id": "gym-147", "name": "파주클라이밍센터", "branches": [{"label": "", "region": "경기", "city": "파주시", "listedName": "파주클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%ED%8C%8C%EC%A3%BC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["gyeonggi"]}, {"id": "gym-148", "name": "트윈클라이밍", "branches": [{"label": "", "region": "경기", "city": "평택시", "listedName": "트윈클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%ED%8A%B8%EC%9C%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["gyeonggi"]}, {"id": "gym-151", "name": "힐앤토클라이밍", "branches": [{"label": "", "region": "경기", "city": "평택시", "listedName": "힐앤토클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%9E%90%EC%95%A4%ED%86%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-152", "name": "CL클라이밍", "branches": [{"label": "", "region": "경기", "city": "화성시", "listedName": "CL클라이밍", "sourceUrl": "https://holday.rocks/gym/cl%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-154", "name": "볼더박스 클라임", "branches": [{"label": "", "region": "경기", "city": "화성시", "listedName": "볼더박스 클라임", "sourceUrl": "https://holday.rocks/gym/%EB%B3%BC%EB%8D%94%EB%B0%95%EC%8A%A4-%ED%81%B4%EB%9D%BC%EC%9E%84"}], "sources": ["gyeonggi"]}, {"id": "gym-155", "name": "아이언팜스 클라이밍센터", "branches": [{"label": "", "region": "경기", "city": "화성시", "listedName": "아이언팜스 클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%95%84%EC%9D%B4%EC%96%B8%ED%8C%9C%EC%8A%A4-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["gyeonggi"]}, {"id": "gym-156", "name": "엑스클라이밍", "branches": [{"label": "", "region": "경기", "city": "화성시", "listedName": "엑스클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%97%91%EC%8A%A4%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-157", "name": "클라임어클락", "branches": [{"label": "", "region": "경기", "city": "화성시", "listedName": "클라임어클락", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9E%84%EC%96%B4%ED%81%B4%EB%9D%BD"}], "sources": ["gyeonggi"]}, {"id": "gym-158", "name": "홀드앤락클라이밍", "branches": [{"label": "", "region": "경기", "city": "화성시", "listedName": "홀드앤락클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%99%80%EB%93%9C%EC%95%A4%EB%9D%BD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["gyeonggi"]}, {"id": "gym-159", "name": "화성클라이밍클럽", "branches": [{"label": "", "region": "경기", "city": "화성시", "listedName": "화성클라이밍클럽", "sourceUrl": "https://holday.rocks/gym/%ED%99%94%EC%84%B1%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%ED%81%B4%EB%9F%BD"}], "sources": ["gyeonggi"]}, {"id": "national-24f114851fcf", "name": "프라임기어", "branches": [{"label": "본점", "region": "부산", "city": "강서구", "listedName": "프라임기어 본점", "sourceUrl": "https://holday.rocks/gym/%ED%94%84%EB%9D%BC%EC%9E%84%EA%B8%B0%EC%96%B4-%EB%B3%B8%EC%A0%90"}], "sources": ["holday-부산"]}, {"id": "national-bb2684620796", "name": "bbc빅월클럽아카데미", "branches": [{"label": "", "region": "부산", "city": "금정구", "listedName": "bbc빅월클럽아카데미", "sourceUrl": "https://holday.rocks/gym/bbc%EB%B9%85%EC%9B%94%ED%81%B4%EB%9F%BD%EC%95%84%EC%B9%B4%EB%8D%B0%EB%AF%B8"}], "sources": ["holday-부산"]}, {"id": "national-3117023fad7f", "name": "웨이브락", "branches": [{"label": "부산대", "region": "부산", "city": "금정구", "listedName": "웨이브락 부산대점", "sourceUrl": "https://holday.rocks/gym/%EC%9B%A8%EC%9D%B4%EB%B8%8C%EB%9D%BD-%EB%B6%80%EC%82%B0%EB%8C%80%EC%A0%90"}, {"label": "서면", "region": "부산", "city": "부산진구", "listedName": "웨이브락 서면점", "sourceUrl": "https://holday.rocks/gym/%EC%9B%A8%EC%9D%B4%EB%B8%8C%EB%9D%BD-%EC%84%9C%EB%A9%B4%EC%A0%90"}, {"label": "남천", "region": "부산", "city": "수영구", "listedName": "웨이브락 남천점", "sourceUrl": "https://holday.rocks/gym/%EC%9B%A8%EC%9D%B4%EB%B8%8C%EB%9D%BD-%EB%82%A8%EC%B2%9C%EC%A0%90"}], "sources": ["holday-부산"]}, {"id": "national-e6e0b2683b09", "name": "리버스락", "branches": [{"label": "", "region": "부산", "city": "기장군", "listedName": "리버스락", "sourceUrl": "https://holday.rocks/gym/%EB%A6%AC%EB%B2%84%EC%8A%A4%EB%9D%BD"}], "sources": ["holday-부산"]}, {"id": "national-ad2a871ba0d6", "name": "하이클라이밍", "branches": [{"label": "", "region": "부산", "city": "기장군", "listedName": "하이클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%95%98%EC%9D%B4%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-부산"]}, {"id": "national-a3f49c590208", "name": "부산문현클라이밍센터", "branches": [{"label": "", "region": "부산", "city": "남구", "listedName": "부산문현클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%B6%80%EC%82%B0%EB%AC%B8%ED%98%84%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-부산"]}, {"id": "national-b9e1b4a62b0b", "name": "동래클라이밍센터", "branches": [{"label": "", "region": "부산", "city": "동래구", "listedName": "동래클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%8F%99%EB%9E%98%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-부산"]}, {"id": "national-5978d16e64e3", "name": "락오디세이", "branches": [{"label": "동래", "region": "부산", "city": "동래구", "listedName": "락오디세이 동래점", "sourceUrl": "https://holday.rocks/gym/%EB%9D%BD%EC%98%A4%EB%94%94%EC%84%B8%EC%9D%B4-%EB%8F%99%EB%9E%98%EC%A0%90"}], "sources": ["holday-부산"]}, {"id": "national-6c71d7993beb", "name": "아트클라이밍", "branches": [{"label": "", "region": "부산", "city": "동래구", "listedName": "아트클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%95%84%ED%8A%B8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-부산"]}, {"id": "national-34d1b93fb9ec", "name": "패밀리클라이밍센터", "branches": [{"label": "", "region": "부산", "city": "동래구", "listedName": "패밀리클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%ED%8C%A8%EB%B0%80%EB%A6%AC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-부산"]}, {"id": "national-8497598c86ea", "name": "돌멩이클라이밍", "branches": [{"label": "전포", "region": "부산", "city": "부산진구", "listedName": "돌멩이클라이밍 전포점", "sourceUrl": "https://holday.rocks/gym/%EB%8F%8C%EB%A9%A9%EC%9D%B4%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-부산"]}, {"id": "national-af5bd0ef8bf4", "name": "부산진구전포청소년센터 스포츠클라이밍", "branches": [{"label": "", "region": "부산", "city": "부산진구", "listedName": "부산진구전포청소년센터 스포츠클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%B6%80%EC%82%B0%EC%A7%84%EA%B5%AC%EC%A0%84%ED%8F%AC%EC%B2%AD%EC%86%8C%EB%85%84%EC%84%BC%ED%84%B0-%EC%8A%A4%ED%8F%AC%EC%B8%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-부산"]}, {"id": "national-eb3c70f58768", "name": "SO클라이밍짐", "branches": [{"label": "화명", "region": "부산", "city": "북구", "listedName": "SO클라이밍짐 화명점", "sourceUrl": "https://holday.rocks/gym/so%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90-%ED%99%94%EB%AA%85%EC%A0%90"}], "sources": ["holday-부산"]}, {"id": "national-f44f2ac2a510", "name": "락클라이밍짐", "branches": [{"label": "", "region": "부산", "city": "북구", "listedName": "락클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EB%9D%BD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-부산"]}, {"id": "national-c41b03466afe", "name": "화명자바클라이밍센터", "branches": [{"label": "", "region": "부산", "city": "북구", "listedName": "화명자바클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%ED%99%94%EB%AA%85%EC%9E%90%EB%B0%94%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-부산"]}, {"id": "national-23de101e4b98", "name": "클럽스파이더클라이밍", "branches": [{"label": "사상", "region": "부산", "city": "사상구", "listedName": "클럽스파이더클라이밍 사상점", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9F%BD%EC%8A%A4%ED%8C%8C%EC%9D%B4%EB%8D%94%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%82%AC%EC%83%81%EC%A0%90"}], "sources": ["holday-부산"]}, {"id": "national-43b05ab36763", "name": "포고클라임", "branches": [{"label": "", "region": "부산", "city": "사상구", "listedName": "포고클라임", "sourceUrl": "https://holday.rocks/gym/%ED%8F%AC%EA%B3%A0%ED%81%B4%EB%9D%BC%EC%9E%84"}], "sources": ["holday-부산"]}, {"id": "national-69bd9ec2844c", "name": "록파티클라이밍", "branches": [{"label": "", "region": "부산", "city": "사하구", "listedName": "록파티클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%A1%9D%ED%8C%8C%ED%8B%B0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-부산"]}, {"id": "national-255e37f9ed00", "name": "오터클라이밍", "branches": [{"label": "", "region": "부산", "city": "사하구", "listedName": "오터클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%98%A4%ED%84%B0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-부산"]}, {"id": "national-316f9578bafc", "name": "짱클라이밍", "branches": [{"label": "", "region": "부산", "city": "사하구", "listedName": "짱클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%A7%B1%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-부산"]}, {"id": "national-442071e8ffe5", "name": "부산클라이밍 해운대센터", "branches": [{"label": "", "region": "부산", "city": "해운대구", "listedName": "부산클라이밍 해운대센터", "sourceUrl": "https://holday.rocks/gym/%EB%B6%80%EC%82%B0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%ED%95%B4%EC%9A%B4%EB%8C%80%EC%84%BC%ED%84%B0"}], "sources": ["holday-부산"]}, {"id": "national-44b86e048c5e", "name": "아르피나 인공암벽장", "branches": [{"label": "", "region": "부산", "city": "해운대구", "listedName": "아르피나 인공암벽장", "sourceUrl": "https://holday.rocks/gym/%EC%95%84%EB%A5%B4%ED%94%BC%EB%82%98-%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-부산"]}, {"id": "national-d7697f93eb17", "name": "남구국제스포츠클라이밍장", "branches": [{"label": "", "region": "대구", "city": "남구", "listedName": "남구국제스포츠클라이밍장", "sourceUrl": "https://holday.rocks/gym/%EB%82%A8%EA%B5%AC%EA%B5%AD%EC%A0%9C%EC%8A%A4%ED%8F%AC%EC%B8%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%9E%A5"}], "sources": ["holday-대구"]}, {"id": "national-3652e7b7c33e", "name": "남구청암벽장", "branches": [{"label": "", "region": "대구", "city": "남구", "listedName": "남구청암벽장", "sourceUrl": "https://holday.rocks/gym/%EB%82%A8%EA%B5%AC%EC%B2%AD%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-대구"]}, {"id": "national-1cc18c0005be", "name": "핸즈클라이밍짐", "branches": [{"label": "", "region": "대구", "city": "남구", "listedName": "핸즈클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%ED%95%B8%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-대구"]}, {"id": "national-e8577e479c82", "name": "M클라이밍 남대구센터", "branches": [{"label": "", "region": "대구", "city": "달서구", "listedName": "M클라이밍 남대구센터", "sourceUrl": "https://holday.rocks/gym/m%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EB%82%A8%EB%8C%80%EA%B5%AC%EC%84%BC%ED%84%B0"}], "sources": ["holday-대구"]}, {"id": "national-b036b3ed4a90", "name": "노루클라이밍", "branches": [{"label": "", "region": "대구", "city": "달서구", "listedName": "노루클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%85%B8%EB%A3%A8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-대구"]}, {"id": "national-bd21d25d68aa", "name": "대구클라이밍센터", "branches": [{"label": "", "region": "대구", "city": "달서구", "listedName": "대구클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%8C%80%EA%B5%AC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0-%EB%8B%AC%EC%84%9C%EA%B5%AC"}], "sources": ["holday-대구"]}, {"id": "national-29fd22794460", "name": "락토피아클라이밍짐", "branches": [{"label": "", "region": "대구", "city": "달서구", "listedName": "락토피아클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EB%9D%BD%ED%86%A0%ED%94%BC%EC%95%84%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-대구"]}, {"id": "national-167aa9d481c2", "name": "마운틴플러스 클라이밍센터", "branches": [{"label": "", "region": "대구", "city": "달서구", "listedName": "마운틴플러스 클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%A7%88%EC%9A%B4%ED%8B%B4%ED%94%8C%EB%9F%AC%EC%8A%A4-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-대구"]}, {"id": "national-0eb5fedacce5", "name": "손세동클라이밍", "branches": [{"label": "대구두류", "region": "대구", "city": "달서구", "listedName": "손세동클라이밍 대구두류점", "sourceUrl": "https://holday.rocks/gym/%EC%86%90%EC%84%B8%EB%8F%99%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EB%8C%80%EA%B5%AC%EB%91%90%EB%A5%98%EC%A0%90"}, {"label": "칠곡", "region": "대구", "city": "북구", "listedName": "손세동클라이밍 칠곡점", "sourceUrl": "https://holday.rocks/gym/%EC%86%90%EC%84%B8%EB%8F%99%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%B9%A0%EA%B3%A1%EC%A0%90"}], "sources": ["holday-대구"]}, {"id": "national-48dba6fb171c", "name": "점프실내암벽", "branches": [{"label": "", "region": "대구", "city": "달서구", "listedName": "점프실내암벽", "sourceUrl": "https://holday.rocks/gym/%EC%A0%90%ED%94%84%EC%8B%A4%EB%82%B4%EC%95%94%EB%B2%BD"}], "sources": ["holday-대구"]}, {"id": "national-084c5ed5c8c5", "name": "초크업클라이밍", "branches": [{"label": "더 볼더", "region": "대구", "city": "달서구", "listedName": "초크업 더 볼더", "sourceUrl": "https://holday.rocks/gym/%EC%B4%88%ED%81%AC%EC%97%85-%EB%8D%94-%EB%B3%BC%EB%8D%94"}, {"label": "월성", "region": "대구", "city": "달서구", "listedName": "초크업클라이밍 월성점", "sourceUrl": "https://holday.rocks/gym/%EC%B4%88%ED%81%AC%EC%97%85%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%9B%94%EC%84%B1%EC%A0%90"}, {"label": "경대", "region": "대구", "city": "북구", "listedName": "초크업클라이밍 경대점", "sourceUrl": "https://holday.rocks/gym/%EC%B4%88%ED%81%AC%EC%97%85%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EA%B2%BD%EB%8C%80%EC%A0%90"}, {"label": "침산", "region": "대구", "city": "북구", "listedName": "초크업클라이밍 침산점", "sourceUrl": "https://holday.rocks/gym/%EC%B4%88%ED%81%AC%EC%97%85%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%B9%A8%EC%82%B0%EC%A0%90"}], "sources": ["holday-대구"]}, {"id": "national-e9437d248780", "name": "클라이밍하이", "branches": [{"label": "", "region": "대구", "city": "달서구", "listedName": "클라이밍하이", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%ED%95%98%EC%9D%B4"}], "sources": ["holday-대구"]}, {"id": "national-936060161aa9", "name": "킹콩클라이밍", "branches": [{"label": "", "region": "대구", "city": "달서구", "listedName": "킹콩클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%82%B9%EC%BD%A9%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-대구"]}, {"id": "national-b65d92e258f1", "name": "몬스터클라이밍", "branches": [{"label": "", "region": "대구", "city": "달성군", "listedName": "몬스터클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%AA%AC%EC%8A%A4%ED%84%B0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-대구"]}, {"id": "national-46ba64ec0caf", "name": "다이노캣 클라이밍", "branches": [{"label": "안심", "region": "대구", "city": "동구", "listedName": "다이노캣 클라이밍 안심점", "sourceUrl": "https://holday.rocks/gym/%EB%8B%A4%EC%9D%B4%EB%85%B8%EC%BA%A3-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-대구"]}, {"id": "national-e7378e5d9622", "name": "정글짐키즈클라이밍센터", "branches": [{"label": "", "region": "대구", "city": "동구", "listedName": "정글짐키즈클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%A0%95%EA%B8%80%EC%A7%90%ED%82%A4%EC%A6%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-대구"]}, {"id": "national-3af94bd5c414", "name": "팔공산인공암벽장", "branches": [{"label": "", "region": "대구", "city": "동구", "listedName": "팔공산인공암벽장", "sourceUrl": "https://holday.rocks/gym/%ED%8C%94%EA%B3%B5%EC%82%B0%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-대구"]}, {"id": "national-1c83077386e5", "name": "M클라이밍", "branches": [{"label": "칠곡", "region": "대구", "city": "북구", "listedName": "M클라이밍 칠곡점", "sourceUrl": "https://holday.rocks/gym/m%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%B9%A0%EA%B3%A1%EC%A0%90"}], "sources": ["holday-대구"]}, {"id": "national-b85ddc649555", "name": "락 클라이밍센터", "branches": [{"label": "", "region": "대구", "city": "북구", "listedName": "락 클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%9D%BD-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-대구"]}, {"id": "national-fc69c4a01228", "name": "벽클라이밍스쿨", "branches": [{"label": "", "region": "대구", "city": "북구", "listedName": "벽클라이밍스쿨", "sourceUrl": "https://holday.rocks/gym/%EB%B2%BD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%8A%A4%EC%BF%A8"}], "sources": ["holday-대구"]}, {"id": "national-a2e6fddc10b6", "name": "에브리클라임", "branches": [{"label": "", "region": "대구", "city": "북구", "listedName": "에브리클라임", "sourceUrl": "https://holday.rocks/gym/%EC%97%90%EB%B8%8C%EB%A6%AC%ED%81%B4%EB%9D%BC%EC%9E%84"}], "sources": ["holday-대구"]}, {"id": "national-bee4e2d30fc8", "name": "챌린져클라이밍", "branches": [{"label": "칠곡", "region": "대구", "city": "북구", "listedName": "챌린져클라이밍 칠곡점", "sourceUrl": "https://holday.rocks/gym/%EC%B1%8C%EB%A6%B0%EC%A0%B8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%B9%A0%EA%B3%A1%EC%A0%90"}, {"label": "본점", "region": "대구", "city": "수성구", "listedName": "챌린져 클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%B1%8C%EB%A6%B0%EC%A0%B8-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}, {"label": "영대", "region": "경북", "city": "경산시", "listedName": "챌린져클라이밍센터 영대점", "sourceUrl": "https://holday.rocks/gym/%EC%B1%8C%EB%A6%B0%EC%A0%B8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0-%EC%98%81%EB%8C%80%EC%A0%90"}], "sources": ["holday-대구", "holday-경북"]}, {"id": "national-0676d7294205", "name": "칠곡클라이밍센터", "branches": [{"label": "", "region": "대구", "city": "북구", "listedName": "칠곡클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%B9%A0%EA%B3%A1%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-대구"]}, {"id": "national-aeeaa6a3ea3f", "name": "광장클라이밍센터", "branches": [{"label": "", "region": "대구", "city": "서구", "listedName": "광장클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EA%B4%91%EC%9E%A5%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-대구"]}, {"id": "national-2b08acca5600", "name": "볼더라운지 플립", "branches": [{"label": "대구", "region": "대구", "city": "서구", "listedName": "볼더라운지 플립 대구점", "sourceUrl": "https://holday.rocks/gym/%EB%B3%BC%EB%8D%94%EB%9D%BC%EC%9A%B4%EC%A7%80-%ED%94%8C%EB%A6%BD-%EB%8C%80%EA%B5%AC%EC%A0%90"}], "sources": ["holday-대구"]}, {"id": "national-3288b71ab85a", "name": "뉴비클라이밍", "branches": [{"label": "수성", "region": "대구", "city": "수성구", "listedName": "뉴비클라이밍 수성점", "sourceUrl": "https://holday.rocks/gym/%EB%89%B4%EB%B9%84%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%88%98%EC%84%B1%EC%A0%90"}], "sources": ["holday-대구"]}, {"id": "national-5040efef8848", "name": "대구체육공원 암벽등반장", "branches": [{"label": "", "region": "대구", "city": "수성구", "listedName": "대구체육공원 암벽등반장", "sourceUrl": "https://holday.rocks/gym/%EB%8C%80%EA%B5%AC%EC%B2%B4%EC%9C%A1%EA%B3%B5%EC%9B%90-%EC%95%94%EB%B2%BD%EB%93%B1%EB%B0%98%EC%9E%A5"}], "sources": ["holday-대구"]}, {"id": "national-174ce8d1c054", "name": "대구파워클라이밍센터", "branches": [{"label": "", "region": "대구", "city": "수성구", "listedName": "대구파워클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%8C%80%EA%B5%AC%ED%8C%8C%EC%9B%8C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-대구"]}, {"id": "national-55d3e49f30fd", "name": "동성로클라이밍짐", "branches": [{"label": "", "region": "대구", "city": "중구", "listedName": "동성로클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EB%8F%99%EC%84%B1%EB%A1%9C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-대구"]}, {"id": "national-2e05056d0a2e", "name": "강화클라이밍", "branches": [{"label": "", "region": "인천", "city": "강화군", "listedName": "강화클라이밍", "sourceUrl": "https://holday.rocks/gym/%EA%B0%95%ED%99%94%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-인천"]}, {"id": "national-172870215888", "name": "디스커버리 클라임스퀘어", "branches": [{"label": "ICN", "region": "인천", "city": "검단구", "listedName": "디스커버리 클라임스퀘어 ICN", "sourceUrl": "https://holday.rocks/gym/%EB%94%94%EC%8A%A4%EC%BB%A4%EB%B2%84%EB%A6%AC-%ED%81%B4%EB%9D%BC%EC%9E%84%EC%8A%A4%ED%80%98%EC%96%B4-icn"}, {"label": "청라", "region": "인천", "city": "서해구", "listedName": "클라임스퀘어 청라점", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9E%84%EC%8A%A4%ED%80%98%EC%96%B4-%EC%B2%AD%EB%9D%BC%EC%A0%90"}, {"label": "송도", "region": "인천", "city": "연수구", "listedName": "디스커버리 클라임스퀘어 송도점", "sourceUrl": "https://holday.rocks/gym/%EB%94%94%EC%8A%A4%EC%BB%A4%EB%B2%84%EB%A6%AC-%ED%81%B4%EB%9D%BC%EC%9E%84%EC%8A%A4%ED%80%98%EC%96%B4-%EC%86%A1%EB%8F%84%EC%A0%90"}], "sources": ["holday-인천"]}, {"id": "national-21e5b6aa8e35", "name": "인천계양클라이밍센터", "branches": [{"label": "", "region": "인천", "city": "계양구", "listedName": "인천계양클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%9D%B8%EC%B2%9C%EA%B3%84%EC%96%91%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-인천"]}, {"id": "national-3729b517e80d", "name": "간석실내암벽", "branches": [{"label": "", "region": "인천", "city": "남동구", "listedName": "간석실내암벽", "sourceUrl": "https://holday.rocks/gym/%EA%B0%84%EC%84%9D%EC%8B%A4%EB%82%B4%EC%95%94%EB%B2%BD"}], "sources": ["holday-인천"]}, {"id": "national-e5e06d5491f2", "name": "기필코홀드", "branches": [{"label": "", "region": "인천", "city": "남동구", "listedName": "기필코홀드", "sourceUrl": "https://holday.rocks/gym/%EA%B8%B0%ED%95%84%EC%BD%94%ED%99%80%EB%93%9C"}], "sources": ["holday-인천"]}, {"id": "national-3f979ddd068a", "name": "볼리클라이밍", "branches": [{"label": "", "region": "인천", "city": "남동구", "listedName": "볼리클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%B3%BC%EB%A6%AC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-인천"]}, {"id": "national-70b102c2da23", "name": "허브클라이밍", "branches": [{"label": "인천", "region": "인천", "city": "남동구", "listedName": "허브클라이밍 인천점", "sourceUrl": "https://holday.rocks/gym/%ED%97%88%EB%B8%8C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-인천"]}, {"id": "national-797301ff05fc", "name": "부평클라이밍센터", "branches": [{"label": "", "region": "인천", "city": "부평구", "listedName": "부평클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%B6%80%ED%8F%89%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-인천"]}, {"id": "national-6964753d9f65", "name": "서인천클라이밍", "branches": [{"label": "", "region": "인천", "city": "서해구", "listedName": "서인천클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%84%9C%EC%9D%B8%EC%B2%9C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-인천"]}, {"id": "national-a039e0d1e284", "name": "비블럭클라이밍", "branches": [{"label": "송도", "region": "인천", "city": "연수구", "listedName": "비블럭클라이밍 송도점", "sourceUrl": "https://holday.rocks/gym/%EB%B9%84%EB%B8%94%EB%9F%AD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%86%A1%EB%8F%84%EC%A0%90"}, {"label": "영종하늘도시", "region": "인천", "city": "영종구", "listedName": "비블럭클라이밍 영종하늘도시점", "sourceUrl": "https://holday.rocks/gym/%EB%B9%84%EB%B8%94%EB%9F%AD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%98%81%EC%A2%85%ED%95%98%EB%8A%98%EB%8F%84%EC%8B%9C%EC%A0%90"}], "sources": ["holday-인천"]}, {"id": "national-3f3ce2585005", "name": "인천대학교 인공암벽장", "branches": [{"label": "", "region": "인천", "city": "연수구", "listedName": "인천대학교 인공암벽장", "sourceUrl": "https://holday.rocks/gym/%EC%9D%B8%EC%B2%9C%EB%8C%80%ED%95%99%EA%B5%90-%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-인천"]}, {"id": "national-f4497aebd17d", "name": "클라이밍줌", "branches": [{"label": "", "region": "인천", "city": "연수구", "listedName": "클라이밍줌", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A4%8C"}], "sources": ["holday-인천"]}, {"id": "national-502d9a0aa9a1", "name": "G1클라이밍 송정", "branches": [{"label": "", "region": "광주", "city": "광산구", "listedName": "G1클라이밍 송정", "sourceUrl": "https://holday.rocks/gym/g1%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%86%A1%EC%A0%95"}], "sources": ["holday-광주"]}, {"id": "national-2f3b26e70b71", "name": "그랩잇 클라이밍", "branches": [{"label": "", "region": "광주", "city": "광산구", "listedName": "그랩잇 클라이밍", "sourceUrl": "https://holday.rocks/gym/%EA%B7%B8%EB%9E%A9%EC%9E%87-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-광주"]}, {"id": "national-1e267b7873c0", "name": "레드원클라이밍", "branches": [{"label": "첨단", "region": "광주", "city": "광산구", "listedName": "레드원클라이밍 첨단점", "sourceUrl": "https://holday.rocks/gym/%EB%A0%88%EB%93%9C%EC%9B%90%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%B2%A8%EB%8B%A8"}, {"label": "봉선", "region": "광주", "city": "남구", "listedName": "레드원클라이밍 봉선점", "sourceUrl": "https://holday.rocks/gym/%EB%A0%88%EB%93%9C%EC%9B%90%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-광주"]}, {"id": "national-7b4d2be05ff5", "name": "빛고을클라이밍", "branches": [{"label": "첨단", "region": "광주", "city": "광산구", "listedName": "빛고을클라이밍 첨단점", "sourceUrl": "https://holday.rocks/gym/%EB%B9%9B%EA%B3%A0%EC%9D%84%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%B2%A8%EB%8B%A8%EC%A0%90"}], "sources": ["holday-광주"]}, {"id": "national-1619143cb834", "name": "온클라이밍", "branches": [{"label": "", "region": "광주", "city": "광산구", "listedName": "온클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%98%A8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-광주"]}, {"id": "national-f9c3873a51dd", "name": "바위클라이밍센터", "branches": [{"label": "", "region": "광주", "city": "동구", "listedName": "바위클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%B0%94%EC%9C%84%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-광주"]}, {"id": "national-66bfe4d567a4", "name": "클라이븐클라이밍 컴퍼니", "branches": [{"label": "충장로", "region": "광주", "city": "동구", "listedName": "클라이븐클라이밍 컴퍼니 충장로점", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B8%90%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%BB%B4%ED%8D%BC%EB%8B%88"}], "sources": ["holday-광주"]}, {"id": "national-4c3b2815a852", "name": "광주실내암벽", "branches": [{"label": "", "region": "광주", "city": "북구", "listedName": "광주실내암벽", "sourceUrl": "https://holday.rocks/gym/%EA%B4%91%EC%A3%BC%EC%8B%A4%EB%82%B4%EC%95%94%EB%B2%BD"}], "sources": ["holday-광주"]}, {"id": "national-1e98ca2f5c73", "name": "핸드워크클라이밍짐", "branches": [{"label": "양산", "region": "광주", "city": "북구", "listedName": "핸드워크클라이밍 양산점", "sourceUrl": "https://holday.rocks/gym/%ED%95%B8%EB%93%9C%EC%9B%8C%ED%81%AC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%96%91%EC%82%B0%EC%A0%90"}, {"label": "본점", "region": "광주", "city": "북구", "listedName": "핸드워크클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%ED%95%B8%EB%93%9C%EC%9B%8C%ED%81%AC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-광주"]}, {"id": "national-99f8f52b451e", "name": "상무인공암벽장", "branches": [{"label": "", "region": "광주", "city": "서구", "listedName": "상무인공암벽장", "sourceUrl": "https://holday.rocks/gym/%EC%83%81%EB%AC%B4%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-광주"]}, {"id": "national-a3d1331a4879", "name": "인케이브 클라이밍짐", "branches": [{"label": "상무", "region": "광주", "city": "서구", "listedName": "인케이브 클라이밍짐 상무점", "sourceUrl": "https://holday.rocks/gym/%EC%9D%B8%EC%BC%80%EC%9D%B4%EB%B8%8C-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90-%EC%83%81%EB%AC%B4%EC%A0%90"}], "sources": ["holday-광주"]}, {"id": "national-2d3afb4a7ae5", "name": "클라임라운지", "branches": [{"label": "", "region": "광주", "city": "서구", "listedName": "클라임라운지", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9E%84%EB%9D%BC%EC%9A%B4%EC%A7%80"}], "sources": ["holday-광주"]}, {"id": "national-d4492f6fd685", "name": "대전클라이밍센터", "branches": [{"label": "", "region": "대전", "city": "서구", "listedName": "대전클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%8C%80%EC%A0%84%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-대전"]}, {"id": "national-075c27c5e71c", "name": "어웨이크클라이밍", "branches": [{"label": "타임월드", "region": "대전", "city": "서구", "listedName": "어웨이크클라이밍 타임월드점", "sourceUrl": "https://holday.rocks/gym/%EC%96%B4%EC%9B%A8%EC%9D%B4%ED%81%AC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%ED%83%80%EC%9E%84%EC%9B%94%EB%93%9C%EC%A0%90"}], "sources": ["holday-대전"]}, {"id": "national-2b27ea229040", "name": "옥녀봉체육공원 인공암벽", "branches": [{"label": "", "region": "대전", "city": "서구", "listedName": "옥녀봉체육공원 인공암벽", "sourceUrl": "https://holday.rocks/gym/%EC%98%A5%EB%85%80%EB%B4%89%EC%B2%B4%EC%9C%A1%EA%B3%B5%EC%9B%90-%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD"}], "sources": ["holday-대전"]}, {"id": "national-810560531aa4", "name": "대전하나클라이밍짐", "branches": [{"label": "", "region": "대전", "city": "유성구", "listedName": "대전하나클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EB%8C%80%EC%A0%84%ED%95%98%EB%82%98%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-대전"]}, {"id": "national-7ef1cf48d9a0", "name": "베이스캠프", "branches": [{"label": "", "region": "대전", "city": "유성구", "listedName": "베이스캠프", "sourceUrl": "https://holday.rocks/gym/%EB%B2%A0%EC%9D%B4%EC%8A%A4%EC%BA%A0%ED%94%84"}], "sources": ["holday-대전"]}, {"id": "national-7c4d084819cb", "name": "클라이밍짐 리드", "branches": [{"label": "본점", "region": "대전", "city": "유성구", "listedName": "클라이밍짐 리드 본점", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90-%EB%A6%AC%EB%93%9C-%EB%B3%B8%EC%A0%90"}, {"label": "유성", "region": "대전", "city": "유성구", "listedName": "클라이밍짐 리드 유성점", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90-%EB%A6%AC%EB%93%9C-%EC%9C%A0%EC%84%B1%EC%A0%90"}], "sources": ["holday-대전"]}, {"id": "national-bfe00d334b02", "name": "등반세계 최병호 클라이밍 센터", "branches": [{"label": "", "region": "울산", "city": "남구", "listedName": "등반세계 최병호 클라이밍 센터", "sourceUrl": "https://holday.rocks/gym/%EB%93%B1%EB%B0%98%EC%84%B8%EA%B3%84-%EC%B5%9C%EB%B3%91%ED%98%B8-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%84%BC%ED%84%B0"}], "sources": ["holday-울산"]}, {"id": "national-2ef0aec76b68", "name": "라온클라이밍짐", "branches": [{"label": "", "region": "울산", "city": "남구", "listedName": "라온클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EB%9D%BC%EC%98%A8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-울산"]}, {"id": "national-264085e8dd7b", "name": "업클라이밍짐", "branches": [{"label": "", "region": "울산", "city": "남구", "listedName": "업클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EC%97%85%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-울산"]}, {"id": "national-68709888327a", "name": "울산인공암벽센터", "branches": [{"label": "", "region": "울산", "city": "남구", "listedName": "울산인공암벽센터", "sourceUrl": "https://holday.rocks/gym/%EC%9A%B8%EC%82%B0%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%84%BC%ED%84%B0"}], "sources": ["holday-울산"]}, {"id": "national-feb9a3655593", "name": "월담클라이밍", "branches": [{"label": "삼산", "region": "울산", "city": "남구", "listedName": "월담클라이밍 삼산점", "sourceUrl": "https://holday.rocks/gym/%EC%9B%94%EB%8B%B4%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-울산"]}, {"id": "national-ae787530747d", "name": "몽클라이밍", "branches": [{"label": "", "region": "울산", "city": "북구", "listedName": "몽클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%AA%BD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-울산"]}, {"id": "national-193540d2384e", "name": "영남알프스 국제클라이밍장", "branches": [{"label": "", "region": "울산", "city": "울주군", "listedName": "영남알프스 국제클라이밍장", "sourceUrl": "https://holday.rocks/gym/%EC%98%81%EB%82%A8%EC%95%8C%ED%94%84%EC%8A%A4-%EA%B5%AD%EC%A0%9C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%9E%A5"}], "sources": ["holday-울산"]}, {"id": "national-1b093fe37c00", "name": "9클라이밍짐", "branches": [{"label": "", "region": "울산", "city": "중구", "listedName": "9클라이밍짐", "sourceUrl": "https://holday.rocks/gym/9%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-울산"]}, {"id": "national-3b083f656476", "name": "별클라이밍", "branches": [{"label": "", "region": "세종", "city": "세종시", "listedName": "별클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%B3%84%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-세종"]}, {"id": "national-d5b3c940e80a", "name": "원더스카이", "branches": [{"label": "", "region": "강원", "city": "강릉시", "listedName": "원더스카이", "sourceUrl": "https://holday.rocks/gym/%EC%9B%90%EB%8D%94%EC%8A%A4%EC%B9%B4%EC%9D%B4"}], "sources": ["holday-강원"]}, {"id": "national-d4d5ce454efd", "name": "클라이밍강릉", "branches": [{"label": "", "region": "강원", "city": "강릉시", "listedName": "클라이밍강릉", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EA%B0%95%EB%A6%89"}], "sources": ["holday-강원"]}, {"id": "national-e8c734ff96b6", "name": "고성클라이밍 실내암벽장", "branches": [{"label": "", "region": "강원", "city": "고성군", "listedName": "고성클라이밍 실내암벽장", "sourceUrl": "https://holday.rocks/gym/%EA%B3%A0%EC%84%B1%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%8B%A4%EB%82%B4%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-강원"]}, {"id": "national-26da68c76cf1", "name": "동해웰빙레포츠타운 인공암벽장", "branches": [{"label": "", "region": "강원", "city": "동해시", "listedName": "동해웰빙레포츠타운 인공암벽장", "sourceUrl": "https://holday.rocks/gym/%EB%8F%99%ED%95%B4%EC%9B%B0%EB%B9%99%EB%A0%88%ED%8F%AC%EC%B8%A0%ED%83%80%EC%9A%B4-%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-강원"]}, {"id": "national-a9d5dd243b2a", "name": "국립등산학교 인공암벽장", "branches": [{"label": "", "region": "강원", "city": "속초시", "listedName": "국립등산학교 인공암벽장", "sourceUrl": "https://holday.rocks/gym/%EA%B5%AD%EB%A6%BD%EB%93%B1%EC%82%B0%ED%95%99%EA%B5%90-%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-강원"]}, {"id": "national-bafa8f2c212f", "name": "속초클라이밍짐", "branches": [{"label": "", "region": "강원", "city": "속초시", "listedName": "속초클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EC%86%8D%EC%B4%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-강원"]}, {"id": "national-e297df4a274f", "name": "아임낫볼더", "branches": [{"label": "", "region": "강원", "city": "속초시", "listedName": "아임낫볼더", "sourceUrl": "https://holday.rocks/gym/%EC%95%84%EC%9E%84%EB%82%AB%EB%B3%BC%EB%8D%94"}], "sources": ["holday-강원"]}, {"id": "national-10c5d2d9f418", "name": "에이짐클라이밍", "branches": [{"label": "", "region": "강원", "city": "속초시", "listedName": "에이짐클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%97%90%EC%9D%B4%EC%A7%90%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-강원"]}, {"id": "national-f839fd56fb4b", "name": "펀클라이밍", "branches": [{"label": "", "region": "강원", "city": "속초시", "listedName": "펀클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%8E%80%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-강원"]}, {"id": "national-bd9bf217dbd0", "name": "용머리공원 인공암벽장", "branches": [{"label": "", "region": "강원", "city": "양구군", "listedName": "용머리공원 인공암벽장", "sourceUrl": "https://holday.rocks/gym/%EC%9A%A9%EB%A8%B8%EB%A6%AC%EA%B3%B5%EC%9B%90-%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-강원"]}, {"id": "national-90dbd797119f", "name": "클리프스테이", "branches": [{"label": "", "region": "강원", "city": "양양군", "listedName": "클리프스테이", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%A6%AC%ED%94%84%EC%8A%A4%ED%85%8C%EC%9D%B4"}], "sources": ["holday-강원"]}, {"id": "national-ba6b90661b36", "name": "고고클라이밍", "branches": [{"label": "본점", "region": "강원", "city": "원주시", "listedName": "고고클라이밍", "sourceUrl": "https://holday.rocks/gym/%EA%B3%A0%EA%B3%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}, {"label": "2호", "region": "강원", "city": "원주시", "listedName": "고고클라이밍 2호점", "sourceUrl": "https://holday.rocks/gym/%EA%B3%A0%EA%B3%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-2%ED%98%B8%EC%A0%90"}], "sources": ["holday-강원"]}, {"id": "national-a0ec9dcbb706", "name": "더쎈클라이밍", "branches": [{"label": "", "region": "강원", "city": "원주시", "listedName": "더쎈클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%8D%94%EC%8E%88%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-강원"]}, {"id": "national-bfe1a63a35f7", "name": "볼트락암벽짐", "branches": [{"label": "", "region": "강원", "city": "원주시", "listedName": "볼트락암벽짐", "sourceUrl": "https://holday.rocks/gym/%EB%B3%BC%ED%8A%B8%EB%9D%BD%EC%95%94%EB%B2%BD%EC%A7%90"}], "sources": ["holday-강원"]}, {"id": "national-153b57de5521", "name": "차클라이밍", "branches": [{"label": "", "region": "강원", "city": "원주시", "listedName": "차클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%B0%A8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-강원"]}, {"id": "national-d246a432d0fb", "name": "클라이밍아미고", "branches": [{"label": "", "region": "강원", "city": "원주시", "listedName": "클라이밍아미고", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%95%84%EB%AF%B8%EA%B3%A0"}], "sources": ["holday-강원"]}, {"id": "national-180a8364da5e", "name": "클라이밍원주", "branches": [{"label": "", "region": "강원", "city": "원주시", "listedName": "클라이밍원주", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%9B%90%EC%A3%BC"}], "sources": ["holday-강원"]}, {"id": "national-9f10621a9dd3", "name": "클라임투게더", "branches": [{"label": "원주", "region": "강원", "city": "원주시", "listedName": "클라임투게더 원주점", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9E%84%ED%88%AC%EA%B2%8C%EB%8D%94"}], "sources": ["holday-강원"]}, {"id": "national-4d815ff081ab", "name": "원통체육문화센터 클라이밍장", "branches": [{"label": "", "region": "강원", "city": "인제군", "listedName": "원통체육문화센터 클라이밍장", "sourceUrl": "https://holday.rocks/gym/%EC%9B%90%ED%86%B5%EC%B2%B4%EC%9C%A1%EB%AC%B8%ED%99%94%EC%84%BC%ED%84%B0-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%9E%A5"}], "sources": ["holday-강원"]}, {"id": "national-182dc4693f44", "name": "태봉클라이밍센터", "branches": [{"label": "", "region": "강원", "city": "철원군", "listedName": "태봉클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%ED%83%9C%EB%B4%89%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-강원"]}, {"id": "national-c1636032bfb8", "name": "남춘천클라이밍", "branches": [{"label": "", "region": "강원", "city": "춘천시", "listedName": "남춘천클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%82%A8%EC%B6%98%EC%B2%9C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-강원"]}, {"id": "national-0bbc5b32cbef", "name": "춘천송암스포츠타운 인공암벽장", "branches": [{"label": "", "region": "강원", "city": "춘천시", "listedName": "춘천송암스포츠타운 인공암벽장", "sourceUrl": "https://holday.rocks/gym/%EC%B6%98%EC%B2%9C%EC%86%A1%EC%95%94%EC%8A%A4%ED%8F%AC%EC%B8%A0%ED%83%80%EC%9A%B4-%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-강원"]}, {"id": "national-ed02ed6beef3", "name": "춘천클라이머스 두번째비밀기지", "branches": [{"label": "", "region": "강원", "city": "춘천시", "listedName": "춘천클라이머스 두번째비밀기지", "sourceUrl": "https://holday.rocks/gym/%EC%B6%98%EC%B2%9C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%A8%B8%EC%8A%A4-%EB%91%90%EB%B2%88%EC%A7%B8%EB%B9%84%EB%B0%80%EA%B8%B0%EC%A7%80"}], "sources": ["holday-강원"]}, {"id": "national-230f02285710", "name": "춘천클라이밍센터", "branches": [{"label": "", "region": "강원", "city": "춘천시", "listedName": "춘천클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%B6%98%EC%B2%9C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-강원"]}, {"id": "national-7f7bbd7fedbb", "name": "홍천스포츠클라이밍센터", "branches": [{"label": "", "region": "강원", "city": "홍천군", "listedName": "홍천스포츠클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%ED%99%8D%EC%B2%9C%EC%8A%A4%ED%8F%AC%EC%B8%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-강원"]}, {"id": "national-bd7d372b01a3", "name": "속리산클라이밍장", "branches": [{"label": "", "region": "충북", "city": "보은군", "listedName": "속리산클라이밍장", "sourceUrl": "https://holday.rocks/gym/%EC%86%8D%EB%A6%AC%EC%82%B0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%9E%A5"}], "sources": ["holday-충북"]}, {"id": "national-3c77ab195b72", "name": "톺아클라이밍", "branches": [{"label": "", "region": "충북", "city": "제천시", "listedName": "톺아클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%86%BA%EC%95%84%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-충북"]}, {"id": "national-bed60616a23d", "name": "다오름클라이밍센터", "branches": [{"label": "", "region": "충북", "city": "청주시", "listedName": "다오름클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%8B%A4%EC%98%A4%EB%A6%84%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-충북"]}, {"id": "national-610e0f3ee2ad", "name": "마루클라이밍센터", "branches": [{"label": "", "region": "충북", "city": "청주시", "listedName": "마루클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%A7%88%EB%A3%A8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-충북"]}, {"id": "national-e760cf25f6c8", "name": "청주국제스포츠클라이밍센터", "branches": [{"label": "", "region": "충북", "city": "청주시", "listedName": "청주국제스포츠클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%B2%AD%EC%A3%BC%EA%B5%AD%EC%A0%9C%EC%8A%A4%ED%8F%AC%EC%B8%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-충북"]}, {"id": "national-431df47e315d", "name": "청주락클라이밍센터", "branches": [{"label": "", "region": "충북", "city": "청주시", "listedName": "청주락클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%B2%AD%EC%A3%BC%EB%9D%BD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-충북"]}, {"id": "national-f1d8a3d1ede4", "name": "타기클라이밍센터", "branches": [{"label": "", "region": "충북", "city": "청주시", "listedName": "타기클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%ED%83%80%EA%B8%B0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-충북"]}, {"id": "national-e7dc05c5e914", "name": "넝쿨클라이밍센터", "branches": [{"label": "", "region": "충북", "city": "충주시", "listedName": "넝쿨클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%84%9D%EC%BF%A8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-충북"]}, {"id": "national-dc1073a41820", "name": "수안보인공암벽장", "branches": [{"label": "", "region": "충북", "city": "충주시", "listedName": "수안보인공암벽장", "sourceUrl": "https://holday.rocks/gym/%EC%88%98%EC%95%88%EB%B3%B4%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-충북"]}, {"id": "national-4fb37337fda0", "name": "오르락클라이밍짐", "branches": [{"label": "", "region": "충북", "city": "충주시", "listedName": "오르락클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EC%98%A4%EB%A5%B4%EB%9D%BD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-충북"]}, {"id": "national-651b93039a67", "name": "충주락클라이밍", "branches": [{"label": "", "region": "충북", "city": "충주시", "listedName": "충주락클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%B6%A9%EC%A3%BC%EB%9D%BD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-충북"]}, {"id": "national-cf19b8461250", "name": "당진시 스포츠클라이밍센터", "branches": [{"label": "", "region": "충남", "city": "당진시", "listedName": "당진시 스포츠클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%8B%B9%EC%A7%84%EC%8B%9C-%EC%8A%A4%ED%8F%AC%EC%B8%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-충남"]}, {"id": "national-d92c2207d490", "name": "서산시 클라이밍장", "branches": [{"label": "", "region": "충남", "city": "서산시", "listedName": "서산시 클라이밍장", "sourceUrl": "https://holday.rocks/gym/%EC%84%9C%EC%82%B0%EC%8B%9C-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%9E%A5-2026%EB%85%84-%EC%98%88%EC%A0%95"}], "sources": ["holday-충남"]}, {"id": "national-62682ea4c115", "name": "서산클라이밍", "branches": [{"label": "", "region": "충남", "city": "서산시", "listedName": "서산클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%84%9C%EC%82%B0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-충남"]}, {"id": "national-09f4a5b1627e", "name": "엣지워크클라이밍", "branches": [{"label": "", "region": "충남", "city": "서산시", "listedName": "엣지워크클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%97%A3%EC%A7%80%EC%9B%8C%ED%81%AC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-충남"]}, {"id": "national-4bee3a91164e", "name": "락트리스포츠클라이밍센터", "branches": [{"label": "", "region": "충남", "city": "아산시", "listedName": "락트리스포츠클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%9D%BD%ED%8A%B8%EB%A6%AC%EC%8A%A4%ED%8F%AC%EC%B8%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-충남"]}, {"id": "national-dac3db500520", "name": "신정호 인공암벽장", "branches": [{"label": "", "region": "충남", "city": "아산시", "listedName": "신정호 인공암벽장", "sourceUrl": "https://holday.rocks/gym/%EC%8B%A0%EC%A0%95%ED%98%B8-%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-충남"]}, {"id": "national-f367503ce4fc", "name": "아산클라이밍", "branches": [{"label": "", "region": "충남", "city": "아산시", "listedName": "아산클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%95%84%EC%82%B0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-충남"]}, {"id": "national-d71b75e44b7a", "name": "와클라이밍", "branches": [{"label": "아산", "region": "충남", "city": "아산시", "listedName": "와클라이밍 아산", "sourceUrl": "https://holday.rocks/gym/%EC%99%80%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%95%84%EC%82%B0"}, {"label": "천안", "region": "충남", "city": "천안시", "listedName": "와클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%99%80%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-충남"]}, {"id": "national-e413fd806034", "name": "도솔공원 인공암벽장", "branches": [{"label": "", "region": "충남", "city": "천안시", "listedName": "도솔공원 인공암벽장", "sourceUrl": "https://holday.rocks/gym/%EB%8F%84%EC%86%94%EA%B3%B5%EC%9B%90-%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-충남"]}, {"id": "national-9d6d24eeea2e", "name": "백석대학교 클라이밍센터", "branches": [{"label": "", "region": "충남", "city": "천안시", "listedName": "백석대학교 클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%B0%B1%EC%84%9D%EB%8C%80%ED%95%99%EA%B5%90-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-충남"]}, {"id": "national-ab7a4cee688f", "name": "클라임맥스", "branches": [{"label": "천안", "region": "충남", "city": "천안시", "listedName": "클라임맥스 천안점", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9E%84%EB%A7%A5%EC%8A%A4"}], "sources": ["holday-충남"]}, {"id": "national-2cea1d549d80", "name": "홍종열클라이밍짐", "branches": [{"label": "천안두정", "region": "충남", "city": "천안시", "listedName": "홍종열클라이밍짐 천안두정점", "sourceUrl": "https://holday.rocks/gym/%ED%99%8D%EC%A2%85%EC%97%B4%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90-%EC%B2%9C%EC%95%88%EB%91%90%EC%A0%95%EC%A0%90"}], "sources": ["holday-충남"]}, {"id": "national-a9e85df90e5c", "name": "홍성클라이밍센터", "branches": [{"label": "", "region": "충남", "city": "홍성군", "listedName": "홍성클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%ED%99%8D%EC%84%B1%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-충남"]}, {"id": "national-6a13c289a31b", "name": "고창인공암벽장", "branches": [{"label": "", "region": "전북", "city": "고창군", "listedName": "고창인공암벽장", "sourceUrl": "https://holday.rocks/gym/%EA%B3%A0%EC%B0%BD%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-전북"]}, {"id": "national-470ac7cf3a77", "name": "군산 스포츠클라이밍센터", "branches": [{"label": "", "region": "전북", "city": "군산시", "listedName": "군산 스포츠클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EA%B5%B0%EC%82%B0-%EC%8A%A4%ED%8F%AC%EC%B8%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-전북"]}, {"id": "national-4a70478a7811", "name": "군산클라이밍센터", "branches": [{"label": "", "region": "전북", "city": "군산시", "listedName": "군산클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EA%B5%B0%EC%82%B0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-전북"]}, {"id": "national-57bd8840a726", "name": "온더락클라이밍", "branches": [{"label": "", "region": "전북", "city": "군산시", "listedName": "온더락클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%98%A8%EB%8D%94%EB%9D%BD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-전북"]}, {"id": "national-633acf3bf0a3", "name": "홀드온클라이밍", "branches": [{"label": "", "region": "전북", "city": "군산시", "listedName": "홀드온클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%99%80%EB%93%9C%EC%98%A8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-전북"]}, {"id": "national-76cd085e5398", "name": "남원스포츠클라이밍", "branches": [{"label": "", "region": "전북", "city": "남원시", "listedName": "남원스포츠클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%82%A8%EC%9B%90%EC%8A%A4%ED%8F%AC%EC%B8%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-전북"]}, {"id": "national-4ef141ac79f1", "name": "전북특별자치도 인공암벽장", "branches": [{"label": "", "region": "전북", "city": "부안군", "listedName": "전북특별자치도 인공암벽장", "sourceUrl": "https://holday.rocks/gym/%EC%A0%84%EB%B6%81%ED%8A%B9%EB%B3%84%EC%9E%90%EC%B9%98%EB%8F%84-%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-전북"]}, {"id": "national-552c2c9a8591", "name": "익산시 인공암벽장", "branches": [{"label": "", "region": "전북", "city": "익산시", "listedName": "익산시 인공암벽장", "sourceUrl": "https://holday.rocks/gym/%EC%9D%B5%EC%82%B0%EC%8B%9C-%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-전북"]}, {"id": "national-322703bcd2f1", "name": "지락펀락 클라이밍센터", "branches": [{"label": "", "region": "전북", "city": "익산시", "listedName": "지락펀락 클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%A7%80%EB%9D%BD%ED%8E%80%EB%9D%BD-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-전북"]}, {"id": "national-cbe0e871cced", "name": "클라임팜", "branches": [{"label": "", "region": "전북", "city": "익산시", "listedName": "클라임팜", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9E%84%ED%8C%9C"}], "sources": ["holday-전북"]}, {"id": "national-6cd5ca396472", "name": "볼더덴", "branches": [{"label": "", "region": "전북", "city": "전주시", "listedName": "볼더덴", "sourceUrl": "https://holday.rocks/gym/%EB%B3%BC%EB%8D%94%EB%8D%B4"}], "sources": ["holday-전북"]}, {"id": "national-861bd257e231", "name": "어센트클라이밍", "branches": [{"label": "만성혁신", "region": "전북", "city": "전주시", "listedName": "어센트클라이밍 만성혁신", "sourceUrl": "https://holday.rocks/gym/%EC%96%B4%EC%84%BC%ED%8A%B8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EB%A7%8C%EC%84%B1%ED%98%81%EC%8B%A0"}, {"label": "전북대", "region": "전북", "city": "전주시", "listedName": "어센트클라이밍 전북대", "sourceUrl": "https://holday.rocks/gym/%EC%96%B4%EC%84%BC%ED%8A%B8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%A0%84%EB%B6%81%EB%8C%80"}], "sources": ["holday-전북"]}, {"id": "national-8bd4384b084f", "name": "올라클라이밍센터", "branches": [{"label": "", "region": "전북", "city": "전주시", "listedName": "올라클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%98%AC%EB%9D%BC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-전북"]}, {"id": "national-656417269693", "name": "완산체육생활공원 인공암벽장", "branches": [{"label": "", "region": "전북", "city": "전주시", "listedName": "완산체육생활공원 인공암벽장", "sourceUrl": "https://holday.rocks/gym/%EC%99%84%EC%82%B0%EC%B2%B4%EC%9C%A1%EC%83%9D%ED%99%9C%EA%B3%B5%EC%9B%90-%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-전북"]}, {"id": "national-f422b0fa7854", "name": "전주BK클라이밍짐", "branches": [{"label": "", "region": "전북", "city": "전주시", "listedName": "전주BK클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EC%A0%84%EC%A3%BCbk%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-전북"]}, {"id": "national-0ff661c8ef31", "name": "전주바위오름", "branches": [{"label": "", "region": "전북", "city": "전주시", "listedName": "전주바위오름", "sourceUrl": "https://holday.rocks/gym/%EC%A0%84%EC%A3%BC%EB%B0%94%EC%9C%84%EC%98%A4%EB%A6%84"}], "sources": ["holday-전북"]}, {"id": "national-a98d5ade0e16", "name": "하드락클라이밍", "branches": [{"label": "", "region": "전북", "city": "전주시", "listedName": "하드락클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%95%98%EB%93%9C%EB%9D%BD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-전북"]}, {"id": "national-7105fcb17f35", "name": "한'S 클라이밍센터", "branches": [{"label": "", "region": "전북", "city": "전주시", "listedName": "한'S 클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%ED%95%9Cs-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-전북"]}, {"id": "national-bee4a3d5d21f", "name": "리드클라이밍", "branches": [{"label": "", "region": "전남", "city": "목포시", "listedName": "리드클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%A6%AC%EB%93%9C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-전남"]}, {"id": "national-5aff30abe833", "name": "목포탑매드클라임동호회", "branches": [{"label": "", "region": "전남", "city": "목포시", "listedName": "목포탑매드클라임동호회", "sourceUrl": "https://holday.rocks/gym/%EB%AA%A9%ED%8F%AC%ED%83%91%EB%A7%A4%EB%93%9C%ED%81%B4%EB%9D%BC%EC%9E%84%EB%8F%99%ED%98%B8%ED%9A%8C"}], "sources": ["holday-전남"]}, {"id": "national-43340172e644", "name": "카르페클라임", "branches": [{"label": "", "region": "전남", "city": "무안군", "listedName": "카르페클라임", "sourceUrl": "https://holday.rocks/gym/%EC%B9%B4%EB%A5%B4%ED%8E%98%ED%81%B4%EB%9D%BC%EC%9E%84"}], "sources": ["holday-전남"]}, {"id": "national-1d1773835271", "name": "네파순천클라이밍센터", "branches": [{"label": "", "region": "전남", "city": "순천시", "listedName": "네파순천클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%84%A4%ED%8C%8C%EC%88%9C%EC%B2%9C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-전남"]}, {"id": "national-2cee0dd8d86f", "name": "원클라임", "branches": [{"label": "", "region": "전남", "city": "순천시", "listedName": "원클라임", "sourceUrl": "https://holday.rocks/gym/%EC%9B%90%ED%81%B4%EB%9D%BC%EC%9E%84"}], "sources": ["holday-전남"]}, {"id": "national-997e0a9b13b7", "name": "팔마인공암벽장", "branches": [{"label": "", "region": "전남", "city": "순천시", "listedName": "팔마인공암벽장", "sourceUrl": "https://holday.rocks/gym/%ED%8C%94%EB%A7%88%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-전남"]}, {"id": "national-56d872f11b90", "name": "스파이더짐", "branches": [{"label": "", "region": "전남", "city": "여수시", "listedName": "스파이더짐", "sourceUrl": "https://holday.rocks/gym/%EC%8A%A4%ED%8C%8C%EC%9D%B4%EB%8D%94%EC%A7%90"}], "sources": ["holday-전남"]}, {"id": "national-17c153f8637f", "name": "여수실내암벽", "branches": [{"label": "", "region": "전남", "city": "여수시", "listedName": "여수실내암벽", "sourceUrl": "https://holday.rocks/gym/%EC%97%AC%EC%88%98%EC%8B%A4%EB%82%B4%EC%95%94%EB%B2%BD"}], "sources": ["holday-전남"]}, {"id": "national-5703be55720e", "name": "경산국제클라이밍파크", "branches": [{"label": "", "region": "경북", "city": "경산시", "listedName": "경산국제클라이밍파크", "sourceUrl": "https://holday.rocks/gym/%EA%B2%BD%EC%82%B0%EA%B5%AD%EC%A0%9C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%ED%8C%8C%ED%81%AC"}], "sources": ["holday-경북"]}, {"id": "national-1c3f98d3b551", "name": "올라클라이밍", "branches": [{"label": "", "region": "경북", "city": "경산시", "listedName": "올라클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%98%AC%EB%9D%BC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-경북"]}, {"id": "national-155c045a0506", "name": "경주락클라이밍센터", "branches": [{"label": "", "region": "경북", "city": "경주시", "listedName": "경주락클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EA%B2%BD%EC%A3%BC%EB%9D%BD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-경북"]}, {"id": "national-2528642d7d8c", "name": "경주클라이밍센터", "branches": [{"label": "", "region": "경북", "city": "경주시", "listedName": "경주클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EA%B2%BD%EC%A3%BC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-경북"]}, {"id": "national-8e146d547a2b", "name": "플로우클라임", "branches": [{"label": "", "region": "경북", "city": "경주시", "listedName": "플로우클라임", "sourceUrl": "https://holday.rocks/gym/%ED%94%8C%EB%A1%9C%EC%9A%B0%ED%81%B4%EB%9D%BC%EC%9E%84"}], "sources": ["holday-경북"]}, {"id": "national-fdc2d24b864f", "name": "노보클라이밍", "branches": [{"label": "", "region": "경북", "city": "구미시", "listedName": "노보클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%85%B8%EB%B3%B4%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-경북"]}, {"id": "national-2e959d3efe91", "name": "클라임커뮤니케이션 CC클라이밍센터", "branches": [{"label": "", "region": "경북", "city": "구미시", "listedName": "클라임커뮤니케이션 CC클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9E%84%EC%BB%A4%EB%AE%A4%EB%8B%88%EC%BC%80%EC%9D%B4%EC%85%98-cc%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-경북"]}, {"id": "national-3a229661fef5", "name": "킹스클라임", "branches": [{"label": "", "region": "경북", "city": "구미시", "listedName": "킹스클라임", "sourceUrl": "https://holday.rocks/gym/%ED%82%B9%EC%8A%A4%ED%81%B4%EB%9D%BC%EC%9E%84"}], "sources": ["holday-경북"]}, {"id": "national-88833d29ef13", "name": "포시즌클라이밍", "branches": [{"label": "산동", "region": "경북", "city": "구미시", "listedName": "포시즌클라이밍 산동점", "sourceUrl": "https://holday.rocks/gym/%ED%8F%AC%EC%8B%9C%EC%A6%8C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EC%82%B0%EB%8F%99%EC%A0%90"}], "sources": ["holday-경북"]}, {"id": "national-53be9f061295", "name": "김천종합스포츠타운 인공암벽장", "branches": [{"label": "", "region": "경북", "city": "김천시", "listedName": "김천종합스포츠타운 인공암벽장", "sourceUrl": "https://holday.rocks/gym/%EA%B9%80%EC%B2%9C%EC%A2%85%ED%95%A9%EC%8A%A4%ED%8F%AC%EC%B8%A0%ED%83%80%EC%9A%B4-%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-경북"]}, {"id": "national-e81edc3d3bf4", "name": "문경국제클라이밍센터", "branches": [{"label": "", "region": "경북", "city": "문경시", "listedName": "문경국제클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%AC%B8%EA%B2%BD%EA%B5%AD%EC%A0%9C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-경북"]}, {"id": "national-7f3b2a47af91", "name": "클라임코리아", "branches": [{"label": "본점", "region": "경북", "city": "문경시", "listedName": "클라임코리아 본점", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9E%84%EC%BD%94%EB%A6%AC%EC%95%84-%EB%B3%B8%EC%A0%90"}], "sources": ["holday-경북"]}, {"id": "national-519c2461d2d4", "name": "상주시민운동장 인공암벽장", "branches": [{"label": "", "region": "경북", "city": "상주시", "listedName": "상주시민운동장 인공암벽장", "sourceUrl": "https://holday.rocks/gym/%EC%83%81%EC%A3%BC%EC%8B%9C%EB%AF%BC%EC%9A%B4%EB%8F%99%EC%9E%A5-%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-경북"]}, {"id": "national-57757c1482cf", "name": "상주시생활체육공원 클라이밍장", "branches": [{"label": "", "region": "경북", "city": "상주시", "listedName": "상주시생활체육공원 클라이밍장", "sourceUrl": "https://holday.rocks/gym/%EC%83%81%EC%A3%BC%EC%8B%9C%EC%83%9D%ED%99%9C%EC%B2%B4%EC%9C%A1%EA%B3%B5%EC%9B%90-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%9E%A5"}], "sources": ["holday-경북"]}, {"id": "national-18a8ace3f39c", "name": "상주클라이밍클럽", "branches": [{"label": "", "region": "경북", "city": "상주시", "listedName": "상주클라이밍클럽", "sourceUrl": "https://holday.rocks/gym/%EC%83%81%EC%A3%BC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%ED%81%B4%EB%9F%BD"}], "sources": ["holday-경북"]}, {"id": "national-54f32b7ddbc1", "name": "안동 스포츠클라이밍장", "branches": [{"label": "", "region": "경북", "city": "안동시", "listedName": "안동 스포츠클라이밍장", "sourceUrl": "https://holday.rocks/gym/%EC%95%88%EB%8F%99-%EC%8A%A4%ED%8F%AC%EC%B8%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%9E%A5"}], "sources": ["holday-경북"]}, {"id": "national-d50f48ec2938", "name": "안동클라이밍센터", "branches": [{"label": "", "region": "경북", "city": "안동시", "listedName": "안동클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%95%88%EB%8F%99%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-경북"]}, {"id": "national-c2ada546243e", "name": "레드포인트클라이밍센터", "branches": [{"label": "", "region": "경북", "city": "영주시", "listedName": "레드포인트클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EB%A0%88%EB%93%9C%ED%8F%AC%EC%9D%B8%ED%8A%B8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-경북"]}, {"id": "national-c9886b2dbe55", "name": "의성클라이밍센터", "branches": [{"label": "", "region": "경북", "city": "의성군", "listedName": "의성클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%9D%98%EC%84%B1%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-경북"]}, {"id": "national-67ac7d3fcb24", "name": "의성클라이밍장", "branches": [{"label": "", "region": "경북", "city": "의성군", "listedName": "의성클라이밍장", "sourceUrl": "https://holday.rocks/gym/%EC%9D%98%EC%84%B1%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%9E%A5"}], "sources": ["holday-경북"]}, {"id": "national-ac87d1bb803d", "name": "김대우암벽교실", "branches": [{"label": "", "region": "경북", "city": "포항시", "listedName": "김대우암벽교실", "sourceUrl": "https://holday.rocks/gym/%EA%B9%80%EB%8C%80%EC%9A%B0%EC%95%94%EB%B2%BD%EA%B5%90%EC%8B%A4"}], "sources": ["holday-경북"]}, {"id": "national-4fa0c98ce9dd", "name": "아띠클라이밍", "branches": [{"label": "", "region": "경북", "city": "포항시", "listedName": "아띠클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%95%84%EB%9D%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-경북"]}, {"id": "national-bd55b8a4a06a", "name": "포항국제클라이밍센터", "branches": [{"label": "", "region": "경북", "city": "포항시", "listedName": "포항국제클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%ED%8F%AC%ED%95%AD%EA%B5%AD%EC%A0%9C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-경북"]}, {"id": "national-b891561a23dc", "name": "포항스파이더클라이밍", "branches": [{"label": "", "region": "경북", "city": "포항시", "listedName": "포항스파이더클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%8F%AC%ED%95%AD%EC%8A%A4%ED%8C%8C%EC%9D%B4%EB%8D%94%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-경북"]}, {"id": "national-6aca20bf923e", "name": "포항클라이밍아카데미", "branches": [{"label": "", "region": "경북", "city": "포항시", "listedName": "포항클라이밍아카데미", "sourceUrl": "https://holday.rocks/gym/%ED%8F%AC%ED%95%AD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%95%84%EC%B9%B4%EB%8D%B0%EB%AF%B8"}], "sources": ["holday-경북"]}, {"id": "national-c63dba93dadd", "name": "트리클라이밍", "branches": [{"label": "", "region": "경남", "city": "거제시", "listedName": "트리클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%8A%B8%EB%A6%AC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-경남"]}, {"id": "national-e4d82b57579e", "name": "거창클라이밍실내암장", "branches": [{"label": "", "region": "경남", "city": "거창군", "listedName": "거창클라이밍실내암장", "sourceUrl": "https://holday.rocks/gym/%EA%B1%B0%EC%B0%BD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%8B%A4%EB%82%B4%EC%95%94%EC%9E%A5"}], "sources": ["holday-경남"]}, {"id": "national-fba06295a4fc", "name": "오름놀터", "branches": [{"label": "", "region": "경남", "city": "고성군", "listedName": "오름놀터", "sourceUrl": "https://holday.rocks/gym/%EC%98%A4%EB%A6%84%EB%86%80%ED%84%B0"}], "sources": ["holday-경남"]}, {"id": "national-d8e724a3a305", "name": "김해시민체육공원 인공암벽장", "branches": [{"label": "", "region": "경남", "city": "김해시", "listedName": "김해시민체육공원 인공암벽장", "sourceUrl": "https://holday.rocks/gym/%EA%B9%80%ED%95%B4%EC%8B%9C%EB%AF%BC%EC%B2%B4%EC%9C%A1%EA%B3%B5%EC%9B%90-%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5-%EA%B9%80%ED%95%B4%EC%8B%9C"}], "sources": ["holday-경남"]}, {"id": "national-d35585df1558", "name": "두클라이밍", "branches": [{"label": "김해", "region": "경남", "city": "김해시", "listedName": "두클라이밍 김해점", "sourceUrl": "https://holday.rocks/gym/%EB%91%90%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D-%EA%B9%80%ED%95%B4%EC%A0%90"}], "sources": ["holday-경남"]}, {"id": "national-f7a71b0a6bef", "name": "로프천국", "branches": [{"label": "", "region": "경남", "city": "김해시", "listedName": "로프천국", "sourceUrl": "https://holday.rocks/gym/%EB%A1%9C%ED%94%84%EC%B2%9C%EA%B5%AD"}], "sources": ["holday-경남"]}, {"id": "national-7af12d31357e", "name": "위드클라이밍짐", "branches": [{"label": "", "region": "경남", "city": "김해시", "listedName": "위드클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EC%9C%84%EB%93%9C%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-경남"]}, {"id": "national-a104f9cdd52f", "name": "코아클라이밍", "branches": [{"label": "", "region": "경남", "city": "김해시", "listedName": "코아클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%BD%94%EC%95%84%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-경남"]}, {"id": "national-55d0a6d6217a", "name": "클라이밍코리아", "branches": [{"label": "", "region": "경남", "city": "김해시", "listedName": "클라이밍코리아", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%BD%94%EB%A6%AC%EC%95%84"}], "sources": ["holday-경남"]}, {"id": "national-4e125f333543", "name": "퍼스트클라이밍짐", "branches": [{"label": "", "region": "경남", "city": "김해시", "listedName": "퍼스트클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%ED%8D%BC%EC%8A%A4%ED%8A%B8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-경남"]}, {"id": "national-75b48969b9f6", "name": "홀드야미클라이밍", "branches": [{"label": "", "region": "경남", "city": "김해시", "listedName": "홀드야미클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%99%80%EB%93%9C%EC%95%BC%EB%AF%B8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-경남"]}, {"id": "national-528981468c52", "name": "사천실내클라이밍", "branches": [{"label": "", "region": "경남", "city": "사천시", "listedName": "사천실내클라이밍", "sourceUrl": "https://holday.rocks/gym/%EC%82%AC%EC%B2%9C%EC%8B%A4%EB%82%B4%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-경남"]}, {"id": "national-6206a7d082b0", "name": "볼더서퍼 클라이밍", "branches": [{"label": "", "region": "경남", "city": "양산시", "listedName": "볼더서퍼 클라이밍", "sourceUrl": "https://holday.rocks/gym/%EB%B3%BC%EB%8D%94%EC%84%9C%ED%8D%BC-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-경남"]}, {"id": "national-3d6fecd3cbd7", "name": "양클짐", "branches": [{"label": "", "region": "경남", "city": "양산시", "listedName": "양클짐", "sourceUrl": "https://holday.rocks/gym/%EC%96%91%ED%81%B4%EC%A7%90"}], "sources": ["holday-경남"]}, {"id": "national-57660b213c01", "name": "어썸클라이밍짐", "branches": [{"label": "", "region": "경남", "city": "양산시", "listedName": "어썸클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EC%96%B4%EC%8D%B8%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-경남"]}, {"id": "national-5af98c4b824d", "name": "클라임파크", "branches": [{"label": "", "region": "경남", "city": "양산시", "listedName": "클라임파크", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9E%84%ED%8C%8C%ED%81%AC"}], "sources": ["holday-경남"]}, {"id": "national-4ad1477bdc8b", "name": "경상남도교육청 학생교육원 스포츠클라이밍장", "branches": [{"label": "", "region": "경남", "city": "의령군", "listedName": "경상남도교육청 학생교육원 스포츠클라이밍장", "sourceUrl": "https://holday.rocks/gym/%EA%B2%BD%EC%83%81%EB%82%A8%EB%8F%84%EA%B5%90%EC%9C%A1%EC%B2%AD-%ED%95%99%EC%83%9D%EA%B5%90%EC%9C%A1%EC%9B%90-%EC%8A%A4%ED%8F%AC%EC%B8%A0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%9E%A5"}], "sources": ["holday-경남"]}, {"id": "national-9d99ee624d95", "name": "빅클라이밍짐", "branches": [{"label": "", "region": "경남", "city": "진주시", "listedName": "빅클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EB%B9%85%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-경남"]}, {"id": "national-55a4b84e3aac", "name": "예티클라이밍짐", "branches": [{"label": "", "region": "경남", "city": "진주시", "listedName": "예티클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EC%98%88%ED%8B%B0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-경남"]}, {"id": "national-0a20d0b6a454", "name": "진주모덕암벽장", "branches": [{"label": "", "region": "경남", "city": "진주시", "listedName": "진주모덕암벽장", "sourceUrl": "https://holday.rocks/gym/%EC%A7%84%EC%A3%BC%EB%AA%A8%EB%8D%95%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-경남"]}, {"id": "national-39b75b7160ea", "name": "진주클라이밍클럽", "branches": [{"label": "", "region": "경남", "city": "진주시", "listedName": "진주클라이밍클럽", "sourceUrl": "https://holday.rocks/gym/%EC%A7%84%EC%A3%BC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%ED%81%B4%EB%9F%BD"}], "sources": ["holday-경남"]}, {"id": "national-489724b03723", "name": "광클라이밍", "branches": [{"label": "", "region": "경남", "city": "창원시", "listedName": "광클라이밍", "sourceUrl": "https://holday.rocks/gym/%EA%B4%91%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-경남"]}, {"id": "national-d17afb367095", "name": "마산클라이밍스쿨", "branches": [{"label": "", "region": "경남", "city": "창원시", "listedName": "마산클라이밍스쿨", "sourceUrl": "https://holday.rocks/gym/%EB%A7%88%EC%82%B0%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%8A%A4%EC%BF%A8"}], "sources": ["holday-경남"]}, {"id": "national-b14a8ce95bd2", "name": "만날공원 인공암벽장", "branches": [{"label": "", "region": "경남", "city": "창원시", "listedName": "만날공원 인공암벽장", "sourceUrl": "https://holday.rocks/gym/%EB%A7%8C%EB%82%A0%EA%B3%B5%EC%9B%90-%EC%9D%B8%EA%B3%B5%EC%95%94%EB%B2%BD%EC%9E%A5"}], "sources": ["holday-경남"]}, {"id": "national-4285dc805138", "name": "비스타 클라이밍짐", "branches": [{"label": "", "region": "경남", "city": "창원시", "listedName": "비스타 클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%EB%B9%84%EC%8A%A4%ED%83%80-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-경남"]}, {"id": "national-dd0c78596c78", "name": "창원클라이머스", "branches": [{"label": "", "region": "경남", "city": "창원시", "listedName": "창원클라이머스", "sourceUrl": "https://holday.rocks/gym/%EC%B0%BD%EC%9B%90%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%A8%B8%EC%8A%A4"}], "sources": ["holday-경남"]}, {"id": "national-546c43bb9e5a", "name": "창원클라이밍스쿨", "branches": [{"label": "", "region": "경남", "city": "창원시", "listedName": "창원클라이밍스쿨", "sourceUrl": "https://holday.rocks/gym/%EC%B0%BD%EC%9B%90%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%8A%A4%EC%BF%A8"}], "sources": ["holday-경남"]}, {"id": "national-2d6da6bfb6eb", "name": "크럭스클라이밍", "branches": [{"label": "", "region": "경남", "city": "창원시", "listedName": "크럭스클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%81%AC%EB%9F%AD%EC%8A%A4%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-경남"]}, {"id": "national-4a39643adb5f", "name": "클라임존", "branches": [{"label": "", "region": "경남", "city": "창원시", "listedName": "클라임존", "sourceUrl": "https://holday.rocks/gym/%ED%81%B4%EB%9D%BC%EC%9E%84%EC%A1%B4"}], "sources": ["holday-경남"]}, {"id": "national-eb1e1c839c17", "name": "핫클라이밍짐", "branches": [{"label": "", "region": "경남", "city": "창원시", "listedName": "핫클라이밍짐", "sourceUrl": "https://holday.rocks/gym/%ED%95%AB%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%A7%90"}], "sources": ["holday-경남"]}, {"id": "national-adc4d8228acb", "name": "통영락클라이밍", "branches": [{"label": "", "region": "경남", "city": "통영시", "listedName": "통영락클라이밍", "sourceUrl": "https://holday.rocks/gym/%ED%86%B5%EC%98%81%EB%9D%BD%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-경남"]}, {"id": "national-9713968ede93", "name": "서귀포클라이밍센터", "branches": [{"label": "", "region": "제주", "city": "서귀포시", "listedName": "서귀포클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%84%9C%EA%B7%80%ED%8F%AC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-제주"]}, {"id": "national-54f25ae1ad8c", "name": "오르명실내암벽등반", "branches": [{"label": "", "region": "제주", "city": "서귀포시", "listedName": "오르명실내암벽등반", "sourceUrl": "https://holday.rocks/gym/%EC%98%A4%EB%A5%B4%EB%AA%85%EC%8B%A4%EB%82%B4%EC%95%94%EB%B2%BD%EB%93%B1%EB%B0%98"}], "sources": ["holday-제주"]}, {"id": "national-5d648c170335", "name": "제주에이스클라이밍센터", "branches": [{"label": "", "region": "제주", "city": "제주시", "listedName": "제주에이스클라이밍센터", "sourceUrl": "https://holday.rocks/gym/%EC%A0%9C%EC%A3%BC%EC%97%90%EC%9D%B4%EC%8A%A4%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%84%BC%ED%84%B0"}], "sources": ["holday-제주"]}, {"id": "national-976cd09fb9f1", "name": "제주종합경기장 오름마당", "branches": [{"label": "", "region": "제주", "city": "제주시", "listedName": "제주종합경기장 오름마당", "sourceUrl": "https://holday.rocks/gym/%EC%A0%9C%EC%A3%BC%EC%A2%85%ED%95%A9%EA%B2%BD%EA%B8%B0%EC%9E%A5-%EC%98%A4%EB%A6%84%EB%A7%88%EB%8B%B9"}], "sources": ["holday-제주"]}, {"id": "national-3781771f7f43", "name": "제주클라이밍스쿨", "branches": [{"label": "", "region": "제주", "city": "제주시", "listedName": "제주클라이밍스쿨", "sourceUrl": "https://holday.rocks/gym/%EC%A0%9C%EC%A3%BC%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EC%8A%A4%EC%BF%A8"}], "sources": ["holday-제주"]}, {"id": "national-52320fd0dc2e", "name": "픽스볼더", "branches": [{"label": "아라", "region": "제주", "city": "제주시", "listedName": "픽스볼더 아라점", "sourceUrl": "https://holday.rocks/gym/%ED%94%BD%EC%8A%A4%EB%B3%BC%EB%8D%94-%EC%95%84%EB%9D%BC%EC%A0%90"}, {"label": "연동", "region": "제주", "city": "제주시", "listedName": "픽스볼더 연동점", "sourceUrl": "https://holday.rocks/gym/%ED%94%BD%EC%8A%A4%EB%B3%BC%EB%8D%94%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D"}], "sources": ["holday-제주"]}, {"id": "national-b83399dad553", "name": "한림스포츠 클라이밍경기장", "branches": [{"label": "", "region": "제주", "city": "제주시", "listedName": "한림스포츠 클라이밍경기장", "sourceUrl": "https://holday.rocks/gym/%ED%95%9C%EB%A6%BC%EC%8A%A4%ED%8F%AC%EC%B8%A0-%ED%81%B4%EB%9D%BC%EC%9D%B4%EB%B0%8D%EA%B2%BD%EA%B8%B0%EC%9E%A5"}], "sources": ["holday-제주"]}]};
+const gyms=gymCatalog.gyms.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+const palette=Array.from(document.querySelectorAll('[data-heart]'));
+// Keep immutable color templates so later shape changes never rewrite placed marks.
+const shapeSelect=$('shapeSelect');
+const markShapes={
+  hold:{label:'홀드',fillRule:'evenodd',path:'M39 34 C22 52 20 83 32 108 C43 131 44 159 64 178 C86 199 113 201 137 187 C157 177 183 174 195 152 C208 128 195 107 190 85 C184 59 188 36 164 20 C137 1 113 12 89 9 C67 6 50 17 39 34 Z M129 108 C129 100 124 95 117 96 C110 96 105 102 106 109 C106 117 111 122 118 121 C125 121 130 115 129 108 Z'},
+  hand:{label:'손',details:'M84 141 Q94 132 94 119 M122 152 Q132 140 131 126 M159 148 Q166 137 163 126',path:'M82 40 C62 44 48 57 35 72 L22 86 C14 94 18 106 30 108 C42 109 54 99 65 96 Q73 93 71 104 C67 117 57 128 46 135 C36 142 40 153 52 153 C66 154 76 147 84 141 C80 152 86 162 98 162 C108 163 116 158 122 152 C124 163 134 167 145 162 C153 159 157 153 159 148 C167 158 180 155 186 144 C197 124 190 87 174 65 C159 42 126 32 101 36 Q90 37 82 40 Z'},
+  heart:{label:'하트'},
+  lightning:{label:'번개',path:'M113 193 Q118 201 130 199 L177 193 Q193 191 184 177 L140 117 Q137 112 145 112 L179 115 Q196 116 184 101 L87 8 Q74 -4 81 17 L100 76 Q102 82 94 81 L51 77 Q35 76 44 91 Z'},
+  star:{label:'별',path:'M107 190 Q115 207 123 189 L144 145 Q147 136 157 136 L198 134 Q216 133 204 120 L174 87 Q168 81 171 71 L181 24 Q185 8 171 17 L128 43 Q120 48 112 43 L73 16 Q57 5 61 24 L68 72 Q70 81 62 87 L29 117 Q15 130 34 132 L78 137 Q87 138 91 149 Z'},
+  flower:{label:'꽃',path:'M81 147 C65 184 88 205 112 201 C138 199 151 175 140 147 C169 169 197 159 204 136 C212 110 192 91 160 90 C189 67 182 36 160 24 C139 12 120 27 111 51 C103 23 77 9 55 23 C31 39 40 68 66 86 C34 85 16 107 24 131 C31 155 57 165 81 147 Z'},
+  circle:{label:'원',path:'M110 198 C163 202 200 164 204 113 C210 61 177 8 124 0 C70 -8 26 25 22 79 C15 132 47 189 110 198 Z'},
+  triangle:{label:'삼각형',path:'M95 184 C104 202 119 204 129 185 C153 145 176 96 200 49 C213 25 202 12 178 12 C132 8 82 7 43 14 C21 17 18 32 30 52 C54 96 73 142 95 184 Z'},
+  square:{label:'네모',path:'M60 192 C100 199 149 195 176 188 Q198 183 199 156 C201 113 206 66 196 27 Q192 7 167 4 C125 -2 78 -4 48 5 Q27 10 26 35 C23 79 21 128 29 165 Q34 186 60 192 Z'},
+  diamond:{label:'마름모',path:'M100 190 Q112 205 125 190 C148 165 172 140 195 115 Q210 101 196 86 C172 59 145 34 121 10 Q109 -3 97 11 C72 37 51 62 28 88 Q16 102 30 117 C54 142 77 167 100 190 Z'}
+};
+const markTemplates=new Map(palette.map(button=>[button.dataset.heart,{svg:button.querySelector('svg').cloneNode(true),label:button.title||button.dataset.heart}]));
+function markKey(shape,color){return shape==='heart'?color:shape+':'+color;}
+function markCountTypography(count){
+  const measure=document.createElement('canvas').getContext('2d');measure.font='400 100px "'+(markTextTarget()?.font||state.fontFamily)+'"';
+  const metrics=measure.measureText(count),ascent=metrics.actualBoundingBoxAscent||75,descent=metrics.actualBoundingBoxDescent||0;
+  const fontSize=184*100/Math.max(1,ascent+descent),scale=fontSize/100;
+  return {fontSize,baseline:112+(ascent-descent)*scale/2,width:metrics.width*scale+Math.max(0,count.length-1)*fontSize*Number(letterSpace.value)/100};
+}
+let markCountFilterSerial=0;
+function applyCountOutline(svg,number,effect){
+  const target=markTextTarget(),fontSize=(target?.size||Number(size.value))*fontDisplayScale(target?.font||state.fontFamily),displaySize=Number(markSize.value)||1;
+  number.setAttribute('stroke',effect.enabled?effect.color:'none');number.setAttribute('stroke-width',String(markSVGStrokeWidth()));number.setAttribute('stroke-linejoin','round');
+}
+function markSVG(key){
+  if(key.includes('~')){
+    const [base,count]=key.split('~'),ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
+    svg.style.overflow='visible';svg.setAttribute('viewBox','0 0 448 224');svg.setAttribute('width','448');svg.setAttribute('height','224');
+    const icon=markSVG(base);icon.style.width='208px';icon.style.height='224px';icon.setAttribute('x','0');icon.setAttribute('y','0');icon.setAttribute('width','208');icon.setAttribute('height','224');
+    const number=document.createElementNS(ns,'text');number.setAttribute('x','230');number.setAttribute('y','157');number.setAttribute('font-family','"'+(markTextTarget()?.font||state.fontFamily)+'", sans-serif');const typography=markCountTypography(count),countSize=typography.fontSize;number.setAttribute('y',String(typography.baseline));number.setAttribute('font-size',String(countSize));number.setAttribute('letter-spacing',String(countSize*Number(letterSpace.value)/100));number.setAttribute('paint-order','stroke fill');number.setAttribute('stroke-linejoin','round');const effect=markOutlineStyle();applyCountOutline(svg,number,effect);if(!marksLinked()&&shadow.checked){const effect=shadowGeometry(),ratio=countSize/(Number(size.value)*fontDisplayScale(state.fontFamily));number.style.filter=(number.getAttribute('filter')||'')+' drop-shadow('+effect.x*ratio+'px '+effect.y*ratio+'px '+shadowRadius()*ratio+'px '+effect.color+')';}number.setAttribute('font-weight','400');number.setAttribute('fill',markTextTarget()?.color||fillColor.value);number.textContent=count;
+    if(typography.width>208){number.setAttribute('textLength','208');number.setAttribute('lengthAdjust','spacingAndGlyphs');}
+    svg.setAttribute('aria-label',icon.getAttribute('aria-label')+' '+count+'개');svg.append(icon,number);return svg;
+  }
+  const [shape,color]=key.includes(':')?key.split(':'):['heart',key];
+  const template=markTemplates.get(color),design=markShapes[shape]||markShapes.heart;
+  const svg=template.svg.cloneNode(true);svg.style.overflow='visible';
+  if(design.path)svg.querySelector('path').setAttribute('d',design.path);
+  if(design.fillRule)svg.querySelector('path').setAttribute('fill-rule',design.fillRule);
+  if(design.details){
+    const lines=svg.querySelector('path').cloneNode(true);
+    lines.setAttribute('d',design.details);
+    lines.setAttribute('fill','none');
+    lines.setAttribute('stroke',color==='🖤'?'#ffffff':'#111111');
+    lines.setAttribute('stroke-width','3');
+    lines.setAttribute('stroke-opacity','.65');
+    lines.setAttribute('stroke-linecap','round');
+    lines.setAttribute('stroke-linejoin','round');
+    svg.append(lines);
+  }
+  svg.setAttribute('aria-label',template.label+' '+design.label);
+  return svg;
+}
+function updateShapePalette(){
+  palette.forEach(button=>{
+    const key=markKey(state.shape,button.dataset.heart);
+    button.replaceChildren(markSVG(key));
+    button.setAttribute('aria-label',markTemplates.get(button.dataset.heart).label+' '+markShapes[state.shape].label+' 추가');
+  });
+  editorViewport.syncCounts?.();
+}
+const alignmentButtons=Array.from(document.querySelectorAll('[data-align]'));
+const ratioButtons=Array.from(document.querySelectorAll('[data-ratio]'));
+const problemOrderStorageKey='wonine.problemOrder';
+function readProblemOrder(){
+  try{return localStorage.getItem(problemOrderStorageKey)==='added'?'added':'color';}
+  catch{return 'color';}
+}
+// Keep insertion history intact so switching modes restores the original order.
+// Explicit line breaks bound each independent color group.
+function displayedMarks(marks){
+  if(state.markDisplay!=='count'||marks.some(key=>key.includes('~')))return marks;
+  const result=[];let counts=new Map();
+  function flush(){for(const [key,count] of counts)result.push(key+'~'+count);counts=new Map();}
+  for(const key of marks){if(key==='\n'){flush();result.push(key);}else counts.set(key,(counts.get(key)||0)+1);}
+  flush();return result;
+}
+// SVG image decoding cannot access the page's webfonts; draw counts with the loaded canvas font.
+function drawMarkCount(ctx,rect,ownShadow=false){
+  if(!rect.key.includes('~'))return;
+  const count=rect.key.split('~')[1],unit=rect.height/224;
+  const typography=markCountTypography(count),countSize=typography.fontSize*unit,x=rect.x+230*unit,y=rect.y+typography.baseline*unit;
+  ctx.save();ctx.font='400 '+countSize+'px "'+(markTextTarget()?.font||state.fontFamily)+'"';ctx.fillStyle=markTextTarget()?.color||fillColor.value;ctx.textAlign='left';ctx.textBaseline='alphabetic';if('letterSpacing' in ctx)ctx.letterSpacing=countSize*Number(letterSpace.value)/100+'px';
+  if(ownShadow&&shadow.checked){const effect=shadowGeometry(),ratio=countSize/(Number(size.value)*fontDisplayScale(state.fontFamily));ctx.shadowColor=effect.color;ctx.shadowOffsetX=effect.x*ratio;ctx.shadowOffsetY=effect.y*ratio;ctx.shadowBlur=2*shadowRadius()*ratio;}
+  const effect=markOutlineStyle();if(effect.enabled){ctx.strokeStyle=effect.color;ctx.lineWidth=markStrokeWidth()*rect.height/Math.max(1,Number(markSize.value));ctx.lineJoin='round';ctx.strokeText(count,x,y,208*unit);}
+  ctx.fillText(count,x,y,208*unit);ctx.restore();
+}
+function markWidthFactor(key){return key.includes('~')?2:1;}
+function arrangedMarks(marks,mode){
+  if(mode==='added')return marks.slice();
+  const result=[];let groups=new Map();
+  function flush(){for(const group of groups.values())result.push(...group);groups=new Map();}
+  for(const key of marks){
+    if(key==='\n'){flush();result.push(key);continue;}
+    const color=key.includes(':')?key.split(':')[1]:key;
+    if(!groups.has(color))groups.set(color,[]);
+    groups.get(color).push(key);
+  }
+  flush();return result;
+}
+const problemOrderButtons=[$('orderByColor'),$('orderByAdded')];
+const state={problemOrder:readProblemOrder(),alignment:'center',markAlignment:'left',markColumnGap:0,markRowGap:16,writingMode:'horizontal',verticalAlign:'top',captionPresent:false,x:50,y:50,hearts:[],markDisplay:'shapes',shape:'hold',photoURL:null,photoView:{zoom:1,cx:.5,cy:.5},loadVersion:0,ratio:'3:4',fontFamily:'Wave',fontVersion:0,fontLoading:false};
+let queued=false,drag=null;
+fontSelect.value='Wave';
+let fontPending=Promise.resolve();
+// Preserve the established OneKut preview and export scale.
+function fontDisplayScale(family){return family==='Wave'?1.3:1;}
+function fontStatus(message){$('fontStatus').textContent=message;$('fontStatus').hidden=!message;}
+fontSelect.addEventListener('change',()=>{
+  const family=fontSelect.value;
+  if(family!=='Wave'&&!fontChoices.some(font=>font.family===family))return;
+  const version=++state.fontVersion,previous=state.fontFamily;
+  state.fontLoading=true;$('saveResult').disabled=true;fontStatus('폰트를 불러오는 중…');
+  fontPending=(async()=>{
+    try{
+      const faces=await document.fonts.load('400 '+size.value+'px "'+family+'"',(text.value||'한글')+'0123456789');
+      if(!faces.length)throw new Error('font');
+      if(version!==state.fontVersion)return;
+      state.fontFamily=family;syncFontPicker();update();fontStatus('');
+    }catch(error){
+      if(version!==state.fontVersion)return;
+      fontSelect.value=previous;syncFontPicker();fontStatus('폰트를 불러오지 못했어요. 이전 폰트를 유지했어요. 다시 선택해 주세요.');
+    }finally{
+      if(version===state.fontVersion){state.fontLoading=false;$('saveResult').disabled=exporting;schedulePosition();}
+    }
+  })();
+});
+const fontMenuChoices=[{family:'Wave',label:'한컷체'},...fontChoices];
+let activeFont=0;
+function syncFontPicker(){
+  document.querySelectorAll('[data-font-card]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.fontCard===fontSelect.value)));
+  $('fontTrigger').textContent=fontMenuChoices.find(font=>font.family===fontSelect.value)?.label||'한컷체';
+  Array.from($('fontList').children).forEach((item,i)=>item.setAttribute('aria-selected',String(fontMenuChoices[i].family===fontSelect.value)));
+}
+function activateFont(index){
+  activeFont=index;
+  Array.from($('fontList').children).forEach((item,i)=>item.className='font-option'+(index===i?' is-active':''));
+  const item=$('fontList').children[index];
+  if(item){$('fontList').setAttribute('aria-activedescendant',item.id);item.scrollIntoView({block:'nearest'});}
+}
+function closeFontPicker(restoreFocus=false){
+  $('fontList').hidden=true;$('fontTrigger').setAttribute('aria-expanded','false');
+  if(restoreFocus)$('fontTrigger').focus();
+}
+function chooseFont(index){
+  fontSelect.value=fontMenuChoices[index].family;syncFontPicker();
+  fontSelect.dispatchEvent(new Event('change'));closeFontPicker(true);
+}
+fontMenuChoices.forEach((font,index)=>{
+  const item=document.createElement('div');item.id='font-option-'+index;item.className='font-option';item.setAttribute('role','option');
+  item.style.fontFamily='"'+font.family+'", sans-serif';item.dataset.font=font.family;
+  const name=document.createElement('span');name.className='font-option-name';name.textContent=font.label;
+  const sample=document.createElement('span');sample.className='font-option-sample';sample.textContent='썸네일 만들기';
+  item.append(name);item.append(sample);
+  item.addEventListener('mousedown',event=>event.preventDefault());item.addEventListener('click',()=>chooseFont(index));
+  $('fontList').append(item);
+});
+syncFontPicker();
+function openFontPicker(){
+  $('fontList').hidden=false;$('fontTrigger').setAttribute('aria-expanded','true');syncFontPicker();
+  activateFont(Math.max(0,fontMenuChoices.findIndex(font=>font.family===fontSelect.value)));$('fontList').focus();
+}
+$('fontTrigger').addEventListener('click',()=>$('fontList').hidden?openFontPicker():closeFontPicker(true));
+$('fontTrigger').addEventListener('keydown',event=>{if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();openFontPicker();}});
+$('fontList').addEventListener('keydown',event=>{
+  if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();activateFont(Math.max(0,Math.min(fontMenuChoices.length-1,activeFont+(event.key==='ArrowDown'?1:-1))));}
+  else if(event.key==='Home'||event.key==='End'){event.preventDefault();activateFont(event.key==='Home'?0:fontMenuChoices.length-1);}
+  else if(event.key==='Enter'||event.key===' '){event.preventDefault();chooseFont(activeFont);}
+  else if(event.key==='Escape'){event.preventDefault();closeFontPicker(true);}
+  else if(event.key==='Tab'){closeFontPicker();$('fontTrigger').focus();}
+});
+window.addEventListener('pointerdown',event=>{if(!$('fontPicker').contains(event.target))closeFontPicker();});
+window.addEventListener('focusin',event=>{if(!$('fontPicker').contains(event.target))closeFontPicker();});
+function option(value,label){const item=document.createElement('option');item.value=value;item.textContent=label;return item;}
+// Use the same trigger and option styling for region, gym, and branch.
+function createSelectPicker(prefix,select){
+  const root=$(prefix+'Picker'),trigger=$(prefix+'Trigger'),list=$(prefix+'List');
+  let active=0;
+  const options=()=>Array.from(select.children);
+  function close(restore=false){list.hidden=true;trigger.setAttribute('aria-expanded','false');list.removeAttribute('aria-activedescendant');if(restore)trigger.focus();}
+  function sync(){
+    const selected=options().find(item=>item.value===select.value);
+    trigger.textContent=selected?.textContent||options()[0]?.textContent||'';
+    trigger.disabled=select.disabled;
+    close();
+  }
+  function activate(index){
+    active=Math.max(0,Math.min(options().length-1,index));
+    Array.from(list.children).forEach((item,i)=>item.className='gym-option'+(i===active?' is-active':''));
+    const item=list.children[active];
+    if(item){list.setAttribute('aria-activedescendant',item.id);item.scrollIntoView({block:'nearest'});}
+  }
+  function choose(index){
+    const item=options()[index];if(!item)return;
+    select.value=item.value;select.dispatchEvent(new Event('change'));sync();close(true);
+  }
+  function open(){
+    if(select.disabled)return;
+    list.replaceChildren();
+    options().forEach((option,index)=>{
+      const item=document.createElement('div');item.id=prefix+'-option-'+index;item.className='gym-option';item.textContent=option.textContent;
+      item.setAttribute('role','option');item.setAttribute('aria-selected',String(option.value===select.value));
+      item.addEventListener('mousedown',event=>event.preventDefault());item.addEventListener('click',()=>choose(index));list.append(item);
+    });
+    list.hidden=false;trigger.setAttribute('aria-expanded','true');list.focus();
+    activate(Math.max(0,options().findIndex(item=>item.value===select.value)));
+  }
+  trigger.addEventListener('click',()=>list.hidden?open():close(true));
+  trigger.addEventListener('keydown',event=>{if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();open();}});
+  list.addEventListener('keydown',event=>{
+    if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();activate(active+(event.key==='ArrowDown'?1:-1));}
+    else if(event.key==='Home'||event.key==='End'){event.preventDefault();activate(event.key==='Home'?0:options().length-1);}
+    else if(event.key==='Enter'||event.key===' '){event.preventDefault();choose(active);}
+    else if(event.key==='Escape'){event.preventDefault();close(true);}
+    else if(event.key==='Tab'){close();trigger.focus();}
+  });
+  window.addEventListener('pointerdown',event=>{if(!root.contains(event.target))close();});
+  window.addEventListener('focusin',event=>{if(!root.contains(event.target))close();});
+  select.addEventListener('change',sync);sync();return {sync};
+}
+Object.entries(markShapes).forEach(([value,design])=>shapeSelect.append(option(value,design.label)));
+shapeSelect.value='hold';updateShapePalette();
+shapeSelect.addEventListener('change',()=>{
+  if(!markShapes[shapeSelect.value])return;
+  state.shape=shapeSelect.value;
+  state.hearts=state.hearts.map(key=>key==='\n'?key:markKey(state.shape,key.includes(':')?key.split(':')[1]:key));
+  updateShapePalette();update();
+});
+const shapePickerUI=createSelectPicker('shape',shapeSelect);
+const branchPickerUI=createSelectPicker('branch',branchSelect);
+function populateGyms(selected=''){
+  const visible=gyms;
+  gymSelect.replaceChildren(option('','직접 입력 / 암장 선택'));
+  visible.forEach(gym=>gymSelect.append(option(gym.id,gym.name)));
+  gymSelect.value=visible.some(gym=>gym.id===selected)?selected:'';
+  syncGymTrigger();
+}
+function populateBranches(gym,selected=''){
+  branchSelect.replaceChildren(option('','지점 선택'));
+  branchField.hidden=!gym||gym.branches.length<2;
+  branchSelect.disabled=branchField.hidden;
+  if(gym)gym.branches.forEach((branch,index)=>branchSelect.append(option(String(index),branch.label)));
+  branchSelect.value=selected!==''&&gym&&gym.branches[Number(selected)]?selected:'';
+  branchPickerUI.sync();
+}
+const gymTrigger=$('gymTrigger'),gymSearch=$('gymSearch'),gymSearchPanel=$('gymSearchPanel'),gymResults=$('gymResults');
+let gymMatches=[],activeGym=-1;
+function syncGymTrigger(){
+  $('gymTrigger').textContent=gyms.find(gym=>gym.id===gymSelect.value)?.name||'직접 입력 / 암장 선택';
+}
+function gymSearchKey(value){return value.normalize('NFC').replace(/\s+/g,'').toLocaleLowerCase('ko');}
+// Normalize once; keystrokes only scan these small strings, not DOM nodes.
+const gymNameCounts=new Map();
+for(const gym of gyms){const name=gymSearchKey(gym.name);gymNameCounts.set(name,(gymNameCounts.get(name)||0)+1);}
+const gymSearchIndex=gyms.map(gym=>({
+  gym,
+  key:gymSearchKey([gym.name,...gym.branches.flatMap(branch=>[branch.label,branch.region,branch.city,branch.district,branch.listedName])].filter(Boolean).join(' ')),
+  detail:gymNameCounts.get(gymSearchKey(gym.name))>1?[...new Set(gym.branches.map(branch=>[branch.region,branch.city,branch.district].filter(Boolean).join(' ')).filter(Boolean))].join(' · '):''
+}));
+function findGymMatches(query){return gymSearchIndex.filter(entry=>entry.key.includes(query));}
+function activateGym(index){
+  activeGym=index;
+  Array.from(gymResults.children).forEach((item,i)=>item.className='gym-option'+(i===index?' is-active':''));
+  const item=gymResults.children[index];
+  if(item){gymSearch.setAttribute('aria-activedescendant',item.id);item.scrollIntoView({block:'nearest'});}
+  else gymSearch.removeAttribute('aria-activedescendant');
+}
+function renderGymMatches(){
+  const query=gymSearchKey(gymSearch.value);
+  const matches=findGymMatches(query);
+  const shown=matches;
+  gymMatches=[{id:'',name:'직접 입력 / 암장 선택'},...shown.map(entry=>entry.gym)];
+  $('gymSearchMore').hidden=true;
+
+  gymResults.replaceChildren();
+  gymMatches.forEach((gym,index)=>{
+    const item=document.createElement('div');item.id='gym-result-'+index;item.className='gym-option';
+    const name=document.createElement('span');name.textContent=gym.name;item.append(name);
+    const detail=index?shown[index-1].detail:'';
+    if(detail){const helper=document.createElement('span');helper.className='gym-option-detail';helper.textContent=detail;item.append(helper);}
+
+    item.setAttribute('role','option');item.setAttribute('aria-selected',String(gym.id===gymSelect.value));
+    item.addEventListener('mousedown',event=>event.preventDefault());
+    item.addEventListener('click',()=>chooseGym(index));gymResults.append(item);
+  });
+  $('gymSearchEmpty').hidden=gymMatches.length>1;
+  activateGym(query?(gymMatches.length>1?1:0):Math.max(0,gymMatches.findIndex(gym=>gym.id===gymSelect.value)));
+}
+function closeGymSearch(restoreFocus=false){
+  gymSearchPanel.hidden=true;gymTrigger.setAttribute('aria-expanded','false');gymSearch.setAttribute('aria-expanded','false');
+  gymSearch.removeAttribute('aria-activedescendant');if(restoreFocus)gymTrigger.focus();
+}
+function openGymSearch(){
+  gymSearchPanel.hidden=false;gymTrigger.setAttribute('aria-expanded','true');gymSearch.setAttribute('aria-expanded','true');
+  gymSearch.value='';renderGymMatches();gymSearch.focus();
+}
+function chooseGym(index){
+  const gym=gymMatches[index];if(!gym)return;
+  gymSelect.value=gym.id;gymSelect.dispatchEvent(new Event('change'));closeGymSearch(true);
+}
+gymTrigger.addEventListener('click',()=>gymSearchPanel.hidden?openGymSearch():closeGymSearch(true));
+gymTrigger.addEventListener('keydown',event=>{if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();openGymSearch();}});
+gymSearch.addEventListener('input',renderGymMatches);
+gymSearch.addEventListener('keydown',event=>{
+  if(event.isComposing)return;
+  if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();activateGym(Math.max(0,Math.min(gymMatches.length-1,activeGym+(event.key==='ArrowDown'?1:-1))));}
+  else if(event.key==='Enter'){event.preventDefault();chooseGym(activeGym);}
+  else if(event.key==='Escape'){event.preventDefault();closeGymSearch(true);}
+  else if(event.key==='Tab')closeGymSearch();
+});
+window.addEventListener('pointerdown',event=>{if(!$('gymSearchPicker').contains(event.target))closeGymSearch();});
+window.addEventListener('focusin',event=>{if(!$('gymSearchPicker').contains(event.target))closeGymSearch();});
+populateGyms();
+gymSelect.addEventListener('change',()=>{
+  const gym=gyms.find(item=>item.id===gymSelect.value);
+  populateBranches(gym);
+  if(gym){text.value=gym.name;update();}
+  syncGymTrigger();
+});
+branchSelect.addEventListener('change',()=>{
+  const gym=gyms.find(item=>item.id===gymSelect.value);if(!gym)return;
+  const branch=branchSelect.value===''?null:gym.branches[Number(branchSelect.value)];
+  text.value=branch?gym.name+' '+branch.label:gym.name;update();
+});
+// Manual wording stays editable; the selectors never overwrite typed text.
+text.addEventListener('input',()=>{gymSelect.value='';populateBranches(null);syncGymTrigger();});
+function syncGymSelection(){
+  for(const gym of gyms){
+    const index=gym.branches.findIndex(branch=>(branch.label?gym.name+' '+branch.label:gym.name)===text.value);
+    if(index!==-1){gymSelect.value=gym.id;populateBranches(gym);if(gym.branches.length>1)branchSelect.value=String(index);branchPickerUI.sync();syncGymTrigger();return;}
+  }
+  gymSelect.value='';populateBranches(null);syncGymTrigger();
+}
+function updateRatio(){
+  const visible=Boolean(state.photoURL);
+  $('photoDetails').hidden=!visible;$('ratioControls').hidden=!visible;
+  stage.style.aspectRatio=visible?state.ratio.replace(':',' / '):'auto';
+  ratioButtons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.ratio===state.ratio)));
+  schedulePosition();
+}
+ratioButtons.forEach(button=>button.addEventListener('click',()=>{state.ratio=button.dataset.ratio;updateRatio();}));
+function currentBounds(){
+  if(editorViewport.bounds)return editorViewport.bounds;
+  return positionBounds(stage.clientWidth,stage.clientHeight,layer.offsetWidth,layer.offsetHeight);
+}
+document.querySelectorAll('[data-valign]').forEach(button=>button.addEventListener('click',()=>{state.writingMode='vertical';state.verticalAlign=button.dataset.valign;update();}));
+function renderPosition(){
+  document.querySelectorAll('[data-valign]').forEach(button=>button.setAttribute('aria-pressed',String(state.writingMode==='vertical'&&state.verticalAlign===button.dataset.valign)));
+  if(!editorViewport.render?.()){
+    renderVerticalPreview();
+    if(!state.photoURL)stage.style.height=Math.max(260,layer.offsetHeight+60)+'px';
+    else stage.style.height='auto';
+  }
+  renderPhotoView();
+  const point=offsetFromPosition(currentBounds(),state.x,state.y);
+  layer.style.left=point.left+'px';layer.style.top=point.top+'px';
+  renderIndependentMarks();renderPhotoOverlays();renderExtraTexts();
+  editorViewport.afterRender?.();
+}
+function schedulePosition(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;renderPosition();});}
+function markTextTarget(){return $('markOutlineLinked').checked&&state.markTextTarget&&state.markTextTarget!=='primary'?extraTexts.find(item=>String(item.id)===state.markTextTarget):null;}
+function marksLinked(){return $('markOutlineLinked').checked&&!markTextTarget();}
+const markLayer=document.createElement('div');
+markLayer.id='markLayer';markLayer.className='independent-marks';markLayer.hidden=true;
+markLayer.tabIndex=0;markLayer.setAttribute('role','group');
+markLayer.setAttribute('aria-label','완등 표시 위치. 끌거나 방향키로 이동');
+stage.append(markLayer);
+let markPosition={x:50,y:60};
+function independentMarkFrame(){
+  const ctx=document.createElement('canvas').getContext('2d');ctx.font=getComputedStyle(preview).font;
+  const layout=explicitExportLayout(ctx,'',arrangedMarks(state.hearts,state.problemOrder),Number(size.value),0,state.markAlignment||'left',stage.clientWidth-40,true,{columnGap:state.markColumnGap||0,rowGap:state.markRowGap??16});
+  const target=markTextTarget();if(target){const textLayout=extraTextLayout(target,stage.clientWidth),origin=extraTextOrigin(target,textLayout,stage.clientWidth,stage.clientHeight);const bounds=positionBounds(stage.clientWidth,stage.clientHeight,layout.width,layout.height);markPosition=positionFromOffset(bounds,origin.x+(textLayout.width-layout.width)/2,origin.y+textLayout.height/2+(Math.abs(Math.sin((target.rotation||0)*Math.PI/180))*textLayout.width+Math.abs(Math.cos((target.rotation||0)*Math.PI/180))*textLayout.height)/2+target.size*.16);}
+  const fit=Math.min(1,(stage.clientWidth-40)/layout.width,(stage.clientHeight-40)/Math.max(1,layout.height));
+  return {layout,fit,bounds:positionBounds(stage.clientWidth,stage.clientHeight,layout.width*fit,layout.height*fit)};
+}
+function renderIndependentMarks(){
+  if(marksLinked())return;
+  const {layout,fit,bounds}=independentMarkFrame();
+  const point=offsetFromPosition(bounds,markPosition.x,markPosition.y);
+  Object.assign(markLayer.style,{left:point.left+'px',top:point.top+'px',width:layout.width+'px',height:layout.height+'px',transform:`scale(${fit}) translate(${layout.width/2}px,${layout.height/2}px) rotate(${state.markRotation||0}deg) scaleX(${state.markFlip?-1:1}) translate(${-layout.width/2}px,${-layout.height/2}px)`});
+  const svgs=Array.from(heartPreview.children).flatMap(node=>node.tagName.toLowerCase()==='svg'?[node]:Array.from(node.children).filter(child=>child.tagName.toLowerCase()==='svg'));
+  heartPreview.replaceChildren(...svgs);
+  layout.hearts.forEach((rect,i)=>{const svg=svgs[i];if(svg)Object.assign(svg.style,{position:'absolute',left:rect.x+'px',top:rect.y+'px',width:rect.width+'px',height:rect.height+'px'});});
+  markLayer.hidden=!layout.hearts.length;
+}
+function markOutlineStyle(){const target=markTextTarget();return $('markOutlineLinked').checked?{enabled:target?target.outline:outline.checked,color:target?.strokeColor||strokeColor.value,width:target?.outlineWidth??Number(outlineWidth.value)}:{enabled:$('markOutlineEnabled').checked,color:$('markStrokeColor').value,width:Number($('markOutlineWidth').value)};}
+// One logical pixel width for marks and counts; never mix viewBox units with pixels.
+function markStrokeWidth(){const effect=markOutlineStyle();if(!effect.enabled)return 0;const target=markTextTarget(),base=$('markOutlineLinked').checked?(target?.size||Number(size.value))*fontDisplayScale(target?.font||state.fontFamily):Number(markSize.value);return 2*base*effect.width/100;}
+function markSVGStrokeWidth(){return markStrokeWidth()*224/Math.max(1,Number(markSize.value));}
+$('markOutlineLinked').addEventListener('change',()=>{
+ const textPoint={left:parseFloat(layer.style.left)||0,top:parseFloat(layer.style.top)||0};
+ const oldRect=heartPreview.getBoundingClientRect(),stageRect=stage.getBoundingClientRect();
+ const scale=stageRect.width/stage.clientWidth||1;
+ if(!marksLinked()){
+   $('markOutlineEnabled').checked=outline.checked;$('markStrokeColor').value=strokeColor.value;$('markOutlineWidth').value=outlineWidth.value;
+   markLayer.append(heartPreview);
+ }else{layer.append(heartPreview);markLayer.hidden=true;}
+ layer.setAttribute('aria-label',marksLinked()?'글자와 완등 표시 위치. 끌거나 방향키로 이동':'글자 위치. 끌거나 방향키로 이동');
+ $('markOutlineCustom').hidden=marksLinked();
+ $('markStrokeColor').dispatchEvent(new Event('input'));update();renderPosition();
+ Object.assign(state,positionFromOffset(currentBounds(),textPoint.left,textPoint.top));
+ if(!marksLinked()&&state.hearts.length){markPosition=positionFromOffset(independentMarkFrame().bounds,(oldRect.left-stageRect.left)/scale,(oldRect.top-stageRect.top)/scale);}
+ renderPosition();
+});
+for(const id of ['markOutlineEnabled','markStrokeColor','markOutlineWidth'])$(id).addEventListener('input',update);
+window.addEventListener('editorreset',()=>{state.markTextTarget='primary';$('markOutlineLinked').checked=true;$('markOutlineCustom').hidden=true;layer.append(heartPreview);markLayer.hidden=true;markPosition={x:50,y:60};layer.setAttribute('aria-label','글자와 완등 표시 위치. 끌거나 방향키로 이동');update();});
+function updateHearts(marks=arrangedMarks(state.hearts,state.problemOrder)){
+  problemOrderButtons.forEach((button,index)=>button.setAttribute('aria-pressed',String(state.problemOrder===(index===0?'color':'added'))));
+  heartPreview.replaceChildren();
+  function addRow(){
+    const row=document.createElement('div');
+    row.className='heart-row';
+    row.style.justifyContent=state.writingMode==='vertical'?'flex-start':{left:'flex-start',center:'center',right:'flex-end'}[state.alignment];
+    heartPreview.append(row);return row;
+  }
+  let row=state.hearts.length?addRow():null;
+  displayedMarks(marks).forEach(key=>{
+    if(key==='\n'){row=addRow();return;}
+    const svg=markSVG(key);if(key.includes('~'))svg.style.width='2em';
+    const path=svg.querySelector('path');
+    const effect=markOutlineStyle();path.setAttribute('stroke',effect.color);
+    path.setAttribute('stroke-width',String(markSVGStrokeWidth()));
+    path.setAttribute('stroke-linejoin','round');
+    path.removeAttribute('vector-effect');
+    row.append(svg);
+  });
+  heartPreview.hidden=state.hearts.length===0;
+  removeHeart.disabled=!state.hearts.some(key=>key!=='\n');
+  clearHearts.disabled=state.hearts.length===0;
+  breakHearts.disabled=state.hearts.length===0;
+  editorViewport.syncCounts?.();
+}
+// Use visible ink height, so font ascender/descender padding does not create
+// a larger gap before the first heart row than between subsequent rows.
+function lineSpacing(metrics,fontSize,gap=fontSize*.16){
+  const ascent=metrics.actualBoundingBoxAscent,descent=metrics.actualBoundingBoxDescent;
+  const height=ascent+descent;
+  const leading=(height+gap-metrics.fontBoundingBoxAscent-metrics.fontBoundingBoxDescent)/2;
+  return {gap,lineHeight:height+gap,top:leading+metrics.fontBoundingBoxAscent-ascent,bottom:leading+metrics.fontBoundingBoxDescent-descent};
+}
+function markColumnGap(baseSize){return baseSize/14;}
+function updateLineSpacing(){
+  const baseSize=Number(size.value),fontSize=baseSize*fontDisplayScale(state.fontFamily),gap=rowGap(baseSize);
+  // SVG hearts have 12 units of transparent padding at both vertical ends.
+  const heartInset=Number(markSize.value)*12/224;
+  heartPreview.style.fontSize=markSize.value+'px';
+  $('markSizeValue').value=markSize.value+'px';
+  layer.style.setProperty('--heart-column-gap',markColumnGap(Number(markSize.value)/.75)+'px');
+  layer.style.setProperty('--heart-row-gap',(gap-2*heartInset)+'px');
+  layer.style.setProperty('--text-heart-gap',(gap-heartInset)+'px');
+  preview.style.lineHeight=(fontSize+gap)+'px';
+  preview.style.marginTop='0px';preview.style.marginBottom='0px';
+  const context=document.createElement('canvas').getContext?.('2d');
+  if(!context)return;
+  context.font='400 '+fontSize+'px "'+state.fontFamily+'"';
+  const metrics=context.measureText(preview.textContent.replace(/\n/g,'')||'한글');
+  if(![metrics.actualBoundingBoxAscent,metrics.actualBoundingBoxDescent,metrics.fontBoundingBoxAscent,metrics.fontBoundingBoxDescent].every(Number.isFinite))return;
+  const spacing=lineSpacing(metrics,fontSize,gap);
+  if(spacing.lineHeight<=gap)return;
+  preview.style.lineHeight=spacing.lineHeight+'px';
+  preview.style.marginTop=-spacing.top+'px';preview.style.marginBottom=-spacing.bottom+'px';
+}
+function update(){
+  const parent=marksLinked()?layer:markLayer;if(heartPreview.parentElement!==parent)parent.append(heartPreview);if(marksLinked())markLayer.hidden=true;
+  if($('markOutlineLinked').checked)markSize.value=String(Math.round((markTextTarget()?.size||Number(size.value))*.75));
+  $('markOutlineWidthValue').value=$('markOutlineWidth').value+'%';
+  const hasCaption=Boolean(text.value.trim());
+  if(hasCaption&&!state.captionPresent){state.x=50;state.y=50;}
+  state.captionPresent=hasCaption;
+  preview.replaceChildren(document.createTextNode(text.value.normalize('NFC')));preview.style.width='';preview.style.height='';
+  preview.style.fontFamily='"'+state.fontFamily+'", sans-serif';
+  preview.style.fontSize=(Number(size.value)*fontDisplayScale(state.fontFamily))+'px';
+  preview.style.letterSpacing=letterGap()+'px';
+  for(const input of [letterSpace,lineSpace,outlineWidth,shadowWidth])$(input.id+'Value').value=input.value+'%';
+  layer.style.fontSize=size.value+'px';$('value').value=size.value+'px';
+  preview.style.color=fillColor.value;
+  preview.style.webkitTextStroke=outline.checked?`${2*textOutlineRadius(parseFloat(preview.style.fontSize))}px ${strokeColor.value}`:'0px transparent';
+  preview.style.textShadow='none';
+  shadowOpacity.nextElementSibling.value=shadowOpacity.value+'%';shadowDistance.nextElementSibling.value=shadowDistance.value+'%';shadowAngle.nextElementSibling.value=(Number(shadowAngle.value)<0?'왼 ':Number(shadowAngle.value)>0?'우 ':'')+Math.abs(Number(shadowAngle.value))+'°';
+  const shadowStyle=shadowGeometry();
+  layer.style.filter=shadow.checked?`drop-shadow(${shadowStyle.x}px ${shadowStyle.y}px ${shadowRadius()}px ${shadowStyle.color})`:'none';
+  layer.style.textAlign=state.alignment;
+  alignmentButtons.forEach(button=>button.setAttribute('aria-pressed',String(state.writingMode==='horizontal'&&button.dataset.align===state.alignment)));
+  updateLineSpacing();updateHearts();schedulePosition();
+}
+[text,size,markSize,fillColor,strokeColor,letterSpace,lineSpace,outlineWidth,shadowColor,shadowWidth,shadowOpacity,shadowDistance,shadowAngle].forEach(input=>input.addEventListener('input',update));
+outline.addEventListener('change',update);
+shadow.addEventListener('change',update);
+alignmentButtons.forEach(button=>button.addEventListener('click',()=>{
+  state.writingMode='horizontal';state.alignment=button.dataset.align;state.x={left:0,center:50,right:100}[state.alignment];update();
+}));
+problemOrderButtons.forEach((button,index)=>button.addEventListener('click',()=>{
+  state.problemOrder=index===0?'color':'added';
+  try{localStorage.setItem(problemOrderStorageKey,state.problemOrder);}catch{}
+  update();
+}));
+palette.forEach(button=>button.addEventListener('click',()=>{state.hearts.push(markKey(state.shape,button.dataset.heart));update();}));
+breakHearts.addEventListener('click',()=>{if(!state.hearts.length)return;state.hearts.push('\n');update();});
+removeHeart.addEventListener('click',()=>{
+  // Remove the last heart, and discard trailing breaks that would leave empty rows.
+  while(state.hearts.at(-1)==='\n')state.hearts.pop();
+  state.hearts.pop();
+  while(state.hearts.at(-1)==='\n')state.hearts.pop();
+  update();
+});
+clearHearts.addEventListener('click',()=>{state.hearts=[];update();});
+function showStatus(message){$('status').textContent=message;$('status').hidden=!message;}
+photoInput.addEventListener('change',()=>{
+  const file=photoInput.files[0];if(!file)return;
+  const version=++state.loadVersion;
+  if(file.type&&!file.type.startsWith('image/')){showStatus('이미지 파일을 선택해 주세요.');photoInput.value='';return;}
+  const asOverlay=Boolean(state.photoURL);
+  const url=URL.createObjectURL(file),candidate=new Image();
+  showStatus('이미지를 불러오는 중이에요.');
+  candidate.onload=()=>{
+    if(version!==state.loadVersion){releasePhotoURL(url);return;}
+    if(asOverlay){
+      const item={id:++photoOverlaySerial,url,image:candidate,name:file.name,x:50,y:50,width:36};photoOverlays.push(item);renderPhotoOverlays();setEditorSelection('image',item.id,{origin:'create'});
+      photoInput.value='';showStatus('');renderPhotoOverlays();window.dispatchEvent(new Event('photooverlaychange'));return;
+    }
+    const previous=state.photoURL;state.photoURL=url;state.photoView={zoom:1,cx:.5,cy:.5};
+    photo.src=url;photo.hidden=false;photo.alt=file.name;stage.classList.add('has-photo');
+    stage.style.height='auto';removePhoto.disabled=false;$('saveResult').disabled=exporting||state.fontLoading;$('photoName').textContent=file.name;$('photoName').title=file.name;
+    if(!state.captionPresent){state.x=50;state.y=50;}
+    if(previous)releasePhotoURL(previous);
+    showStatus('');photoInput.value='';updateRatio();setEditorSelection('background',null,{origin:'create',showTools:false});
+  };
+  candidate.onerror=()=>{
+    releasePhotoURL(url);
+    if(version===state.loadVersion){showStatus('이 이미지를 열 수 없어요. JPG, PNG 또는 WebP 파일로 다시 선택해 주세요.');photoInput.value='';}
+  };
+  candidate.src=url;
+});
+photo.addEventListener('load',schedulePosition);
+removePhoto.addEventListener('click',()=>{
+  state.loadVersion++;if(state.photoURL)releasePhotoURL(state.photoURL);state.photoURL=null;if(backgroundOriginal){releasePhotoURL(backgroundOriginal);backgroundOriginal=null;}state.photoView={zoom:1,cx:.5,cy:.5};
+  photo.hidden=true;if(photoPreviewCanvas)photoPreviewCanvas.hidden=true;photo.removeAttribute('src');stage.classList.remove('has-photo');
+  removePhoto.disabled=true;$('saveResult').disabled=exporting||state.fontLoading;photoInput.value='';$('photoName').textContent='';$('photoName').title='';showStatus('');state.y=0;updateRatio();photoInput.focus();
+});
+// Reset editing state without reloading or letting pending image/font loads restore it.
+const resetDialog=$('resetDialog');
+$('resetEditor').addEventListener('click',()=>{if(!exporting){resetDialog.returnValue='cancel';resetDialog.showModal();}});
+resetDialog.addEventListener('close',()=>{
+  if(resetDialog.returnValue!=='reset'||exporting)return;
+  state.loadVersion++;state.fontVersion++;
+  if(state.photoURL)releasePhotoURL(state.photoURL);
+  if(backgroundOriginal){releasePhotoURL(backgroundOriginal);backgroundOriginal=null;}
+  if(drag&&layer.hasPointerCapture(drag.id))layer.releasePointerCapture(drag.id);
+  drag=null;
+  Object.assign(state,{problemOrder:'color',alignment:'center',markAlignment:'left',markColumnGap:0,markRowGap:16,writingMode:'horizontal',verticalAlign:'top',captionPresent:false,x:50,y:50,hearts:[],markDisplay:'shapes',shape:'hold',photoURL:null,photoView:{zoom:1,cx:.5,cy:.5},ratio:'3:4',fontFamily:'Wave',fontLoading:false});
+  try{localStorage.removeItem(problemOrderStorageKey);}catch{}
+  fontPending=Promise.resolve();
+  text.value=text.defaultValue;
+  for(const input of [size,markSize,fillColor,strokeColor,letterSpace,lineSpace,outlineWidth,shadowColor,shadowWidth,shadowOpacity,shadowDistance,shadowAngle])input.value=input.defaultValue;
+  outline.checked=outline.defaultChecked;shadow.checked=shadow.defaultChecked;
+  fontSelect.value='Wave';syncFontPicker();closeFontPicker();fontStatus('');
+  shapeSelect.value='hold';shapePickerUI.sync();updateShapePalette();
+  gymSearch.value='';closeGymSearch();syncGymSelection();
+  photo.hidden=true;if(photoPreviewCanvas)photoPreviewCanvas.hidden=true;photo.removeAttribute('src');photo.alt='';photoInput.value='';
+  stage.classList.remove('has-photo');removePhoto.disabled=true;
+  $('photoName').textContent='';$('photoName').title='';showStatus('');
+  $('saveResult').disabled=false;
+  updateRatio();update();window.dispatchEvent(new Event('editorreset'));
+});
+layer.addEventListener('pointerdown',event=>{
+  if(event.button!==0||!event.isPrimary)return;
+  event.preventDefault();layer.focus({preventScroll:true});
+  const point=offsetFromPosition(currentBounds(),state.x,state.y);
+  drag={id:event.pointerId,startX:event.clientX,startY:event.clientY,left:point.left,top:point.top};
+  layer.setPointerCapture(event.pointerId);
+});
+layer.addEventListener('pointermove',event=>{
+  if(!drag||event.pointerId!==drag.id)return;
+  const displayScale=stage.getBoundingClientRect().width/stage.clientWidth||1;
+  const pos=positionFromOffset(currentBounds(),drag.left+(event.clientX-drag.startX)/displayScale,drag.top+(event.clientY-drag.startY)/displayScale);
+  state.x=pos.x;state.y=pos.y;renderPosition();
+});
+function endDrag(event){if(drag&&drag.id===event.pointerId){drag=null;if(layer.hasPointerCapture(event.pointerId))layer.releasePointerCapture(event.pointerId);}}
+layer.addEventListener('pointerup',endDrag);layer.addEventListener('pointercancel',endDrag);layer.addEventListener('lostpointercapture',()=>{drag=null;});
+layer.addEventListener('keydown',event=>{
+  const direction={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[event.key];if(!direction)return;
+  event.preventDefault();const bounds=currentBounds(),point=offsetFromPosition(bounds,state.x,state.y),step=event.shiftKey?20:4;
+  const pos=positionFromOffset(bounds,point.left+direction[0]*step,point.top+direction[1]*step);state.x=pos.x;state.y=pos.y;renderPosition();
+});
+let markDrag=null;
+markLayer.addEventListener('pointerdown',event=>{
+  if(event.button!==0||!event.isPrimary||marksLinked())return;
+  event.preventDefault();event.stopPropagation();markLayer.focus({preventScroll:true});
+  const point=offsetFromPosition(independentMarkFrame().bounds,markPosition.x,markPosition.y);
+  markDrag={id:event.pointerId,x:event.clientX,y:event.clientY,...point};markLayer.setPointerCapture(event.pointerId);
+});
+markLayer.addEventListener('pointermove',event=>{
+  if(!markDrag||event.pointerId!==markDrag.id)return;
+  const scale=stage.getBoundingClientRect().width/stage.clientWidth||1;
+  markPosition=positionFromOffset(independentMarkFrame().bounds,markDrag.left+(event.clientX-markDrag.x)/scale,markDrag.top+(event.clientY-markDrag.y)/scale);
+  renderIndependentMarks();
+});
+for(const name of ['pointerup','pointercancel','lostpointercapture'])markLayer.addEventListener(name,()=>{markDrag=null;});
+markLayer.addEventListener('keydown',event=>{
+  const direction={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[event.key];if(!direction)return;
+  event.preventDefault();event.stopPropagation();const bounds=independentMarkFrame().bounds,point=offsetFromPosition(bounds,markPosition.x,markPosition.y),step=event.shiftKey?20:4;
+  markPosition=positionFromOffset(bounds,point.left+direction[0]*step,point.top+direction[1]*step);renderIndependentMarks();
+});
+const resizeObserver=new ResizeObserver(schedulePosition);resizeObserver.observe(stage);resizeObserver.observe(layer);
+document.fonts.ready.then(()=>{update();});window.addEventListener('resize',schedulePosition);
+window.addEventListener('pagehide',event=>{if(!event.persisted&&state.photoURL)releasePhotoURL(state.photoURL);});
+syncGymSelection();updateRatio();update();
+
+// Desktop retains authored breaks; mobile shares bounded wrapping with export.
+function explicitExportLayout(ctx,caption,hearts,baseSize,letterSpacing,alignment,maxWidth=Infinity,forceHorizontal=false,markOptions=null){
+  hearts=displayedMarks(hearts);
+  if(state.writingMode==='vertical'&&!forceHorizontal)return verticalExportLayout(ctx,caption,hearts,baseSize,letterSpacing,maxWidth);
+  const lines=[];
+  for(const paragraph of caption.normalize('NFC').replace(/\r\n?/g,'\n').split('\n')){
+    let line='',count=0;
+    for(const {segment} of new Intl.Segmenter('ko',{granularity:'grapheme'}).segment(paragraph)){
+      const glyph=segment==='\t'?'        ':segment;
+      if(line&&ctx.measureText(line+glyph).width+count*letterSpacing>maxWidth){
+        lines.push(line.trimEnd());line='';count=0;
+        if(/^\s+$/.test(glyph))continue;
+      }
+      line+=glyph;count++;
+    }
+    lines.push(line);
+  }
+  if(!caption)lines.length=0;
+  const gap=markOptions?baseSize*markOptions.rowGap/100:rowGap(baseSize),heartSize=Number(markSize.value),heartInset=heartSize*12/224,columnGap=markColumnGap(heartSize/.75)+(markOptions?heartSize*markOptions.columnGap/100:0);
+  const metrics=ctx.measureText(lines.join('')||'한글');
+  const ascent=Math.max(0,metrics.actualBoundingBoxAscent??metrics.fontBoundingBoxAscent??baseSize*.85);
+  const descent=Math.max(0,metrics.actualBoundingBoxDescent??metrics.fontBoundingBoxDescent??baseSize*.15);
+  const inkHeight=ascent+descent||baseSize;
+  const textRows=lines.map(line=>{
+    const segments=Array.from(new Intl.Segmenter('ko',{granularity:'grapheme'}).segment(line));
+    // Match CSS's default tab width without treating a tab as an explicit break.
+    let prefix='';
+    const glyphs=segments.map((item,index)=>{
+      const glyph=item.segment==='\t'?'        ':item.segment;
+      const x=ctx.measureText(prefix).width+index*letterSpacing;
+      prefix+=glyph;return {text:glyph,x};
+    });
+    return {glyphs,width:Math.max(0,ctx.measureText(prefix).width+Math.max(0,segments.length-1)*letterSpacing)};
+  });
+  const heartRows=hearts.length?[[]]:[];
+  hearts.forEach(key=>{
+    if(key==='\n'){heartRows.push([]);return;}
+    const row=heartRows.at(-1);
+    if(row.length&&(row.reduce((sum,k)=>sum+markWidthFactor(k)*heartSize,0)+markWidthFactor(key)*heartSize+row.length*columnGap)>maxWidth)heartRows.push([]);
+    heartRows.at(-1).push(key);
+  });
+  const heartWidths=heartRows.map(row=>row.length?row.reduce((sum,k)=>sum+markWidthFactor(k)*heartSize,0)+(row.length-1)*columnGap:0);
+  const width=Math.max(1,...textRows.map(row=>row.width),...heartWidths);
+  const align=alignment==='center'?.5:alignment==='right'?1:0;
+  const glyphs=[];
+  textRows.forEach((row,index)=>row.glyphs.forEach(g=>glyphs.push({...g,x:g.x+(width-row.width)*align,y:ascent+index*(inkHeight+gap)})));
+  const textHeight=lines.length?inkHeight+(lines.length-1)*(inkHeight+gap):0;
+  const heartTop=textHeight+(lines.length&&heartRows.length?gap:0);
+  const heartHeight=heartSize-2*heartInset;
+  const heartItems=[];
+  heartRows.forEach((row,index)=>{let x=(width-heartWidths[index])*align;row.forEach(key=>{const itemWidth=heartSize*markWidthFactor(key);heartItems.push({key,x,y:heartTop+index*(heartHeight+gap)-heartInset,width:itemWidth,height:heartSize});x+=itemWidth+columnGap;});});
+  return {textWidth:width,textHeight,lines,marks:heartRows.flatMap((row,i)=>i?['\n',...row]:row),width,height:heartRows.length?heartTop+heartRows.length*heartHeight+(heartRows.length-1)*gap:textHeight,glyphs,hearts:heartItems};
+}
+function verticalExportLayout(ctx,caption,hearts,baseSize,letterSpacing,maxWidth){
+  const gap=rowGap(baseSize),fontSize=baseSize*fontDisplayScale(state.fontFamily);
+  const metrics=ctx.measureText(caption.replace(/\s/g,'')||'한글');
+  const ascent=Math.max(0,metrics.actualBoundingBoxAscent),inkHeight=Math.max(1,ascent+metrics.actualBoundingBoxDescent);
+  const step=Math.max(1,fontSize+letterSpacing);
+  const columns=caption?caption.normalize('NFC').replace(/\r\n?/g,'\n').split('\n').map(line=>Array.from(new Intl.Segmenter('ko',{granularity:'grapheme'}).segment(line),g=>g.segment)):[];
+  const widths=columns.map(col=>Math.max(fontSize,...col.map(g=>ctx.measureText(g).width)));
+  const heights=columns.map(col=>col.length?inkHeight+(col.length-1)*step:0);
+  const textHeight=Math.max(0,...heights),textWidth=widths.reduce((a,b)=>a+b,0)+Math.max(0,columns.length-1)*gap;
+  const align={top:0,middle:.5,bottom:1}[state.verticalAlign],glyphs=[];
+  let right=textWidth;
+  columns.forEach((column,i)=>{right-=widths[i];column.forEach((g,j)=>glyphs.push({text:g,x:right+(widths[i]-ctx.measureText(g).width)/2,y:ascent+j*step+(textHeight-heights[i])*align}));right-=gap;});
+  const marks=explicitExportLayout(ctx,'',hearts,baseSize,0,'left',maxWidth,true);
+  const markTop=textHeight+(caption&&hearts.length?gap:0);
+  return {lines:caption.split('\n'),marks:marks.marks,width:Math.max(1,textWidth,marks.width),height:hearts.length?markTop+marks.height:textHeight,textWidth,textHeight,glyphs,hearts:marks.hearts.map(h=>({...h,y:h.y+markTop}))};
+}
+function renderVerticalPreview(layout){
+  const ctx=document.createElement('canvas').getContext('2d');ctx.font=getComputedStyle(preview).font;
+  layout=layout||explicitExportLayout(ctx,text.value,marksLinked()?arrangedMarks(state.hearts,state.problemOrder):[],Number(size.value),letterGap(),state.alignment);
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('width',Math.max(1,layout.textWidth));svg.setAttribute('height',Math.max(0,layout.textHeight));svg.style.display='block';svg.style.overflow='visible';svg.style.font='inherit';svg.style.letterSpacing='0px';svg.style.webkitTextStroke='0px transparent';svg.setAttribute('stroke',outline.checked?strokeColor.value:'none');svg.setAttribute('stroke-width',2*textOutlineRadius(parseFloat(getComputedStyle(preview).fontSize)));svg.setAttribute('stroke-linejoin','round');svg.style.paintOrder='stroke fill';
+  for(const g of layout.glyphs){const t=document.createElementNS(svg.namespaceURI,'text');t.setAttribute('x',g.x);t.setAttribute('y',g.y);t.setAttribute('fill','currentColor');t.textContent=g.text;svg.append(t);}
+  preview.replaceChildren(svg);preview.style.marginTop='0px';preview.style.marginBottom='0px';preview.style.lineHeight='1';
+}
+function exportFrame(box,layout,hasPhoto){
+  const width=hasPhoto?box.width:Math.max(box.width,layout.width+40);
+  const height=hasPhoto?box.height:Math.max(editorViewport.logical?box.height:260,layout.height+60);
+  const fit=hasPhoto?Math.min(1,Math.max(1,width-40)/layout.width,Math.max(1,height-40)/Math.max(1,layout.height)):1;
+  const bounds=positionBounds(width,height,layout.width*fit,layout.height*fit);
+  return {width,height,fit,bounds};
+}
+function exportCrop(width,height,ratio,view=state.photoView){
+  const [rw,rh]=ratio.split(':').map(Number),aspect=rw/rh;
+  const sw=Math.min(width,height*aspect),sh=sw/aspect;
+  const factor=Math.min(1,4096/Math.max(sw,sh));
+  return {...photoCrop(width,height,ratio,view),width:Math.max(1,Math.round(sw*factor)),height:Math.max(1,Math.round(sh*factor))};
+}
+function loadExportImage(src){return new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('image'));image.src=src;});}
+function exportMarkImage(rect,pixelScale){
+  const svg=markSVG(rect.key);svg.querySelector('text')?.remove();
+  const path=svg.querySelector('path'),effect=markOutlineStyle();path.setAttribute('stroke',effect.color);path.setAttribute('stroke-linejoin','round');path.removeAttribute('vector-effect');path.setAttribute('stroke-width',String(markSVGStrokeWidth()));
+  const padding=markStrokeWidth()/2+2,ns='http://www.w3.org/2000/svg',outer=document.createElementNS(ns,'svg');
+  outer.setAttribute('xmlns',ns);outer.setAttribute('viewBox',[-padding,-padding,rect.width+padding*2,rect.height+padding*2].join(' '));
+  outer.setAttribute('width',(rect.width+padding*2)*pixelScale);outer.setAttribute('height',(rect.height+padding*2)*pixelScale);
+  svg.setAttribute('x','0');svg.setAttribute('y','0');svg.setAttribute('width',rect.width);svg.setAttribute('height',rect.height);svg.style.width=rect.width+'px';svg.style.height=rect.height+'px';svg.style.overflow='visible';outer.append(svg);
+  return loadExportImage('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(outer))).then(image=>({image,rect,padding}));
+}
+function canvasBlob(canvas){return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('encode')),'image/png'));}
+function addTextMaskOutline(overlay,ink,color,scaleX,scaleY,fontSize){
+  const mask=document.createElement('canvas');mask.width=overlay.width;mask.height=overlay.height;
+  const maskInk=mask.getContext('2d');if(!maskInk)throw new Error('canvas');
+  maskInk.drawImage(overlay,0,0);
+  maskInk.globalCompositeOperation='source-in';maskInk.fillStyle=color;
+  maskInk.fillRect(0,0,mask.width,mask.height);
+  ink.save();ink.setTransform(1,0,0,1,0,0);ink.globalCompositeOperation='destination-over';
+  ink.globalAlpha=textOutlineOpacity;
+  const radius=textOutlineRadius(fontSize);
+  for(const [x,y] of textOutlineOffsets)ink.drawImage(mask,x*radius*scaleX,y*radius*scaleY);
+  ink.restore();
+  mask.width=mask.height=0;
+}
+// Decorative images are independent layers above the background, below captions.
+let backgroundWorker=null,backgroundJob=0;const backgroundJobs=new Map();
+function personMask(bitmap){
+  if(!backgroundWorker){
+    backgroundWorker=new Worker(new URL('../shared/background-removal-worker.js',location.href));
+    backgroundWorker.onmessage=({data})=>{const job=backgroundJobs.get(data.id);if(!job)return;backgroundJobs.delete(data.id);clearTimeout(job.timer);data.error?job.reject(new Error(data.error)):job.resolve(data);};
+    backgroundWorker.onerror=()=>{for(const job of backgroundJobs.values()){clearTimeout(job.timer);job.reject(new Error('runtime'));}backgroundJobs.clear();backgroundWorker?.terminate();backgroundWorker=null;};
+  }
+  return new Promise((resolve,reject)=>{const id=++backgroundJob,timer=setTimeout(()=>{backgroundWorker?.terminate();backgroundWorker=null;for(const job of backgroundJobs.values()){clearTimeout(job.timer);job.reject(new Error('timeout'));}backgroundJobs.clear();},60000);backgroundJobs.set(id,{resolve,reject,timer});backgroundWorker.postMessage({id,bitmap},[bitmap]);});
+}
+async function removePhotoBackground(){
+  const selected=photoOverlays.find(item=>item.id===selectedPhotoOverlay);
+  if(!selected&&backgroundOriginal){
+    releasePhotoURL(state.photoURL);state.photoURL=backgroundOriginal; backgroundOriginal=null;photo.src=state.photoURL;state.loadVersion++;await photo.decode();renderPhotoView();window.dispatchEvent(new Event('photooverlaychange'));return;
+  }
+  if(selected?.cutoutFromBackground){deletePhotoOverlay();return;}
+  if(selected?.originalImage){
+    releasePhotoURL(selected.url);Object.assign(selected,{url:selected.originalUrl,image:selected.originalImage});delete selected.originalUrl;delete selected.originalImage;
+    const node=photoOverlayNodes.get(selected.id);node?.querySelector('img').setAttribute('src',selected.url);state.loadVersion++;renderPhotoOverlays();window.dispatchEvent(new Event('photooverlaychange'));return;
+  }
+  const source=selected?.image||photo,sourceUrl=selected?.url||state.photoURL;if(!sourceUrl)return;
+  const version=state.loadVersion,bitmap=await createImageBitmap(source),mask=await personMask(bitmap);
+  if(version!==state.loadVersion)return;
+  const maxSide=2048,scale=Math.min(1,maxSide/Math.max(source.naturalWidth,source.naturalHeight)),width=Math.max(1,Math.round(source.naturalWidth*scale)),height=Math.max(1,Math.round(source.naturalHeight*scale));
+  const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(source,0,0,width,height);
+  const pixels=ctx.getImageData(0,0,width,height);let left=width,top=height,right=-1,bottom=-1,foreground=0;
+  for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+    const fx=x/Math.max(1,width-1)*(mask.width-1),fy=y/Math.max(1,height-1)*(mask.height-1),mx=Math.floor(fx),my=Math.floor(fy),nx=Math.min(mask.width-1,mx+1),ny=Math.min(mask.height-1,my+1),dx=fx-mx,dy=fy-my,p=(mask.mask[my*mask.width+mx]*(1-dx)+mask.mask[my*mask.width+nx]*dx)*(1-dy)+(mask.mask[ny*mask.width+mx]*(1-dx)+mask.mask[ny*mask.width+nx]*dx)*dy;
+    const t=clamp((p-.15)/.7,0,1),alpha=t*t*(3-2*t),i=(y*width+x)*4+3;pixels.data[i]=Math.round(pixels.data[i]*alpha);
+    if(pixels.data[i]>32){foreground++;left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);}
+  }
+  if(right<left||foreground<width*height*.005)throw new Error('no-person');
+  ctx.putImageData(pixels,0,0);const padding=4;left=Math.max(0,left-padding);top=Math.max(0,top-padding);right=Math.min(width-1,right+padding);bottom=Math.min(height-1,bottom+padding);
+  const cropped=document.createElement('canvas');cropped.width=right-left+1;cropped.height=bottom-top+1;cropped.getContext('2d').drawImage(canvas,left,top,cropped.width,cropped.height,0,0,cropped.width,cropped.height);
+  const blob=await canvasBlob(selected?cropped:canvas),url=URL.createObjectURL(blob);let image;try{image=await loadExportImage(url);}catch(error){releasePhotoURL(url);throw error;}
+  if(version!==state.loadVersion){releasePhotoURL(url);return;}
+  if(selected){selected.originalImage=selected.image;selected.originalUrl=selected.url;selected.image=image;selected.url=url;photoOverlayNodes.get(selected.id)?.querySelector('img').setAttribute('src',url);}
+  else {backgroundOriginal=state.photoURL;state.photoURL=url;photo.src=url;await photo.decode();renderPhotoView();}
+  state.loadVersion++;renderPhotoOverlays();window.dispatchEvent(new Event('photooverlaychange'));showStatus('');
+}
+function normalizeOverlayAngle(degrees){return ((degrees+180)%360+360)%360-180;}
+function photoOverlayRect(item,width,height){
+  const ratio=item.cropRatio?item.cropRatio.split(':').map(Number).reduce((a,b)=>a/b):item.image.naturalWidth/item.image.naturalHeight;
+  const w=Math.min(width*item.width/100,width*.95,height*.95*ratio),h=w/ratio;
+  return {x:clamp(width*item.x/100-w/2,0,Math.max(0,width-w)),y:clamp(height*item.y/100-h/2,0,Math.max(0,height-h)),width:w,height:h};
+}
+function selectPhotoOverlay(id){setEditorSelection(id===null?'background':'image',id,{origin:'canvas'});renderPhotoOverlays();window.dispatchEvent(new Event('photooverlaychange'));}
+function deletePhotoOverlay(id=selectedPhotoOverlay){const index=photoOverlays.findIndex(item=>item.id===id);if(index<0)return false;const [item]=photoOverlays.splice(index,1);releasePhotoURL(item.url);if(item.originalUrl)releasePhotoURL(item.originalUrl);state.loadVersion++;renderPhotoOverlays();setEditorSelection('background',null,{origin:'delete',showTools:false});window.dispatchEvent(new Event('photooverlaychange'));return true;}
+function sizePhotoOverlayHandles(){
+  const scale=stage.getBoundingClientRect().width/stage.clientWidth||1;
+  for(const node of photoOverlayNodes.values()){const handle=node.querySelector('.photo-overlay-resize');Object.assign(handle.style,{width:32/scale+'px',height:32/scale+'px',minHeight:32/scale+'px',right:-16/scale+'px',bottom:-16/scale+'px'});const rotate=node.querySelector('.photo-overlay-rotate');Object.assign(rotate.style,{width:32/scale+'px',height:32/scale+'px',minHeight:32/scale+'px',top:-44/scale+'px',left:'50%',marginLeft:-16/scale+'px'});}
+}
+function renderPhotoOverlays(){
+  for(const [id,node] of photoOverlayNodes)if(!photoOverlays.some(item=>item.id===id)){node.remove();photoOverlayNodes.delete(id);}
+  for(const item of photoOverlays){
+    let node=photoOverlayNodes.get(item.id);
+    if(!node){
+      node=document.createElement('div');node.className='photo-overlay';node.tabIndex=0;node.setAttribute('role','group');node.setAttribute('aria-label','추가 이미지 '+item.name);const img=document.createElement('img');img.src=item.url;img.alt='';img.draggable=false;node.append(img);
+      const handle=document.createElement('button');handle.type='button';handle.className='photo-overlay-resize';handle.setAttribute('aria-label','추가 이미지 크기 조절');node.append(handle);const rotate=document.createElement('button');rotate.type='button';rotate.className='photo-overlay-rotate';rotate.setAttribute('aria-label','추가 이미지 회전 조절');rotate.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a8 8 0 1 1 1 8M4 4v6h6"/></svg>';node.append(rotate);stage.append(node);photoOverlayNodes.set(item.id,node);
+      const points=new Map();let gesture=null;
+      node.onpointerdown=e=>{if(e.button!==0)return;e.preventDefault();e.stopPropagation();selectPhotoOverlay(item.id);points.set(e.pointerId,{x:e.clientX,y:e.clientY});node.setPointerCapture(e.pointerId);const a=[...points.values()];gesture=a.length===2?{type:'pinch',distance:Math.max(1,Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)),width:item.width,angle:Math.atan2(a[1].y-a[0].y,a[1].x-a[0].x),rotation:item.rotation||0}:{type:rotate.contains(e.target)?'rotate':e.target===handle?'resize':'move',x:e.clientX,y:e.clientY,left:item.x,top:item.y,width:item.width,rotation:item.rotation||0,angle:Math.atan2(e.clientY-node.getBoundingClientRect().y-node.getBoundingClientRect().height/2,e.clientX-node.getBoundingClientRect().x-node.getBoundingClientRect().width/2)};};
+      node.onpointermove=e=>{if(!points.has(e.pointerId)||!gesture)return;e.preventDefault();e.stopPropagation();points.set(e.pointerId,{x:e.clientX,y:e.clientY});const r=stage.getBoundingClientRect();
+        if(gesture.type==='pinch'&&points.size===2){const [a,b]=[...points.values()];item.width=clamp(gesture.width*Math.hypot(a.x-b.x,a.y-b.y)/gesture.distance,5,95);item.rotation=normalizeOverlayAngle(gesture.rotation+(Math.atan2(b.y-a.y,b.x-a.x)-gesture.angle)*180/Math.PI);}
+        else if(gesture.type==='rotate'){const box=node.getBoundingClientRect();item.rotation=normalizeOverlayAngle(gesture.rotation+(Math.atan2(e.clientY-box.y-box.height/2,e.clientX-box.x-box.width/2)-gesture.angle)*180/Math.PI);}
+        else if(gesture.type==='resize')item.width=clamp(gesture.width+(e.clientX-gesture.x)/r.width*200,5,95);
+        else if(gesture.type==='move'){item.x=clamp(gesture.left+(e.clientX-gesture.x)/r.width*100,0,100);item.y=clamp(gesture.top+(e.clientY-gesture.y)/r.height*100,0,100);}
+        state.loadVersion++;renderPhotoOverlays();window.dispatchEvent(new Event('photooverlaysize'));};
+      for(const type of ['pointerup','pointercancel','lostpointercapture'])node.addEventListener(type,e=>{points.delete(e.pointerId);gesture=null;});
+      node.onfocus=()=>{if(selectedPhotoOverlay!==item.id)selectPhotoOverlay(item.id);};
+      node.onkeydown=e=>{if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();deletePhotoOverlay();return;}const d={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];if(d){e.preventDefault();item.x=clamp(item.x+d[0],0,100);item.y=clamp(item.y+d[1],0,100);state.loadVersion++;renderPhotoOverlays();}};
+    }
+    const r=photoOverlayRect(item,stage.clientWidth,stage.clientHeight);Object.assign(node.style,{left:r.x+'px',top:r.y+'px',width:r.width+'px',height:r.height+'px',transform:'rotate('+(item.rotation||0)+'deg)'});node.querySelector('img').style.transform=item.flip?'scaleX(-1)':'';node.classList.toggle('is-selected',selectedPhotoOverlay===item.id);
+  }
+  sizePhotoOverlayHandles();
+}
+function drawPhotoOverlays(ctx,width,height,scaleX,scaleY){ctx.save();ctx.scale(scaleX,scaleY);ctx.filter='none';for(const item of photoOverlays){const r=photoOverlayRect(item,width,height);ctx.save();ctx.translate(r.x+r.width/2,r.y+r.height/2);ctx.rotate((item.rotation||0)*Math.PI/180);ctx.scale(item.flip?-1:1,1);const crop=photoCrop(item.image.naturalWidth,item.image.naturalHeight,item.cropRatio||item.image.naturalWidth+':'+item.image.naturalHeight,{zoom:1,cx:.5,cy:.5});ctx.drawImage(item.image,crop.sx,crop.sy,crop.sw,crop.sh,-r.width/2,-r.height/2,r.width,r.height);ctx.restore();}ctx.restore();}
+window.addEventListener('editorreset',()=>{for(const item of photoOverlays){releasePhotoURL(item.url);if(item.originalUrl)releasePhotoURL(item.originalUrl);}photoOverlays.length=0;selectedPhotoOverlay=null;renderPhotoOverlays();window.dispatchEvent(new Event('photooverlaychange'));});
+// Additional captions have independent content, size and position; marks stay on the primary caption.
+const extraTexts=[];
+const extraTextNodes=new Map();let extraTextSerial=0;
+function extraTextLayout(item,width){
+  const measure=document.createElement('canvas').getContext('2d');
+  measure.font='400 '+item.size*fontDisplayScale(item.font)+'px "'+item.font+'"';
+  // Keep supplemental captions horizontal and independent of primary caption settings.
+  if(item.writingMode==='vertical'){const fontSize=item.size*fontDisplayScale(item.font),step=fontSize+item.size*(item.letterSpace||0)/100,gap=item.size*(item.lineSpace??16)/100,columns=item.text.split('\n').map(line=>Array.from(line)),heights=columns.map(col=>col.length*step),height=Math.max(1,...heights),glyphs=[];columns.forEach((col,i)=>col.forEach((g,j)=>glyphs.push({text:g,x:(columns.length-1-i)*(fontSize+gap),y:fontSize+j*step+(height-heights[i])*({top:0,middle:.5,bottom:1}[item.verticalAlign]||0)})));return {width:columns.length*(fontSize+gap)-gap,height,glyphs};}
+  return explicitExportLayout(measure,item.text,[],item.size,item.size*(item.letterSpace||0)/100,item.alignment||'center',Math.max(1,width-40),true,{rowGap:item.lineSpace??16,columnGap:0});
+}
+function extraTextOrigin(item,layout,width,height){return {x:clamp(width*item.x/100-layout.width/2,0,Math.max(0,width-layout.width)),y:clamp(height*item.y/100-layout.height/2,0,Math.max(0,height-layout.height))};}
+function renderExtraTexts(){
+  for(const [id,node] of extraTextNodes)if(!extraTexts.some(item=>item.id===id)){node.remove();extraTextNodes.delete(id);}
+  const width=stage.clientWidth,height=stage.clientHeight;if(!width||!height)return;
+  for(const item of extraTexts){
+    let node=extraTextNodes.get(item.id);
+    if(!node){
+      node=document.createElement('div');node.className='extra-text-layer';node.tabIndex=0;node.setAttribute('role','group');stage.append(node);extraTextNodes.set(item.id,node);
+      const pointers=new Map();let gesture=null;
+      node.onpointerdown=e=>{if(e.button!==0)return;window.dispatchEvent(new CustomEvent('selectextratext',{detail:item.id}));e.preventDefault();e.stopPropagation();node.focus({preventScroll:true});pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});node.setPointerCapture(e.pointerId);const points=[...pointers.values()];gesture=points.length===2?{pinch:true,distance:Math.max(1,Math.hypot(points[0].x-points[1].x,points[0].y-points[1].y)),size:item.size}:{pinch:false,x:e.clientX,y:e.clientY,left:item.x,top:item.y};};
+      node.onpointermove=e=>{if(!pointers.has(e.pointerId)||!gesture)return;e.preventDefault();e.stopPropagation();pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+        if(gesture.pinch&&pointers.size===2){const [a,b]=[...pointers.values()];item.size=Math.round(clamp(gesture.size*Math.hypot(a.x-b.x,a.y-b.y)/gesture.distance,30,500));window.dispatchEvent(new Event('extratextsize'));}
+        else if(!gesture.pinch){const r=stage.getBoundingClientRect();item.x=clamp(gesture.left+(e.clientX-gesture.x)/r.width*100,0,100);item.y=clamp(gesture.top+(e.clientY-gesture.y)/r.height*100,0,100);}
+        state.loadVersion++;renderExtraTexts();if(markTextTarget()){update();renderPosition();}};
+      for(const type of ['pointerup','pointercancel','lostpointercapture'])node.addEventListener(type,e=>{pointers.delete(e.pointerId);gesture=null;});
+      node.onkeydown=e=>{const d={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];if(!d)return;e.preventDefault();item.x=clamp(item.x+d[0],0,100);item.y=clamp(item.y+d[1],0,100);state.loadVersion++;renderExtraTexts();if(markTextTarget()){update();renderPosition();}};
+    }
+    const layout=extraTextLayout(item,width),origin=extraTextOrigin(item,layout,width,height),ns='http://www.w3.org/2000/svg';
+    const svg=document.createElementNS(ns,'svg');svg.setAttribute('width',layout.width);svg.setAttribute('height',Math.max(1,layout.height));svg.style.overflow='visible';
+    node.style.filter=item.shadow?'drop-shadow('+Math.cos((item.shadowAngle||0)*Math.PI/180)*(item.shadowDistance??3)+'px '+Math.sin((item.shadowAngle||0)*Math.PI/180)*(item.shadowDistance??3)+'px '+(item.shadowWidth??3)+'px '+(item.shadowColor||'#111111')+Math.round((item.shadowOpacity??50)*2.55).toString(16).padStart(2,'0')+')':'none';
+    for(const glyph of layout.glyphs){const t=document.createElementNS(ns,'text');t.setAttribute('x',glyph.x);t.setAttribute('y',glyph.y);t.setAttribute('font-family',item.font);t.setAttribute('font-size',item.size*fontDisplayScale(item.font));t.setAttribute('fill',item.color);if(item.outline){t.setAttribute('stroke',item.strokeColor||'#111111');t.setAttribute('stroke-width',item.size*fontDisplayScale(item.font)*(item.outlineWidth??1)/50);t.setAttribute('stroke-linejoin','round');t.setAttribute('paint-order','stroke fill');}t.textContent=glyph.text;svg.append(t);}
+    node.replaceChildren(svg);node.style.left=origin.x+'px';node.style.top=origin.y+'px';node.style.transform='rotate('+(item.rotation||0)+'deg) scaleX('+(item.flip?-1:1)+')';node.setAttribute('aria-label','추가 텍스트: '+(item.text||'빈 문구')+'. 끌어서 이동, 두 손가락으로 크기 조절');
+  }
+}
+function drawExtraTexts(ctx,width,height,scaleX,scaleY){
+  ctx.save();ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=ctx.shadowOffsetY=0;ctx.scale(scaleX,scaleY);
+  for(const item of extraTexts){const layout=extraTextLayout(item,width),origin=extraTextOrigin(item,layout,width,height);ctx.save();ctx.translate(origin.x+layout.width/2,origin.y+layout.height/2);ctx.rotate((item.rotation||0)*Math.PI/180);ctx.scale(item.flip?-1:1,1);origin.x=-layout.width/2;origin.y=-layout.height/2;ctx.font='400 '+item.size*fontDisplayScale(item.font)+'px "'+item.font+'"';ctx.fillStyle=item.color;ctx.textAlign='left';ctx.textBaseline='alphabetic';if(item.shadow){ctx.shadowColor=(item.shadowColor||'#111111')+Math.round((item.shadowOpacity??50)*2.55).toString(16).padStart(2,'0');ctx.shadowBlur=(item.shadowWidth??3)*2;ctx.shadowOffsetX=Math.cos((item.shadowAngle||0)*Math.PI/180)*(item.shadowDistance??3);ctx.shadowOffsetY=Math.sin((item.shadowAngle||0)*Math.PI/180)*(item.shadowDistance??3);}for(const glyph of layout.glyphs){if(item.outline){ctx.strokeStyle=item.strokeColor||'#111111';ctx.lineWidth=item.size*fontDisplayScale(item.font)*(item.outlineWidth??1)/50;ctx.lineJoin='round';ctx.strokeText(glyph.text,origin.x+glyph.x,origin.y+glyph.y);}ctx.fillText(glyph.text,origin.x+glyph.x,origin.y+glyph.y);}ctx.restore();}
+  ctx.restore();
+}
+window.addEventListener('editorreset',()=>{extraTexts.length=0;renderExtraTexts();});
+let exporting=false;
+$('saveResult').addEventListener('click',async()=>{
+  if(exporting||state.fontLoading)return;
+  exporting=true;$('resetEditor').disabled=true;$('saveResult').disabled=true;$('saveResult').textContent='저장 중…';
+  const version=state.loadVersion,fontVersion=state.fontVersion,hasPhoto=Boolean(state.photoURL);
+  try{
+    await fontPending;
+    await Promise.all(extraTexts.map(item=>document.fonts.load('400 '+item.size+'px "'+item.font+'"',item.text||'한글')));
+    await document.fonts.ready;
+    if(hasPhoto&&photo.decode)await photo.decode();
+    renderPosition();
+    if(version!==state.loadVersion||fontVersion!==state.fontVersion)throw new Error('changed');
+    // Export at logical canvas dimensions, independently of mobile preview zoom.
+    const box=editorViewport.logical?{width:stage.clientWidth,height:stage.clientHeight}:stage.getBoundingClientRect();
+    if(!box.width||!box.height)throw new Error('size');
+    const style=getComputedStyle(preview);
+    const measure=document.createElement('canvas').getContext('2d');if(!measure)throw new Error('canvas');
+    measure.font=style.font;
+    const layout=explicitExportLayout(measure,text.value,marksLinked()?arrangedMarks(state.hearts,state.problemOrder):[],Number(size.value),letterGap(),state.alignment,editorViewport.logical?box.width-40:Infinity);
+    const frame=exportFrame(box,layout,hasPhoto);
+    const origin=offsetFromPosition(frame.bounds,state.x,state.y);
+    const factor=Math.min(2,4096/Math.max(frame.width,frame.height));
+    const crop=hasPhoto?exportCrop(photoDimensions().width,photoDimensions().height,state.ratio):{width:Math.max(1,Math.round(frame.width*factor)),height:Math.max(1,Math.round(frame.height*factor))};
+    const canvas=document.createElement('canvas');canvas.width=crop.width;canvas.height=crop.height;
+    const ctx=canvas.getContext('2d');if(!ctx)throw new Error('canvas');
+    const scaleX=canvas.width/frame.width,scaleY=canvas.height/frame.height;
+    ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+    if(hasPhoto)ctx.drawImage(photoSource(),crop.sx,crop.sy,crop.sw,crop.sh,0,0,canvas.width,canvas.height);
+    drawPhotoOverlays(ctx,frame.width,frame.height,scaleX,scaleY);
+    const overlay=document.createElement('canvas');overlay.width=canvas.width;overlay.height=canvas.height;
+    const ink=overlay.getContext('2d');if(!ink)throw new Error('canvas');
+    ink.scale(scaleX,scaleY);ink.translate(origin.left,origin.top);ink.scale(frame.fit,frame.fit);ink.translate(layout.width/2,layout.height/2);ink.rotate((state.textRotation||0)*Math.PI/180);ink.scale(state.textFlip?-1:1,1);ink.translate(-layout.width/2,-layout.height/2);
+    ink.font=style.font;ink.textAlign='left';ink.textBaseline='alphabetic';
+    ink.fillStyle=fillColor.value;
+    if(outline.checked&&Number(outlineWidth.value)>0){
+      ink.strokeStyle=strokeColor.value;ink.lineWidth=2*textOutlineRadius(parseFloat(style.fontSize));ink.lineJoin='round';
+      if(ink.lineWidth>0)for(const glyph of layout.glyphs)if(glyph.text.trim())ink.strokeText(glyph.text,glyph.x,glyph.y);
+    }
+    for(const glyph of layout.glyphs){
+      if(!glyph.text.trim())continue;
+      ink.fillText(glyph.text,glyph.x,glyph.y);
+    }
+    const heartJobs=layout.hearts.map(rect=>exportMarkImage(rect,scaleX*frame.fit));
+    const withShadow=shadow.checked;
+    for(const {image,rect,padding} of await Promise.all(heartJobs)){ink.drawImage(image,rect.x-padding,rect.y-padding,rect.width+padding*2,rect.height+padding*2);drawMarkCount(ink,rect);}
+    if(version!==state.loadVersion||fontVersion!==state.fontVersion)throw new Error('changed');
+    if(withShadow){const effect=shadowGeometry();ctx.shadowColor=effect.color;ctx.shadowOffsetX=effect.x*scaleX*frame.fit;ctx.shadowOffsetY=effect.y*scaleY*frame.fit;ctx.shadowBlur=2*shadowRadius()*scaleX*frame.fit;}
+    ctx.drawImage(overlay,0,0);
+    if(!marksLinked()){
+      const detached=independentMarkFrame(),point=offsetFromPosition(detached.bounds,markPosition.x,markPosition.y);
+      ctx.save();ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=ctx.shadowOffsetY=0;
+      ctx.scale(scaleX,scaleY);ctx.translate(point.left,point.top);ctx.scale(detached.fit,detached.fit);ctx.translate(detached.layout.width/2,detached.layout.height/2);ctx.rotate((state.markRotation||0)*Math.PI/180);ctx.scale(state.markFlip?-1:1,1);ctx.translate(-detached.layout.width/2,-detached.layout.height/2);
+      for(const rect of detached.layout.hearts){
+        const {image,padding}=await exportMarkImage(rect,scaleX*detached.fit);
+        ctx.drawImage(image,rect.x-padding,rect.y-padding,rect.width+padding*2,rect.height+padding*2);drawMarkCount(ctx,rect,true);
+      }
+      ctx.restore();
+    }
+    drawExtraTexts(ctx,frame.width,frame.height,scaleX,scaleY);
+    const blob=await canvasBlob(canvas);
+    if(version!==state.loadVersion||fontVersion!==state.fontVersion)throw new Error('changed');
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('a');link.href=url;
+    link.download=($('photoName').textContent.replace(/\.[^.]+$/,'')||'클라이밍')+'-썸네일.png';
+    document.body.append(link);link.click();link.remove();
+    setTimeout(()=>releasePhotoURL(url),60000);
+    showStatus('');
+  }catch(error){
+    showStatus(error.message==='changed'?'사진이나 폰트가 변경됐어요. 저장을 다시 눌러 주세요.':'저장하지 못했어요. 이미지를 다시 확인하고 저장을 눌러 주세요.');
+  }finally{
+    exporting=false;$('resetEditor').disabled=false;$('saveResult').textContent='저장';$('saveResult').disabled=state.fontLoading;
+  }
+});
+
+// Rotate the source once per image/orientation; crop coordinates stay in visual axes.
+let rotatedPhotoCache=null;
+function photoDimensions(view=state.photoView){const swap=(view.rotation||0)%180!==0;return {width:swap?photo.naturalHeight:photo.naturalWidth,height:swap?photo.naturalWidth:photo.naturalHeight};}
+function photoTiltScale(view){const {width:w,height:h}=photoDimensions(view),a=Math.abs(view.tilt||0)*Math.PI/180;return Math.max((w*Math.cos(a)+h*Math.sin(a))/w,(h*Math.cos(a)+w*Math.sin(a))/h);}
+// Bake adjustments into a photo-only bitmap shared by preview and export.
+let correctedPhotoCache=null;
+function correctedPhoto(view=state.photoView){
+  const settings=['brightness','contrast','saturation','warmth','shadows','highlights','sharpness'].map(k=>clamp(Number(view[k])||0,k==='sharpness'?0:-100,100));
+  if(!settings.some(Boolean))return photo;
+  const key=[state.photoURL,...settings].join('|');if(correctedPhotoCache?.key===key)return correctedPhotoCache.canvas;
+  const canvas=document.createElement('canvas');canvas.width=photo.naturalWidth;canvas.height=photo.naturalHeight;
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(photo,0,0);
+  const pixels=ctx.getImageData(0,0,canvas.width,canvas.height),data=pixels.data;
+  const [brightness,contrast,saturation,warmth,shadows,highlights,sharpness]=settings.map(v=>v/100);
+  const exposure=2**(brightness*.7),contrastGain=2**(contrast*.6),saturationGain=1+saturation;
+  for(let i=0;i<data.length;i+=4){
+    let r=data[i]/255,g=data[i+1]/255,b=data[i+2]/255;
+    const l=.2126*r+.7152*g+.0722*b;
+    // Luminance masks adjust tones without independently shifting channel colors.
+    const delta=.4*(shadows*4*l*(1-l)**3+highlights*4*l**3*(1-l));
+    r=clamp(r+delta,0,1);g=clamp(g+delta,0,1);b=clamp(b+delta,0,1);
+    r*=1+warmth*.1;b*=1-warmth*.1;
+    const gray=.2126*r+.7152*g+.0722*b;
+    for(let c=0;c<3;c++){
+      const value=c===0?r:c===1?g:b;
+      const saturated=gray+(value-gray)*saturationGain;
+      data[i+c]=Math.round(clamp(((saturated-.5)*contrastGain+.5)*exposure,0,1)*255);
+    }
+  }
+  if(sharpness){
+    const original=new Uint8ClampedArray(data),w=canvas.width,h=canvas.height,amount=sharpness*.2;
+    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++)for(let c=0;c<3;c++){
+      const i=(y*w+x)*4+c,detail=4*original[i]-original[i-4]-original[i+4]-original[i-w*4]-original[i+w*4];
+      data[i]=clamp(original[i]+clamp(detail*amount,-24,24),0,255);
+    }
+  }
+  ctx.putImageData(pixels,0,0);correctedPhotoCache={key,canvas};return canvas;
+}
+function photoFilterKey(view){return ['brightness','contrast','saturation','warmth','shadows','highlights','sharpness'].map(k=>view[k]||0).join(',');}
+let photoPreviewCanvas=null;
+function photoSource(view=state.photoView){
+  const rotation=view.rotation||0,tilt=view.tilt||0,flip=!!view.flip;if(!rotation&&!tilt&&!flip&&![view.brightness,view.contrast,view.saturation,view.warmth,view.shadows,view.highlights,view.sharpness].some(Boolean))return photo;
+  const key=[state.photoURL,rotation,tilt,flip,photoFilterKey(view)].join('|');if(rotatedPhotoCache?.key===key)return rotatedPhotoCache.canvas;
+  const canvas=document.createElement('canvas'),dims=photoDimensions(view);canvas.width=dims.width;canvas.height=dims.height;
+  const ctx=canvas.getContext('2d'),scale=photoTiltScale(view);ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(tilt*Math.PI/180);ctx.scale(scale,scale);ctx.scale(flip?-1:1,1);ctx.rotate(rotation*Math.PI/180);ctx.drawImage(correctedPhoto(view),-photo.naturalWidth/2,-photo.naturalHeight/2);
+  rotatedPhotoCache={key,canvas};return canvas;
+}
+// One normalized source crop drives CSS preview, the adjustment canvas and PNG.
+function photoCrop(width,height,ratio,view){
+  const [rw,rh]=ratio.split(':').map(Number),aspect=rw/rh;
+  const sw=Math.min(width,height*aspect)/clamp(view.zoom,1,4),sh=sw/aspect;
+  return {sx:clamp(view.cx*width-sw/2,0,width-sw),sy:clamp(view.cy*height-sh/2,0,height-sh),sw,sh};
+}
+function renderPhotoView(){
+  if(!state.photoURL||!photo.naturalWidth||!photo.naturalHeight)return;
+  const dims=photoDimensions(),crop=photoCrop(dims.width,dims.height,state.ratio,state.photoView);
+  photo.style.width=(photo.naturalWidth/crop.sw*100)+'%';photo.style.height=(photo.naturalHeight/crop.sh*100)+'%';
+  photo.style.left=((dims.width/2-crop.sx)/crop.sw*100)+'%';photo.style.top=((dims.height/2-crop.sy)/crop.sh*100)+'%';
+  photo.style.transform='translate(-50%,-50%) rotate('+(state.photoView.tilt||0)+'deg) scale('+photoTiltScale(state.photoView)+') scaleX('+(state.photoView.flip?-1:1)+') rotate('+(state.photoView.rotation||0)+'deg)';
+  photo.style.filter='none';photo.style.right='auto';photo.style.bottom='auto';photo.style.objectFit='fill';
+  if(!photoPreviewCanvas){photoPreviewCanvas=document.createElement('canvas');photoPreviewCanvas.className='photo';photoPreviewCanvas.setAttribute('aria-hidden','true');photo.after(photoPreviewCanvas);}
+  const corrected=correctedPhoto();photoPreviewCanvas.hidden=false;
+  photoPreviewCanvas.style.cssText=photo.style.cssText;photoPreviewCanvas.style.pointerEvents='none';photoPreviewCanvas.style.visibility='visible';
+  if(photoPreviewCanvas._source!==corrected||photoPreviewCanvas._photoURL!==state.photoURL){photoPreviewCanvas.width=photo.naturalWidth;photoPreviewCanvas.height=photo.naturalHeight;photoPreviewCanvas.getContext('2d').drawImage(corrected,0,0);photoPreviewCanvas._source=corrected;photoPreviewCanvas._photoURL=state.photoURL;}
+  photo.style.visibility='hidden';
+}
+const photoAdjustDialog=$('photoAdjustDialog'),photoAdjustCanvas=$('photoAdjustCanvas');
+const photoZoom=$('photoZoom'),photoPointers=new Map();
+let photoDraft=null,photoGesture=null,photoAdjustVersion=0;
+function boundPhotoDraft(){
+  photoDraft.zoom=clamp(photoDraft.zoom,1,4);
+  const crop=photoCrop(photoDimensions(photoDraft).width,photoDimensions(photoDraft).height,(photoDraft.ratio||state.ratio),photoDraft);
+  photoDraft.cx=(crop.sx+crop.sw/2)/photoDimensions(photoDraft).width;
+  photoDraft.cy=(crop.sy+crop.sh/2)/photoDimensions(photoDraft).height;
+}
+function drawPhotoAdjustment(){
+  if(!photoAdjustDialog.open||!photoDraft)return;
+  const [rw,rh]=(photoDraft.ratio||state.ratio).split(':').map(Number);photoAdjustDialog.style.setProperty('--photo-aspect',String(rw/rh));
+  boundPhotoDraft();
+  $('photoTilt').value=photoDraft.tilt||0;$('photoTiltValue').value=(photoDraft.tilt||0)+'°';
+  $('flipPhoto').setAttribute('aria-pressed',String(!!photoDraft.flip));
+  document.querySelectorAll('[data-crop-ratio]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.cropRatio===photoDraft.ratio)));
+  const rect=photoAdjustCanvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,3);
+  photoAdjustCanvas.width=Math.max(1,Math.round(rect.width*dpr));
+  photoAdjustCanvas.height=Math.max(1,Math.round(rect.height*dpr));
+  const crop=photoCrop(photoDimensions(photoDraft).width,photoDimensions(photoDraft).height,(photoDraft.ratio||state.ratio),photoDraft);
+  const ctx=photoAdjustCanvas.getContext('2d');
+  ctx.drawImage(photoSource(photoDraft),crop.sx,crop.sy,crop.sw,crop.sh,0,0,photoAdjustCanvas.width,photoAdjustCanvas.height);
+  photoZoom.value=String(photoDraft.zoom);$('photoZoomValue').value=Math.round(photoDraft.zoom*100)+'%';
+}
+$('adjustPhoto').addEventListener('click',async()=>{
+  if(!state.photoURL||exporting)return;
+  const version=state.loadVersion;
+  try{await photo.decode();}catch{return;}
+  if(version!==state.loadVersion||!state.photoURL||photoAdjustDialog.open)return;
+  photoAdjustVersion=version;photoDraft={...state.photoView,ratio:state.ratio};
+  photoPointers.clear();photoGesture=null;
+  const [rw,rh]=state.ratio.split(':').map(Number);
+  photoAdjustDialog.style.setProperty('--photo-aspect',String(rw/rh));
+  photoAdjustDialog.showModal();drawPhotoAdjustment();
+});
+$('cancelPhotoAdjust').addEventListener('click',()=>photoAdjustDialog.close());
+$('applyPhotoAdjust').addEventListener('click',()=>{
+  if(photoDraft&&photoAdjustVersion===state.loadVersion){
+    state.ratio=photoDraft.ratio||state.ratio;state.photoView={...photoDraft};state.loadVersion++;updateRatio();renderPhotoView();
+  }
+  photoAdjustDialog.close();
+});
+photoAdjustDialog.addEventListener('close',()=>{photoDraft=null;photoPointers.clear();photoGesture=null;});
+$('resetPhotoAdjust').addEventListener('click',()=>{photoDraft={zoom:1,cx:.5,cy:.5,ratio:state.ratio};drawPhotoAdjustment();});
+photoZoom.addEventListener('input',()=>{if(photoDraft){photoDraft.zoom=Number(photoZoom.value);drawPhotoAdjustment();}});
+function beginPhotoGesture(){
+  if(!photoDraft)return;
+  const points=[...photoPointers.values()];
+  photoGesture=points.length?{points,view:{...photoDraft},rect:photoAdjustCanvas.getBoundingClientRect()}:null;
+}
+photoAdjustCanvas.addEventListener('pointerdown',event=>{
+  if(event.button!==0)return;
+  event.preventDefault();photoAdjustCanvas.focus({preventScroll:true});
+  if(photoPointers.size>=2)return;
+  photoPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  photoAdjustCanvas.setPointerCapture(event.pointerId);beginPhotoGesture();
+});
+photoAdjustCanvas.addEventListener('pointermove',event=>{
+  if(!photoPointers.has(event.pointerId)||!photoGesture||!photoDraft)return;
+  photoPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  const points=[...photoPointers.values()],start=photoGesture.points,rect=photoGesture.rect;
+  const before=photoCrop(photoDimensions(photoDraft).width,photoDimensions(photoDraft).height,(photoDraft.ratio||state.ratio),photoGesture.view);
+  if(points.length===1){
+    photoDraft.cx=photoGesture.view.cx-(points[0].x-start[0].x)/rect.width*before.sw/photoDimensions(photoDraft).width;
+    photoDraft.cy=photoGesture.view.cy-(points[0].y-start[0].y)/rect.height*before.sh/photoDimensions(photoDraft).height;
+  }else{
+    const distance=p=>Math.hypot(p[1].x-p[0].x,p[1].y-p[0].y);
+    const midpoint=p=>({x:(p[0].x+p[1].x)/2,y:(p[0].y+p[1].y)/2});
+    const old=midpoint(start),now=midpoint(points);
+    photoDraft.zoom=clamp(photoGesture.view.zoom*distance(points)/Math.max(1,distance(start)),1,4);
+    const after=photoCrop(photoDimensions(photoDraft).width,photoDimensions(photoDraft).height,(photoDraft.ratio||state.ratio),photoDraft);
+    const anchorX=before.sx+(old.x-rect.left)/rect.width*before.sw;
+    const anchorY=before.sy+(old.y-rect.top)/rect.height*before.sh;
+    photoDraft.cx=(anchorX+(.5-(now.x-rect.left)/rect.width)*after.sw)/photoDimensions(photoDraft).width;
+    photoDraft.cy=(anchorY+(.5-(now.y-rect.top)/rect.height)*after.sh)/photoDimensions(photoDraft).height;
+  }
+  drawPhotoAdjustment();
+});
+function endPhotoGesture(event){
+  if(!photoPointers.delete(event.pointerId))return;
+  beginPhotoGesture();
+}
+for(const type of ['pointerup','pointercancel','lostpointercapture'])photoAdjustCanvas.addEventListener(type,endPhotoGesture);
+photoAdjustCanvas.addEventListener('keydown',event=>{
+  if(!photoDraft||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;
+  event.preventDefault();
+  const crop=photoCrop(photoDimensions(photoDraft).width,photoDimensions(photoDraft).height,(photoDraft.ratio||state.ratio),photoDraft),step=event.shiftKey ? .1 : .02;
+  if(event.key==='ArrowLeft')photoDraft.cx+=crop.sw/photoDimensions(photoDraft).width*step;
+  if(event.key==='ArrowRight')photoDraft.cx-=crop.sw/photoDimensions(photoDraft).width*step;
+  if(event.key==='ArrowUp')photoDraft.cy+=crop.sh/photoDimensions(photoDraft).height*step;
+  if(event.key==='ArrowDown')photoDraft.cy-=crop.sh/photoDimensions(photoDraft).height*step;
+  drawPhotoAdjustment();
+});
+new ResizeObserver(()=>{if(photoAdjustDialog.open){drawPhotoAdjustment();beginPhotoGesture();}}).observe(photoAdjustCanvas);
+
+for(const [id,delta] of [['rotatePhotoLeft',-90],['rotatePhotoRight',90]])$(id).addEventListener('click',()=>{
+  if(!photoDraft)return;
+  const {cx,cy}=photoDraft;photoDraft.rotation=((photoDraft.rotation||0)+delta+360)%360;
+  photoDraft.cx=delta>0?1-cy:cy;photoDraft.cy=delta>0?cx:1-cx;
+  photoPointers.clear();photoGesture=null;drawPhotoAdjustment();
+});
+$('photoTilt').addEventListener('input',()=>{if(photoDraft){photoDraft.tilt=Number($('photoTilt').value);drawPhotoAdjustment();}});
+$('flipPhoto').addEventListener('click',()=>{if(photoDraft){photoDraft.flip=!photoDraft.flip;photoDraft.cx=1-photoDraft.cx;drawPhotoAdjustment();}});
+document.querySelectorAll('[data-crop-ratio]').forEach(button=>button.addEventListener('click',()=>{if(photoDraft){photoDraft.ratio=button.dataset.cropRatio;drawPhotoAdjustment();}}));
+// One color control for text, outline and shadow; palette derives from marks.
+function setupColorControls(){
+  const colors=Array.from(markTemplates.values(),item=>({name:item.label,value:item.svg.querySelector('path').getAttribute('fill').toLowerCase()}));
+  const dialog=document.createElement('dialog');dialog.className='color-dialog';dialog.setAttribute('aria-label','색 직접 고르기');
+  dialog.innerHTML='<h2>색 직접 고르기</h2><div class="color-sv" role="application" aria-label="채도와 밝기 선택" tabindex="0"><span></span></div><label class="color-hue-label">색상<input class="color-hue" type="range" min="0" max="360" value="0" aria-label="색상"></label><label class="color-hex-label">색 코드<input class="color-hex" type="text" maxlength="7" spellcheck="false" aria-label="색 코드"><span class="color-sample"></span></label><p class="color-error" role="status" hidden>색 코드를 #RRGGBB 형식으로 입력해 주세요.</p><div class="color-actions"><button type="button" data-cancel>취소</button><button type="button" data-apply>적용</button></div>';
+  document.body.append(dialog);
+  let target=null,h=0,s=0,v=1,draft='#ffffff';
+  const sv=dialog.querySelector('.color-sv'),hue=dialog.querySelector('.color-hue'),hex=dialog.querySelector('.color-hex');
+  function hsvHex(){const c=v*s,x=c*(1-Math.abs((h/60)%2-1)),m=v-c;const a=h<60?[c,x,0]:h<120?[x,c,0]:h<180?[0,c,x]:h<240?[0,x,c]:h<300?[x,0,c]:[c,0,x];return '#'+a.map(n=>Math.round((n+m)*255).toString(16).padStart(2,'0')).join('');}
+  function fromHex(value){const [r,g,b]=value.slice(1).match(/../g).map(n=>parseInt(n,16)/255),max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min;v=max;s=max?d/max:0;if(d)h=((max===r?(g-b)/d:max===g?(b-r)/d+2:(r-g)/d+4)*60+360)%360;}
+  function paint(){draft=hsvHex();sv.style.backgroundColor=`hsl(${h} 100% 50%)`;sv.firstElementChild.style.left=(s*100)+'%';sv.firstElementChild.style.top=((1-v)*100)+'%';hue.value=h;hex.value=draft;dialog.querySelector('.color-sample').style.background=draft;dialog.querySelector('.color-error').hidden=true;}
+  function commit(input,value){const effect=input===strokeColor?outline:input===shadowColor?shadow:input.id==='markStrokeColor'?$('markOutlineEnabled'):null;if(effect)effect.checked=true;input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}));}
+  function pointer(e){const r=sv.getBoundingClientRect();s=clamp((e.clientX-r.left)/r.width,0,1);v=1-clamp((e.clientY-r.top)/r.height,0,1);paint();}
+  sv.addEventListener('pointerdown',e=>{sv.setPointerCapture(e.pointerId);pointer(e);});sv.addEventListener('pointermove',e=>{if(sv.hasPointerCapture(e.pointerId))pointer(e);});
+  sv.addEventListener('keydown',e=>{const step=e.shiftKey?.1:.01;if(e.key==='ArrowLeft')s-=step;else if(e.key==='ArrowRight')s+=step;else if(e.key==='ArrowUp')v+=step;else if(e.key==='ArrowDown')v-=step;else return;e.preventDefault();s=clamp(s,0,1);v=clamp(v,0,1);paint();});
+  hue.addEventListener('input',()=>{h=Number(hue.value);paint();});hex.addEventListener('input',()=>{if(/^#[0-9a-f]{6}$/i.test(hex.value)){fromHex(hex.value);paint();}});
+  dialog.querySelector('[data-cancel]').onclick=()=>dialog.close();dialog.querySelector('[data-apply]').onclick=()=>{if(!/^#[0-9a-f]{6}$/i.test(hex.value)){dialog.querySelector('.color-error').hidden=false;return;}commit(target,hex.value);dialog.close();};
+  const eyedrop=document.createElement('dialog');eyedrop.className='color-dialog';eyedrop.setAttribute('aria-label','사진에서 색 추출');
+  eyedrop.innerHTML='<h2>사진에서 색 고르기</h2><p>사진에서 원하는 색을 눌러 주세요.</p><canvas class="eyedrop-canvas" tabindex="0" aria-label="사진의 색 선택. 방향키로 이동, Enter로 적용"></canvas><div class="eyedrop-value"><span class="color-sample"></span><output></output></div><div class="color-actions"><button type="button" data-cancel>취소</button><button type="button" data-apply>적용</button></div>';
+  document.body.append(eyedrop);const ec=eyedrop.querySelector('canvas'),ctx=ec.getContext('2d',{willReadFrequently:true});let ex=0,ey=0,picked='#ffffff';
+  function sample(){const a=ctx.getImageData(ex,ey,1,1).data;picked='#'+Array.from(a).slice(0,3).map(n=>n.toString(16).padStart(2,'0')).join('');eyedrop.querySelector('output').value=picked;eyedrop.querySelector('.color-sample').style.background=picked;}
+  function samplePointer(e){const r=ec.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)return;ex=clamp(Math.floor((e.clientX-r.left)/r.width*ec.width),0,ec.width-1);ey=clamp(Math.floor((e.clientY-r.top)/r.height*ec.height),0,ec.height-1);sample();}
+  ec.addEventListener('pointerdown',e=>{ec.setPointerCapture(e.pointerId);samplePointer(e);});ec.addEventListener('pointermove',e=>{if(ec.hasPointerCapture(e.pointerId))samplePointer(e);});
+  ec.addEventListener('keydown',e=>{const d={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];if(d){e.preventDefault();ex=clamp(ex+d[0],0,ec.width-1);ey=clamp(ey+d[1],0,ec.height-1);sample();}else if(e.key==='Enter'){commit(target,picked);eyedrop.close();}});
+  eyedrop.querySelector('[data-cancel]').onclick=()=>eyedrop.close();eyedrop.querySelector('[data-apply]').onclick=()=>{commit(target,picked);eyedrop.close();};
+  window.addEventListener('edittextcolor',e=>{target=e.detail.input;if(e.detail.eyedrop){if(!state.photoURL){showStatus('스포이드는 이미지를 추가한 뒤 사용할 수 있어요.');return;}const crop=photoCrop(photoDimensions().width,photoDimensions().height,state.ratio,state.photoView);ec.width=480;ec.height=Math.round(480*crop.sh/crop.sw);ctx.drawImage(photoSource(),crop.sx,crop.sy,crop.sw,crop.sh,0,0,ec.width,ec.height);ex=Math.floor(ec.width/2);ey=Math.floor(ec.height/2);sample();eyedrop.showModal();}else{fromHex(target.value);paint();dialog.showModal();}});
+  for(const input of [fillColor,strokeColor,shadowColor,$('markStrokeColor')]){
+    const effect=input===strokeColor?outline:input===shadowColor?shadow:input.id==='markStrokeColor'?$('markOutlineEnabled'):null;
+    if(effect)effect.closest('label').hidden=true;
+    input.hidden=true;const row=document.createElement('div');row.className='color-picker-row';row.setAttribute('role','group');row.setAttribute('aria-label',input.id==='fillColor'?'글자색 선택':input.id==='strokeColor'?'테두리 색 선택':input.id==='markStrokeColor'?'완등 표시 테두리 색 선택':'그림자 색 선택');
+    let none;
+    if(effect){none=document.createElement('button');none.type='button';none.className='color-none';none.setAttribute('aria-label',input===strokeColor?'테두리 없음':'그림자 없음');none.title='없음';none.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="m6.4 6.4 11.2 11.2"/></svg>';none.onclick=()=>{effect.checked=false;effect.dispatchEvent(new Event('change'));sync();};row.append(none);effect.addEventListener('change',sync);}
+    const drop=document.createElement('button');drop.type='button';drop.className='color-drop';drop.setAttribute('aria-label','스포이드');drop.title='스포이드';drop.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5 5 5M4 20l4-1L20 7a2 2 0 0 0-3-3L5 16l-1 4Z"/></svg>';
+    drop.onclick=async()=>{target=input;if(state.photoURL){const crop=photoCrop(photoDimensions().width,photoDimensions().height,state.ratio,state.photoView);ec.width=480;ec.height=Math.round(480*crop.sh/crop.sw);ctx.drawImage(photoSource(),crop.sx,crop.sy,crop.sw,crop.sh,0,0,ec.width,ec.height);ex=Math.floor(ec.width/2);ey=Math.floor(ec.height/2);sample();eyedrop.showModal();}else{showStatus('스포이드는 이미지를 추가한 뒤 사용할 수 있어요.');}};
+    const custom=document.createElement('button');custom.type='button';custom.className='color-custom';custom.setAttribute('aria-label','색 직접 고르기');custom.title='색 직접 고르기';custom.onclick=()=>{target=input;fromHex(input.value);paint();dialog.showModal();};row.append(drop,custom);
+    for(const color of colors){const button=document.createElement('button');button.type='button';button.className='color-preset';button.style.setProperty('--swatch',color.value);button.dataset.color=color.value;button.title=color.name;button.setAttribute('aria-label',color.name);button.onclick=()=>commit(input,color.value);row.append(button);}
+    function sync(){if(none)none.setAttribute('aria-pressed',String(!effect.checked));for(const button of row.querySelectorAll('[data-color]'))button.setAttribute('aria-pressed',String((!effect||effect.checked)&&button.dataset.color===input.value.toLowerCase()));custom.style.setProperty('--chosen',input.value);}
+    input.after(row);input.addEventListener('input',sync);window.addEventListener('editorreset',sync);sync();
+  }
+}
+setupColorControls();
+
+// A single numeric editor serves every range, including dynamically created text/image controls.
+const numericDialog=document.createElement('dialog');numericDialog.id='numericAdjustmentDialog';
+numericDialog.innerHTML='<form><h2 id="numericAdjustmentTitle">값 입력</h2><label class="numeric-adjustment-field"><input type="number" aria-labelledby="numericAdjustmentTitle" required><span class="numeric-adjustment-unit"></span></label><p class="numeric-adjustment-limits"></p><div class="numeric-adjustment-options"></div><div class="numeric-adjustment-actions"><button type="button" data-cancel>취소</button><button type="submit">적용</button></div></form>';
+numericDialog.setAttribute('aria-labelledby','numericAdjustmentTitle');document.body.append(numericDialog);
+const numericForm=numericDialog.querySelector('form'),numericInput=numericDialog.querySelector('input');let numericCommit=null,numericReturnFocus=null;
+function openNumericAdjustment({title,value,min,max,step=1,unit='',choices=[],apply,returnFocus}){
+  $('numericAdjustmentTitle').textContent=title;numericInput.min=min;numericInput.max=max;numericInput.step=step;numericInput.value=value;numericInput.setCustomValidity('');
+  numericDialog.querySelector('.numeric-adjustment-unit').textContent=unit;numericDialog.querySelector('.numeric-adjustment-limits').textContent=min+' ~ '+max+unit;
+  const options=numericDialog.querySelector('.numeric-adjustment-options');options.replaceChildren();for(const choice of choices){const button=document.createElement('button');button.type='button';button.textContent=choice+unit;button.onclick=()=>{numericInput.value=choice;numericInput.focus();};options.append(button);}
+  numericCommit=apply;numericReturnFocus=returnFocus;numericDialog.showModal();numericInput.focus();numericInput.select();
+}
+numericDialog.querySelector('[data-cancel]').onclick=()=>numericDialog.close();
+numericForm.onsubmit=e=>{e.preventDefault();if(!numericInput.reportValidity())return;const value=Number(numericInput.value);if(!Number.isFinite(value))return;numericCommit?.(value);numericDialog.close();};
+numericDialog.addEventListener('close',()=>{numericCommit=null;if(numericReturnFocus?.isConnected)numericReturnFocus.focus({preventScroll:true});numericReturnFocus=null;});
+function rangeForOutput(output){return output.closest('label')?.querySelector('input[type=range]');}
+function editRangeOutput(output){
+  const range=rangeForOutput(output);if(!range||range.disabled)return;
+  const percentZoom=range.dataset.imageSetting==='zoom'||range.id==='photoZoom',factor=percentZoom?100:1;
+  const unit=percentZoom?'%':output.textContent.includes('°')?'°':output.textContent.includes('%')?'%':output.textContent.includes('px')?'px':'';
+  const title=range.getAttribute('aria-label')||range.closest('label').querySelector('span')?.textContent||'값';
+  openNumericAdjustment({title,value:Number((Number(range.value)*factor).toFixed(4)),min:Number(range.min||0)*factor,max:Number(range.max||100)*factor,step:Number(((Number(range.step)||1)*factor).toFixed(4)),unit,returnFocus:output,apply:value=>{if(!range.isConnected||range.disabled)return;range.value=String(value/factor);range.dispatchEvent(new Event('input',{bubbles:true}));range.dispatchEvent(new Event('change',{bubbles:true}));}});
+}
+function decorateRangeOutputs(){}
+
+// Shared touch affordances for every object, independent of the bottom menu.
+const objectTools=document.createElement('div');objectTools.className='object-touch-tools';objectTools.hidden=true;stage.append(objectTools);
+let touchObject=null;
+// Canonical selection: all menus, content editing and canvas affordances derive from this.
+const editorSelection={kind:'none',id:null,showTools:false};
+function setEditorSelection(kind,id=null,{origin='canvas',showTools=true}={}){
+  if(kind==='none'||kind==='background')showTools=false;
+  if(kind==='text'&&id!=='primary'&&!extraTexts.some(item=>item.id===id))kind='none',id=null;
+  if(kind==='image'&&!photoOverlays.some(item=>item.id===id))kind='background',id=null;
+  const changed=editorSelection.kind!==kind||editorSelection.id!==id||editorSelection.showTools!==showTools;
+  Object.assign(editorSelection,{kind,id,showTools});
+  selectedPhotoOverlay=kind==='image'?id:null;
+  const node=kind==='text'?(id==='primary'?layer:extraTextNodes.get(id)):kind==='image'?photoOverlayNodes.get(id):kind==='marks'&&!marksLinked()?markLayer:null;
+  touchObject=showTools&&node?objectAdapter(node):null;
+  for(const [key,el] of photoOverlayNodes)el.classList.toggle('is-selected',kind==='image'&&key===id);
+  positionObjectTools();
+  if(changed)window.dispatchEvent(new CustomEvent('editorselectionchange',{detail:{kind,id,origin}}));
+}
+function selectCanvasNode(node){
+  const extra=[...extraTextNodes].find(([,el])=>el===node),image=[...photoOverlayNodes].find(([,el])=>el===node);
+  if(extra)setEditorSelection('text',extra[0]);else if(image)setEditorSelection('image',image[0]);else if(node===layer)setEditorSelection('text','primary');else if(node===markLayer)setEditorSelection('marks');else setEditorSelection('background',null,{showTools:false});
+}
+
+function objectAdapter(node){
+  const extra=[...extraTextNodes].find(([,el])=>el===node),image=[...photoOverlayNodes].find(([,el])=>el===node);
+  if(extra){const item=extraTexts.find(x=>x.id===extra[0]);return {node,get size(){return item.size},resize:v=>{item.size=clamp(v,30,500)},get angle(){return item.rotation||0},rotate:v=>{item.rotation=v},flip:()=>{item.flip=!item.flip},remove:()=>{extraTexts.splice(extraTexts.indexOf(item),1);if(state.markTextTarget===String(item.id))state.markTextTarget='primary'},render:()=>{renderExtraTexts();update();}};}
+  if(image){const item=photoOverlays.find(x=>x.id===image[0]);return {node,get size(){return item.width},resize:v=>{item.width=clamp(v,5,95)},freeRatio:(dx,dy)=>{if(item.ratioMode==='free'){const r=photoOverlayRect(item,stage.clientWidth,stage.clientHeight);item.cropRatio=Math.max(30,r.width+dx)+':'+Math.max(30,r.height+dy)}},get angle(){return item.rotation||0},rotate:v=>{item.rotation=v},flip:()=>{item.flip=!item.flip},remove:()=>{deletePhotoOverlay(item.id)},render:renderPhotoOverlays};}
+  if(node===layer)return {node,get size(){return Number(size.value)},resize:v=>{size.value=clamp(v,30,500)},get angle(){return state.textRotation||0},rotate:v=>{state.textRotation=v},flip:()=>{state.textFlip=!state.textFlip},remove:()=>{text.value=''},render:()=>{update();renderPosition()}};
+  if(node===markLayer)return {node,get size(){return Number(markSize.value)},resize:v=>{markSize.value=clamp(v,1,240)},get angle(){return state.markRotation||0},rotate:v=>{state.markRotation=v},flip:()=>{state.markFlip=!state.markFlip},remove:()=>{state.hearts=[]},render:()=>{update();renderPosition()}};
+}
+function refreshSelectionOutline(){
+ const selectedNode=editorSelection.kind==='text'?(editorSelection.id==='primary'?layer:extraTextNodes.get(editorSelection.id)):editorSelection.kind==='image'?photoOverlayNodes.get(editorSelection.id):editorSelection.kind==='marks'?(marksLinked()?layer:markLayer):null;
+ const scale=stage.getBoundingClientRect().width/stage.clientWidth||1;
+ for(const node of [layer,markLayer,...extraTextNodes.values(),...photoOverlayNodes.values()]){
+   const active=node===selectedNode&&!node.hidden;
+   node.classList.toggle('is-editor-selected',active);
+   if(active){node.style.setProperty('--selection-line-width',1.25/scale+'px');node.style.setProperty('--selection-line-offset',3/scale+'px');}
+ }
+}
+function positionObjectTools(){refreshSelectionOutline();if(!touchObject||!touchObject.node.isConnected||touchObject.node.hidden){objectTools.hidden=true;return;}const r=touchObject.node.getBoundingClientRect(),s=stage.getBoundingClientRect(),scale=s.width/stage.clientWidth||1;Object.assign(objectTools.style,{left:clamp((r.left-s.left)/scale,0,Math.max(0,stage.clientWidth-140/scale))+'px',top:Math.max(0,(r.top-s.top-38)/scale)+'px',width:Math.max(100,r.width)+'px',height:r.height+76+'px',transform:'scale('+1/scale+')'});objectTools.hidden=false;}
+for(const [action,label,icon] of [['rotate','회전','M4 10a8 8 0 1 1 1 8M4 4v6h6'],['flip','좌우 반전','M12 3v18M3 18h5V6ZM21 18h-5V6Z'],['remove','삭제','M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15']]){
+ const b=document.createElement('button');b.type='button';b.dataset.action=action;b.setAttribute('aria-label',label);b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+icon+'"/></svg>';objectTools.append(b);
+ b.onclick=()=>{if(!touchObject)return;if(action==='flip')touchObject.flip();if(action==='remove'){const removed=touchObject;removed.remove();removed.render();setEditorSelection(editorSelection.kind==='image'?'background':'none',null,{origin:'delete',showTools:false});return;}state.loadVersion++;touchObject.render();positionObjectTools();};
+ if(action==='rotate'||action==='resize'){let gesture=null;b.onpointerdown=e=>{e.preventDefault();e.stopPropagation();b.setPointerCapture(e.pointerId);gesture={x:e.clientX,y:e.clientY,size:touchObject.size,angle:touchObject.angle};};b.onpointermove=e=>{if(!gesture||!touchObject)return;e.preventDefault();if(action==='resize'){touchObject.resize(gesture.size*Math.max(.1,1+(e.clientX-gesture.x-e.clientY+gesture.y)/100));touchObject.freeRatio?.(e.movementX||0,e.movementY||0);}else touchObject.rotate(normalizeOverlayAngle(gesture.angle+(e.clientX-gesture.x)*1.5));state.loadVersion++;touchObject.render();positionObjectTools();};b.onpointerup=e=>{if(gesture&&action==='rotate'&&Math.abs(e.clientX-gesture.x)<3){touchObject.rotate(normalizeOverlayAngle(gesture.angle+90));touchObject.render();}gesture=null;positionObjectTools();};b.onpointercancel=()=>{gesture=null;};}
+}
+stage.addEventListener('pointerdown',e=>{if(e.target.closest('.object-touch-tools,[data-editor-history]'))return;const node=e.target.closest('.photo-overlay,.extra-text-layer,#textLayer,#markLayer');selectCanvasNode(node);},true);
+objectTools.addEventListener('pointerdown',e=>e.stopPropagation());
+stage.addEventListener('pointermove',positionObjectTools);window.addEventListener('resize',positionObjectTools);
+window.addEventListener('editorreset',()=>{setEditorSelection('none',null,{origin:'reset',showTools:false});state.textRotation=0;state.textFlip=false;state.markRotation=0;state.markFlip=false;});
+
+// Primary captions and independent marks also support two-finger scaling.
+for(const node of [layer,markLayer]){
+ const points=new Map();let pinch=null;
+ node.addEventListener('pointerdown',e=>{if(e.pointerType!=='touch')return;points.set(e.pointerId,{x:e.clientX,y:e.clientY});if(points.size===2){const [a,b]=[...points.values()],adapter=objectAdapter(node);pinch={adapter,size:adapter.size,distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y))};drag=null;markDrag=null;e.preventDefault();e.stopImmediatePropagation();node.setPointerCapture(e.pointerId);}},true);
+ node.addEventListener('pointermove',e=>{if(!points.has(e.pointerId))return;points.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!pinch||points.size!==2)return;const [a,b]=[...points.values()];e.preventDefault();e.stopImmediatePropagation();pinch.adapter.resize(pinch.size*Math.hypot(a.x-b.x,a.y-b.y)/pinch.distance);state.loadVersion++;pinch.adapter.render();positionObjectTools();},true);
+ for(const type of ['pointerup','pointercancel','lostpointercapture'])node.addEventListener(type,e=>{points.delete(e.pointerId);pinch=null;});
+}

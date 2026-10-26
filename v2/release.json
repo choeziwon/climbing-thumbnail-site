@@ -1,0 +1,12 @@
+{
+  "kind": "v2-wireframe-test",
+  "builtOn": "2026-10-26",
+  "editorSource": "fc1435baeab217f55e0945c7c6bf8d344badfe85",
+  "features": [
+    "calendar",
+    "thumbnail",
+    "profile",
+    "memberships",
+    "geolocation-nearest-gyms"
+  ]
+}

@@ -1,0 +1,101 @@
+@font-face{font-family:OneKutBrand;src:url('editor/assets/OneKut-Web.ttf?v=96fd7110d7db1de5') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+#wandeung-calendar .wc-header #wc-title.wc-brand{font-family:OneKutBrand,system-ui,sans-serif;font-size:30px;font-weight:400;line-height:1.3;letter-spacing:0}
+#wandeung-calendar .wc-info-panel{padding:var(--frame-panel-top) var(--frame-page-x) var(--frame-panel-bottom);background:var(--frame-background);color:var(--frame-text);font-family:var(--frame-font-family)}
+#wandeung-calendar .wc-info-section{margin:0 0 var(--frame-field-gap)}
+#wandeung-calendar .wc-info-section h2{font-size:16px;line-height:24px;font-weight:600;letter-spacing:0;margin:0 0 var(--frame-label-gap)}
+#wandeung-calendar .wc-info-field{display:block;font-size:var(--frame-label-size);line-height:var(--frame-label-line);font-weight:400}
+#wandeung-calendar .wc-info-field input{display:block;box-sizing:border-box;width:100%;min-width:0;height:var(--frame-control-height);border:1px solid var(--frame-control-border);border-radius:var(--frame-control-radius);background:var(--frame-background);color:var(--frame-text);padding:10px 12px;font:14px/22px var(--frame-font-family);margin-top:var(--frame-label-gap)}
+#wandeung-calendar .wc-info-field input[type=date]{font-size:16px;margin-top:0}
+#wandeung-calendar .wc-info-field input:focus-visible{outline:2px solid var(--frame-primary);outline-offset:3px}
+#wandeung-calendar .wc-info-panel button{min-height:var(--frame-control-height);border-radius:var(--frame-control-radius);padding:10px 12px;font:14px/22px var(--frame-font-family);background:var(--frame-background);color:var(--frame-text);border:1px solid var(--frame-control-border)}
+#wandeung-calendar .wc-info-panel button.wc-primary{background:var(--frame-primary);color:var(--frame-background);border-color:var(--frame-primary)}
+#wandeung-calendar .wc-profile-photo-row{display:flex;align-items:center;gap:16px;margin-bottom:var(--frame-field-gap)}
+#wandeung-calendar .wc-avatar{width:72px;height:72px;flex:none;border-radius:50%;background:var(--frame-soft-background);border:1px solid var(--frame-control-border);display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--frame-muted)}
+#wandeung-calendar .wc-avatar svg{width:26px;height:26px}
+#wandeung-calendar .wc-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+#wandeung-calendar .wc-photo-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#wandeung-calendar .wc-info-panel .wc-photo-actions .wc-link{border:0;padding:8px;color:var(--frame-muted)}
+#wandeung-calendar .wc-membership-placeholder{padding:var(--frame-card-padding);border:1px dashed var(--frame-control-border);border-radius:var(--frame-control-radius);background:var(--frame-subtle-background);color:var(--frame-muted);font-size:13px;text-align:center}
+#wandeung-calendar .wc-experience{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding:var(--frame-card-padding);border-radius:var(--frame-control-radius);background:var(--frame-soft-background);font-size:14px;line-height:20px}
+#wandeung-calendar .wc-experience strong{font-weight:600}
+#wandeung-calendar .wc-body-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+#wandeung-calendar .wc-unit-field{position:relative}
+#wandeung-calendar .wc-unit-field input{padding-right:40px;appearance:textfield;-moz-appearance:textfield}
+#wandeung-calendar .wc-unit-field input::-webkit-inner-spin-button,#wandeung-calendar .wc-unit-field input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+#wandeung-calendar .wc-unit-field>span{position:absolute;right:12px;top:12px;font-size:14px;line-height:20px;color:var(--frame-muted);pointer-events:none}
+#wandeung-calendar .wc-info-panel .wc-muted{color:var(--frame-muted)}
+#wandeung-calendar .wc-info-panel #wc-profile-error:empty{display:none}
+#wandeung-calendar .wc-visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media(max-width:350px){#wandeung-calendar .wc-header #wc-title.wc-brand{font-size:28px}}
+
+#wandeung-calendar .wc-info-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:32px;margin-bottom:var(--frame-label-gap)}
+#wandeung-calendar .wc-info-heading h2{margin:0}
+#wandeung-calendar .wc-info-panel .wc-section-edit{min-height:32px;padding:4px 0 4px 12px;border:0;border-radius:0;background:transparent;color:var(--frame-muted)}
+#wandeung-calendar .wc-info-panel .wc-section-edit:disabled{opacity:.35}
+#wandeung-calendar .wc-section-actions{display:flex;gap:var(--frame-action-gap);margin-top:var(--frame-field-gap)}
+#wandeung-calendar .wc-section-actions button{flex:1}
+#wandeung-calendar .wc-profile-name{min-width:0}
+#wandeung-calendar .wc-profile-name p{font-size:16px;font-weight:600;overflow-wrap:anywhere;margin:4px 0 0}
+#wandeung-calendar .wc-profile-name>span,#wandeung-calendar .wc-body-value>span{font-size:14px}
+#wandeung-calendar .wc-info-value{font-size:16px;line-height:24px;margin:0}
+#wandeung-calendar .wc-body-value p{font-size:18px;line-height:26px;font-weight:600;margin:8px 0 0}
+#wandeung-calendar .wc-body-value p span{font-size:14px;font-weight:400}
+
+#wandeung-calendar .wc-membership-form{display:grid;gap:var(--frame-field-gap);margin-bottom:16px}
+#wandeung-calendar .wc-membership-form .wc-section-actions{margin-top:0}
+#wandeung-calendar .wc-membership-dates{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+#wandeung-calendar .wc-membership-dates input[type=date]{margin-top:var(--frame-label-gap);font-size:14px;padding:10px 8px}
+#wandeung-calendar .wc-membership-card{padding:var(--frame-card-padding);border:1px solid var(--frame-control-border);border-radius:var(--frame-control-radius);margin-bottom:12px}
+#wandeung-calendar .wc-membership-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+#wandeung-calendar .wc-membership-card-top strong{min-width:0;overflow-wrap:anywhere;font-size:16px;line-height:24px}
+#wandeung-calendar .wc-membership-status{flex:none;font-size:13px;line-height:20px;padding:2px 8px;border-radius:6px;background:var(--frame-soft-background);font-weight:600}
+#wandeung-calendar .is-expired .wc-membership-status{color:var(--frame-muted)}
+#wandeung-calendar .wc-membership-kind{font-size:14px;line-height:20px;margin:4px 0 16px;overflow-wrap:anywhere;color:var(--frame-muted)}
+#wandeung-calendar .wc-membership-period{margin:0;display:grid;gap:8px;font-size:14px;line-height:20px}
+#wandeung-calendar .wc-membership-period>div{display:flex;justify-content:space-between;gap:8px}
+#wandeung-calendar .wc-membership-period dt{color:var(--frame-muted)}
+#wandeung-calendar .wc-membership-period dd{margin:0}
+#wandeung-calendar .wc-membership-card-actions{display:flex;justify-content:flex-end;gap:16px;margin-top:8px}
+#wandeung-calendar .wc-membership-card-actions button{border:0;padding:4px 0;min-height:32px;color:var(--frame-muted);background:transparent}
+#wandeung-calendar .wc-membership-card-actions button:disabled{opacity:.35}
+#wandeung-calendar #wc-membership-error:empty{display:none}
+#wandeung-calendar .wc-membership-empty{padding:var(--frame-card-padding);color:var(--frame-muted);font-size:14px}
+@media(max-width:350px){#wandeung-calendar .wc-membership-dates{grid-template-columns:minmax(0,1fr)}}
+
+#wandeung-calendar .wc-body-summary{padding:var(--frame-card-padding);border-radius:var(--frame-control-radius);background:var(--frame-soft-background)}
+
+/* Information overview: identity, experience, then a route to memberships. */
+#wandeung-calendar .wc-profile-section .wc-profile-photo-row{align-items:flex-start}
+#wandeung-calendar .wc-profile-details{flex:1;min-width:0;display:grid;gap:16px}
+#wandeung-calendar .wc-profile-details .wc-body-value p{font-size:16px;margin-top:4px;overflow-wrap:anywhere}
+#wandeung-calendar .wc-profile-edit-fields{display:grid;gap:var(--frame-field-gap)}
+#wandeung-calendar .wc-experience-card{padding:var(--frame-card-padding);border-radius:var(--frame-control-radius);background:var(--frame-soft-background)}
+#wandeung-calendar .wc-experience-details{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font-size:14px;line-height:20px;color:var(--frame-secondary-text)}
+#wandeung-calendar .wc-start-edit{margin-top:16px}
+#wandeung-calendar .wc-start-edit input[type=date]{margin-top:8px}
+#wandeung-calendar .wc-info-panel .wc-membership-summary{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;text-align:left;padding:var(--frame-card-padding);border:0;border-radius:var(--frame-control-radius);background:var(--frame-soft-background);color:var(--frame-text)}
+#wandeung-calendar .wc-membership-summary>span:first-child{display:grid;gap:8px;min-width:0}
+#wandeung-calendar .wc-membership-summary strong{font-size:16px;line-height:24px;font-weight:600}
+#wandeung-calendar .wc-membership-summary>span:last-child{font-size:24px;flex:none;color:var(--frame-muted)}
+#wandeung-calendar .wc-membership-total{margin-left:4px;color:var(--frame-secondary-text)}
+#wandeung-calendar .wc-membership-page .wc-membership-empty{padding:var(--frame-card-padding);border-radius:var(--frame-control-radius);background:var(--frame-soft-background)}
+
+/* Compact identity: one nickname row, one horizontal measurements row. */
+#wandeung-calendar .wc-profile-section .wc-avatar{width:56px;height:56px}
+#wandeung-calendar .wc-profile-section .wc-profile-photo-row{align-items:center;gap:12px;margin-bottom:0}
+#wandeung-calendar .wc-profile-section:has(.wc-profile-edit-fields) .wc-profile-photo-row{margin-bottom:16px}
+#wandeung-calendar .wc-profile-details{gap:6px}
+#wandeung-calendar .wc-profile-details .wc-profile-name{display:flex;align-items:baseline;gap:8px}
+#wandeung-calendar .wc-profile-details .wc-profile-name>span{flex:none}
+#wandeung-calendar .wc-profile-details .wc-profile-name p{margin:0;min-width:0;overflow-wrap:anywhere}
+#wandeung-calendar .wc-profile-details .wc-body-fields{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px}
+#wandeung-calendar .wc-profile-details .wc-body-value{display:flex;align-items:baseline;gap:4px;white-space:nowrap}
+#wandeung-calendar .wc-profile-details .wc-body-value+.wc-body-value::before{content:'/';margin-right:4px;color:var(--frame-control-border)}
+#wandeung-calendar .wc-profile-details .wc-body-value p{margin:0;line-height:var(--frame-main-line)}
+
+#wandeung-calendar .wc-visit-summary{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;padding:var(--frame-card-padding);border-radius:var(--frame-control-radius);background:var(--frame-soft-background)}
+#wandeung-calendar .wc-visit-summary>div{min-width:0}
+#wandeung-calendar .wc-visit-summary>div+div{border-left:1px solid var(--frame-soft-border);padding-left:16px}
+#wandeung-calendar .wc-visit-summary p{display:flex;align-items:baseline;gap:4px;margin:8px 0 0;font-size:var(--frame-main-size);line-height:var(--frame-main-line)}
+#wandeung-calendar .wc-visit-summary strong{font-size:var(--frame-title-size);line-height:var(--frame-title-line);font-weight:600;font-variant-numeric:tabular-nums}
+#wandeung-calendar .wc-visit-summary p>span{font-size:var(--frame-description-size);color:var(--frame-secondary-text)}

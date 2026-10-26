@@ -1,0 +1,50 @@
+/* UI values from Git v1; component variables are imported from v1-design-tokens.css: static/shared/editor.css and static/mobile/editor.css.
+   Calendar/profile layout is service-specific; thumbnail artwork is independent. */
+:root {
+  --frame-font-family: "Pretendard", system-ui, sans-serif;
+  --frame-page-x: 16px;
+  --frame-card-padding: 16px;
+  --frame-panel-top: 18px;
+  --frame-panel-bottom: 24px;
+  --frame-field-gap: 16px;
+  --frame-label-gap: 8px;
+  --frame-action-gap: 8px;
+  --frame-control-height: 44px;
+  --frame-control-radius: var(--control-radius);
+  --frame-button-radius: 9px;
+  --frame-control-item-radius: var(--control-item-radius);
+  --frame-title-size: 20px;
+  --frame-title-line: 28px;
+  --frame-main-size: 14px;
+  --frame-main-line: 20px;
+  --frame-description-size: 14px;
+  --frame-description-line: 22px;
+  --frame-caption-size: 12px;
+  --frame-caption-line: 18px;
+  --frame-label-size: 14px;
+  --frame-label-line: 20px;
+  --frame-tab-size: 14px;
+  --frame-tab-height: 44px;
+  --frame-textarea-size: 16px;
+  --frame-textarea-height: 80px;
+  --frame-textarea-padding: 16px;
+  --frame-textarea-radius: 12px;
+  --frame-text: #111111;
+  --frame-secondary-text: #666666;
+  --frame-muted: #666666;
+  --frame-nav-muted: #737780;
+  --frame-background: #ffffff;
+  --frame-control-border: #d9dde3;
+  --frame-button-border: #d9d9d9;
+  --frame-soft-border: var(--control-border);
+  --frame-nav-border: #e7e8eb;
+  --frame-soft-background: var(--control-surface);
+  --frame-subtle-background: #fafbfc;
+  --frame-hover-background: #f5f5f5;
+  --frame-primary: #111111;
+  --frame-primary-hover: #111111;
+  --frame-action-text: #111111;
+  --frame-selected-background: var(--selection-bg);
+  --frame-danger: #9b372e;
+  --frame-destructive: #f04452;
+}
