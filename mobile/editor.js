@@ -1,5 +1,5 @@
-// Move the existing controls into a mobile workspace, retaining their listeners
-// and state. Comment anchors restore the desktop DOM when the breakpoint changes.
+// One responsive mobile workspace for every viewport.
+// The source controls supply shared behavior, never a second editor UI.
 var mobileWorkspace;
 function fitMobilePreview(){
   if(!mobileWorkspace?.active)return;
@@ -387,8 +387,7 @@ function setupMobileWorkspace(){
     for(const control of custom.querySelectorAll('input,button,select'))control.disabled=linked.checked;
   }
   linked.addEventListener('change',syncMarkLink);window.addEventListener('editorreset',()=>{selectedMarkStyleTab='style';syncMarkLink();});syncMarkLink();
-  const moves=[];
-  function move(node,parent){const anchor=document.createComment('desktop position');node.before(anchor);moves.push({node,anchor});parent.append(node);}
+  function move(node,parent){parent.append(node);}
   const done=document.createElement('button');done.type='button';done.className='mobile-edit-done';done.setAttribute('aria-label','편집 완료');
   done.textContent='완료';
   const panelHeading=shell.querySelector('.mobile-panel-heading');
@@ -592,14 +591,11 @@ function setupMobileWorkspace(){
     shell.style.setProperty('--mobile-top',(v?.offsetTop||0)+'px');
     fitMobilePreview();
   }
-  const query=window.WONINE_MOBILE_FORCE?{matches:true,addEventListener(){}}:window.matchMedia('(width < 1080px)');
   function apply(){
-    if(query.matches===mobileWorkspace.active)return;
-    mobileWorkspace.active=query.matches;
-    document.querySelectorAll('[data-mobile-caption]').forEach(title=>{title.textContent=query.matches?title.dataset.mobileCaption:title.dataset.desktopCaption;});
-    editorViewport.logical=query.matches;
-    document.body.classList.toggle('mobile-editing',query.matches);shell.hidden=!query.matches;
-    if(query.matches){
+    mobileWorkspace.active=true;
+    document.querySelectorAll('[data-mobile-caption]').forEach(title=>{title.textContent=title.dataset.mobileCaption;});
+    editorViewport.logical=true;
+    document.body.classList.add('mobile-editing');shell.hidden=false;
       move(document.querySelector('.editor-actions'),header);move(frame,canvas);
       move(text,textGroups[0]);move(document.querySelector('main .gym-picker'),textGroups[0]);
       move(document.querySelector('main .position-controls .font-field'),textGroups[1]);
@@ -618,15 +614,8 @@ function setupMobileWorkspace(){
       move(document.querySelector('main .photo-tools'),panels[2]);panels[2].append(...imageGroups);canvas.append(imageReset);syncImage();
       move($('fontStatus'),feedback);move($('status'),feedback);
       closeTool(false);viewport();
-    }else{
-      for(const {node,anchor} of moves.reverse()){anchor.replaceWith(node);}moves.length=0;
-      preview.textContent=text.value.normalize('NFC');updateHearts();
-      frame.style.width='';frame.style.height='';stage.style.transform='';stage.style.width='';
-      layer.style.width='';layer.style.maxWidth='';layer.style.transform='';layer.style.transformOrigin='';mobileWorkspace.bounds=null;editorViewport.bounds=null;
-    }
     schedulePosition();
   }
-  query.addEventListener('change',apply);
   window.addEventListener('resize',viewport);window.visualViewport?.addEventListener('resize',viewport);window.visualViewport?.addEventListener('scroll',viewport);
   new ResizeObserver(()=>{shell.style.setProperty('--mobile-header-height',header.offsetHeight+'px');fitMobilePreview();}).observe(header);
   const chromeObserver=new ResizeObserver(fitMobilePreview);chromeObserver.observe(bar);chromeObserver.observe(feedback);
