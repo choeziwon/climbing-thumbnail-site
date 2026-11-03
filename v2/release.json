@@ -1,9 +1,13 @@
 {
   "kind": "v2-wireframe-test",
-  "builtOn": "2026-10-26",
+  "builtOn": "2026-11-04",
   "editorSource": "fc1435baeab217f55e0945c7c6bf8d344badfe85",
   "features": [
-    "calendar",
+    "monthly-calendar",
+    "annual-gym-visit-grid",
+    "year-month-picker",
+    "swipe-month-navigation",
+    "calendar-summary",
     "thumbnail",
     "profile",
     "memberships",

@@ -1,11 +1,11 @@
 #wandeung-calendar .wc-gym-logo{position:relative;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;flex:0 0 40px;border-radius:10px;overflow:hidden;background:#fff;color:var(--wc-muted);border:1px solid var(--wc-line);vertical-align:middle}
 #wandeung-calendar .wc-gym-logo>svg{width:22px;height:22px}
 #wandeung-calendar .wc-gym-logo>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff;padding:3px}
-#wandeung-calendar .wc-gym-logo-small{width:21px;height:21px;flex-basis:21px;border-radius:5px}
-#wandeung-calendar .wc-gym-logo-small>svg{width:14px;height:14px}
+#wandeung-calendar .wc-gym-logo-small{width:42px;height:42px;flex-basis:42px;border-radius:10px}
+#wandeung-calendar .wc-gym-logo-small>svg{width:27px;height:27px}
 #wandeung-calendar .wc-gym-logo-small>img{padding:1px}
-#wandeung-calendar .wc-date{min-height:66px;height:66px!important;gap:3px}
-#wandeung-calendar .wc-day-gyms{display:flex;align-items:center;justify-content:center;gap:2px;height:23px;max-width:100%}
+#wandeung-calendar .wc-date{min-height:58px;height:58px!important;gap:2px;padding:4px 0}
+#wandeung-calendar .wc-day-gyms{display:flex;align-items:center;justify-content:center;gap:2px;height:44px;max-width:100%;width:42px;position:relative}
 #wandeung-calendar .wc-day-more{font-size:10px;line-height:12px}
 #wandeung-calendar .wc-day-status{position:relative;display:inline-flex}
 #wandeung-calendar .wc-day-status>.wc-dot{position:absolute;right:-1px;bottom:-1px;background:var(--wc-bg);color:var(--wc-fg);width:6px;height:6px}
@@ -30,3 +30,21 @@
 #wandeung-calendar .wc-gym-logo>img[src$="/the-climb-hires.png"]{filter:brightness(0) invert(1);padding:0}
 #wandeung-calendar .wc-gym-location{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;color:var(--wc-muted);font-size:12px;line-height:18px}
 #wandeung-calendar .wc-gym-location>button{flex-shrink:0;min-height:44px;padding:4px 8px;background:transparent;border:0;color:var(--wc-fg);font-size:13px}
+
+/* Calendar density approved 2026-11-04. */
+#wandeung-calendar .wc-date-number{font-size:12px;line-height:16px;font-weight:400}
+#wandeung-calendar .wc-calendar{margin-top:12px;row-gap:2px}
+#wandeung-calendar .wc-weekday{padding-block:4px}
+#wandeung-calendar .wc-legend{margin-top:10px}
+
+/* Approved number-only date badges and date-detail bottom sheet. */
+#wandeung-calendar .wc-date,#wandeung-calendar .wc-date[aria-pressed=true],#wandeung-calendar .wc-date[aria-pressed=true]:hover,#wandeung-calendar .wc-date.wc-today:not([aria-pressed=true]){background:transparent;color:var(--wc-fg);border:0;box-shadow:none}
+#wandeung-calendar .wc-date-number{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:18px;border-radius:9px;padding:0 4px}
+#wandeung-calendar .wc-date[aria-pressed=true] .wc-date-number{background:var(--frame-primary);color:#fff}
+#wandeung-calendar .wc-date.wc-today:not([aria-pressed=true]) .wc-date-number{box-shadow:inset 0 0 0 1px var(--frame-primary)}
+#wandeung-calendar .wc-phone{position:relative}
+#wandeung-calendar .wc-day-overlay{position:absolute;inset:0;z-index:30;display:flex;align-items:flex-end}
+#wandeung-calendar .wc-day-backdrop{position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:0;padding:0;background:#0005}
+#wandeung-calendar .wc-day-backdrop:hover:not(:disabled){background:#0005}
+#wandeung-calendar .wc-day-sheet{position:relative;display:flex;flex-direction:column;width:100%;height:220px;max-height:65%;overflow:hidden;border-radius:20px 20px 0 0;background:var(--frame-background);padding:20px 16px;border:0;box-shadow:0 -4px 24px #0001}
+#wandeung-calendar .wc-day-sheet::before{content:'';display:block;width:40px;height:4px;border-radius:2px;background:var(--frame-control-border);margin:-12px auto 8px;flex:none}
