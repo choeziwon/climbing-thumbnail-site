@@ -2,6 +2,7 @@
 (() => {
   const tabs=[...document.querySelectorAll('[data-ds-tab]')];
   function selectTab(name,updateHash=true){
+    name=name==='colors'?'foundations':name;
     const active=tabs.find(tab=>tab.dataset.dsTab===name)||tabs[0];
     for(const tab of tabs){
       const selected=tab===active;
