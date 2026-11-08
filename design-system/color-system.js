@@ -1,30 +1,19 @@
 // The catalog reads the same atomic and semantic stylesheets as the service.
 (() => {
-  const tabs=[...document.querySelectorAll('[data-ds-tab]')];
-  function selectTab(name,updateHash=true){
+  const menuLinks=[...document.querySelectorAll('[data-ds-page]')];
+  function selectPage(name){
     name=name==='colors'?'foundations':name;
-    const active=tabs.find(tab=>tab.dataset.dsTab===name)||tabs[0];
-    for(const tab of tabs){
-      const selected=tab===active;
-      tab.setAttribute('aria-selected',String(selected));tab.tabIndex=selected?0:-1;
-      document.getElementById(tab.getAttribute('aria-controls')).hidden=!selected;
+    const active=menuLinks.find(link=>link.dataset.dsPage===name)||menuLinks[0];
+    for(const link of menuLinks){
+      const selected=link===active;
+      if(selected)link.setAttribute('aria-current','page');
+      else link.removeAttribute('aria-current');
+      document.getElementById(link.getAttribute('aria-controls')).hidden=!selected;
     }
-    if(updateHash)history.replaceState(null,'','#'+active.dataset.dsTab);
   }
-  tabs.forEach((tab,index)=>{
-    tab.addEventListener('click',()=>selectTab(tab.dataset.dsTab));
-    tab.addEventListener('keydown',event=>{
-      let next=index;
-      if(event.key==='ArrowRight')next=(index+1)%tabs.length;
-      else if(event.key==='ArrowLeft')next=(index+tabs.length-1)%tabs.length;
-      else if(event.key==='Home')next=0;
-      else if(event.key==='End')next=tabs.length-1;
-      else return;
-      event.preventDefault();selectTab(tabs[next].dataset.dsTab);tabs[next].focus();
-    });
-  });
-  window.addEventListener('hashchange',()=>selectTab(location.hash.slice(1),false));
-  selectTab(location.hash.slice(1),false);
+  // Native hash links keep every menu item keyboard-accessible and support Back/Forward.
+  window.addEventListener('hashchange',()=>selectPage(location.hash.slice(1)));
+  selectPage(location.hash.slice(1));
 
   const rootStyle=getComputedStyle(document.documentElement);
   const catalog=document.getElementById('color-catalog');
