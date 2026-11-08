@@ -1,6 +1,6 @@
 {
   "kind": "v2-wireframe-test",
-  "builtOn": "2026-11-04",
+  "builtOn": "2026-11-08",
   "editorSource": "fc1435baeab217f55e0945c7c6bf8d344badfe85",
   "features": [
     "monthly-calendar",
@@ -11,6 +11,11 @@
     "thumbnail",
     "profile",
     "memberships",
-    "geolocation-nearest-gyms"
-  ]
+    "geolocation-nearest-gyms",
+    "shared-atomic-color-system",
+    "full-color-palette",
+    "updated-service-ui",
+    "gym-logo-membership-summary"
+  ],
+  "colorTokenSha256": "8749dad86bfd29d5ae2db0d02ed1cc9370a28ab98d9fb31585852b9597d0c24b"
 }

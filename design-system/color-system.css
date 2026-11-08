@@ -6,7 +6,6 @@
 .ds-tabs>button:focus-visible{outline:2px solid var(--frame-primary);outline-offset:3px}
 .color-intro{margin:0 0 24px}
 .color-intro h2{font-size:24px;line-height:32px}
-.color-intro p{margin:8px 0;color:var(--frame-secondary-text)}
 .color-sections{display:grid;gap:20px}
 .color-sections h2{font-size:17px;line-height:26px;font-weight:600}
 .color-swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px}
@@ -16,6 +15,4 @@
 .color-token strong{display:block;font-size:14px;line-height:20px;font-weight:500;color:var(--frame-text)}
 .color-token code{display:block;overflow-wrap:anywhere;font:11px/18px ui-monospace,monospace;margin-top:4px}
 .color-token .color-value{display:block;margin-top:2px;font-variant-numeric:tabular-nums;color:var(--frame-text)}
-.color-token .color-origin{display:block;margin-top:4px}
-.color-policy{margin:0;padding-left:20px;color:var(--frame-secondary-text);font-size:14px;line-height:24px}
 @media(max-width:480px){.color-swatches{grid-template-columns:repeat(2,minmax(0,1fr))}.ds-tabs{max-width:none}}

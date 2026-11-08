@@ -1,4 +1,4 @@
-<!doctype html><html lang="ko"><head><meta name="robots" content="noindex,nofollow"><base href="editor/mobile/">
+<!doctype html><html lang="ko"><head><base href="editor/mobile/">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>완등 한 컷: 클라이밍 썸네일 만들기(beta)</title>
 <meta name="description" content="이미지와 다양한 폰트·도형으로 나만의 클라이밍 썸네일을 만들어 보세요. 성공 문제를 색상별로 기록하고 PNG로 저장할 수 있어요.">
 <meta name="robots" content="index, follow, max-image-preview:large">
@@ -25,7 +25,38 @@
 <link rel="stylesheet" href="../shared/fonts.css?v=faaea88a4426">
 <link rel="stylesheet" href="../shared/editor.css?v=36c335f45090">
 <link rel="stylesheet" href="editor.css?v=bdcdc9632e3e">
-</head><body>
+<link rel="stylesheet" href="../../frame-color-tokens.css?v=8749dad86bfd"><link rel="stylesheet" href="../../frame-ui-tokens.css?v=c5188fbc025f"><style data-v2-page-shell>/* V2-only page integration. Original v1 editor controls and dialogs are reused.
+   The outer page now owns the title and reset/save icon actions. */
+:root{--primary:var(--frame-primary)}
+body.mobile-editing{color:var(--frame-text);background:var(--frame-background)}
+.mobile-editor,.mobile-editor :is(.mobile-content,.mobile-panel-bar,.mobile-feedback,.mobile-tools){background-color:var(--frame-background)}
+.mobile-editor :is(.mobile-panel-bar,.mobile-header){border-color:var(--frame-nav-border)}
+.mobile-editor .mobile-menu button{background-color:var(--frame-background);color:var(--frame-nav-muted)}
+.mobile-editor .mobile-menu button[aria-expanded=true]{background-color:var(--frame-selected-background);color:var(--frame-text)}
+.mobile-editor .mobile-panel :is(textarea,input:not([type=color]):not([type=range]):not([type=checkbox]),select,.gym-trigger,.font-trigger){border-color:var(--frame-control-border);background-color:var(--frame-background);color:var(--frame-text)}
+.mobile-editor :is(input,textarea)::placeholder{color:var(--frame-placeholder);opacity:1}
+.mobile-editor :is(.hint,.mobile-feedback .status){color:var(--frame-secondary-text)}
+.mobile-editor .mobile-header{display:none}
+
+/* Tools scroll over the preview; opening them never resizes the photo. */
+.mobile-editor #mobile-tools.mobile-tools:not([hidden]){position:absolute;z-index:3;left:0;right:0;bottom:0;box-sizing:border-box;height:45%;max-height:100%;background:var(--frame-background);overflow-y:auto}
+.mobile-editor.menu-overview-open #mobile-tools.mobile-tools:not([hidden]){height:65px;overflow:hidden}
+.mobile-editor.template-browser-open #mobile-tools.mobile-tools:not([hidden]){height:184px;overflow-y:auto}
+
+/* Center the unchanged photo in the uncovered canvas, so the visible hatched
+   space above and below it stays equal when a tool overlays the lower edge. */
+.mobile-editor .mobile-canvas .preview-frame{transform:translateY(calc(var(--v2-tools-overlap,0px) / -2))}
+
+/* Keep all composition options on one naturally swipeable strip. */
+.mobile-editor .image-tool-strip{width:100%;max-width:100%;box-sizing:border-box;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;touch-action:pan-x;overscroll-behavior-x:contain}
+.mobile-editor .image-tool-strip .image-ratio-tools{flex:0 0 auto}
+.mobile-editor .image-tool-strip button{touch-action:pan-x}
+
+/* The canvas stays stationary while tools overlay it. Its floating controls
+   clear the measured overlay instead of covering the first action row. */
+.mobile-editor .mobile-canvas>.editor-history{bottom:calc(12px + var(--v2-tools-overlap,0px))}
+.mobile-editor .mobile-canvas>#resetImageSettings{bottom:calc(12px + var(--v2-tools-overlap,0px))!important}
+</style></head><body>
 
 <header class="site-header"><h1>완등 한 컷</h1></header>
 <main>
@@ -79,9 +110,124 @@
 
 <script src="../shared/editor.js?v=1e65e62a5f45"></script>
 <script>window.WONINE_MOBILE_FORCE=true;</script>
-<script src="editor.js?v=73cfced9fbcf"></script>
+<script src="../../wandeung-v1-mobile-editor.js?v=0f3bb37680a9"></script>
 <script src="../shared/history.js?v=bfa12344fcfd"></script>
-<script>
+<script data-v2-page-shell>// Commands invoke v1's existing reset dialog and PNG export handlers.
+(()=>{
+ const channel='wandeung-v1-shell';
+ const reset=document.getElementById('resetEditor');
+ const save=document.getElementById('saveResult');
+ if(!reset||!save)return;
+ const send=message=>parent.postMessage({channel,...message},'*');
+ function report(){
+  const saving=save.textContent.includes('저장 중');
+  window.wandeungEditorExportStatus?.(saving);
+  send({type:'status',resetDisabled:reset.disabled,saveDisabled:save.disabled||window.wandeungEditorCanSave?.()===false,saving});
+ }
+ window.addEventListener('message',event=>{
+  if(event.source!==parent||event.data?.channel!==channel||event.data.type!=='command')return;
+  const button=event.data.command==='reset'?reset:event.data.command==='save'?save:null;
+  if(button&&!button.disabled&&(button!==save||window.wandeungEditorCanSave?.()!==false)){if(button===save)window.wandeungEditorBeginExport?.();button.click();}
+ });
+ const observer=new MutationObserver(report);
+ for(const button of [reset,save])observer.observe(button,{attributes:true,attributeFilter:['disabled'],childList:true,subtree:true,characterData:true});
+ // Only the editing panel's vertical scrolling affects the global menu.
+ // Horizontal color strips, dialogs and search results are excluded.
+ document.addEventListener('scroll',event=>{
+  if(event.target.matches?.('.mobile-tools'))send({type:'scroll',scrollTop:event.target.scrollTop});
+ },true);
+ window.addEventListener('wandeungsavestate',report);
+ const shell=document.querySelector?.('.mobile-editor');
+ if(shell){
+  const canvas=shell.querySelector('.mobile-canvas'),tools=shell.querySelector('#mobile-tools');
+  let previousOverlap=null;
+  const syncPreviewControls=()=>{
+   if(!canvas||!tools)return;
+   const preview=canvas.getBoundingClientRect(),panel=tools.getBoundingClientRect();
+   const overlap=!tools.hidden&&panel.height>0?Math.max(0,preview.bottom-panel.top):0;
+   canvas.style.setProperty('--v2-tools-overlap',overlap+'px');
+   if(overlap!==previousOverlap){
+    previousOverlap=overlap;
+    // The native crop frame lives beside the preview, so follow its new
+    // position after centering without changing image/crop data or scale.
+    const stage=canvas.querySelector?.('.stage'),crop=canvas.querySelector?.('.free-crop-frame');
+    if(stage&&crop&&!crop.hidden){
+     const image=stage.getBoundingClientRect();
+     Object.assign(crop.style,{left:(image.left-preview.left)+'px',top:(image.top-preview.top)+'px',width:image.width+'px',height:image.height+'px'});
+    }
+    if(typeof positionObjectTools==='function')positionObjectTools();
+   }
+  };
+  const toolsReport=()=>{send({type:'tools',open:shell.classList.contains('editing-tool')});syncPreviewControls();};
+  new MutationObserver(toolsReport).observe(shell,{attributes:true,attributeFilter:['class']});
+  if(tools)new MutationObserver(syncPreviewControls).observe(tools,{attributes:true,attributeFilter:['hidden']});
+  if(typeof ResizeObserver!=='undefined'){
+   const layoutObserver=new ResizeObserver(syncPreviewControls);
+   if(canvas)layoutObserver.observe(canvas);
+   if(tools)layoutObserver.observe(tools);
+  }
+  toolsReport();
+ }
+ report();
+})();
+
+// Touch uses native horizontal scrolling. Add the same drag gesture for a mouse
+// without treating the release after a drag as an option selection.
+(()=>{
+ let drag=null,suppress=null;
+ document.addEventListener('pointerdown',event=>{
+  suppress=null;
+  const strip=event.target.closest?.('.image-tool-strip');
+  if(event.pointerType!=='mouse'||event.button!==0||!strip||strip.scrollWidth<=strip.clientWidth)return;
+  drag={strip,id:event.pointerId,x:event.clientX,y:event.clientY,left:strip.scrollLeft,moved:false};
+ });
+ document.addEventListener('pointermove',event=>{
+  if(!drag||event.pointerId!==drag.id)return;
+  const dx=event.clientX-drag.x,dy=event.clientY-drag.y;
+  if(!drag.moved){
+   if(Math.abs(dx)<8)return;
+   if(Math.abs(dy)>Math.abs(dx)){drag=null;return;}
+   drag.moved=true;drag.strip.setPointerCapture?.(drag.id);
+  }
+  event.preventDefault();drag.strip.scrollLeft=drag.left-dx;
+ },{passive:false});
+ const finish=event=>{
+  if(!drag||event.pointerId!==drag.id)return;
+  if(drag.moved&&event.type!=='pointercancel')suppress={strip:drag.strip,until:Date.now()+350};
+  if(drag.strip.hasPointerCapture?.(drag.id))drag.strip.releasePointerCapture(drag.id);
+  drag=null;
+ };
+ document.addEventListener('pointerup',finish);
+ document.addEventListener('pointercancel',finish);
+ document.addEventListener('click',event=>{
+  if(suppress&&Date.now()<suppress.until&&event.target.closest?.('.image-tool-strip')===suppress.strip){
+   event.preventDefault();event.stopImmediatePropagation();suppress=null;
+  }
+ },true);
+})();
+
+// Export availability follows document changes, independent of selection/tool navigation.
+(()=>{
+ if(typeof state==='undefined')return;
+ const ids=['text','size','fillColor','strokeColor','letterSpace','lineSpace','outlineWidth','shadowColor','shadowWidth','shadowOpacity','shadowDistance','shadowAngle','markSize','markStrokeColor','markOutlineWidth','outline','shadow','markOutlineLinked','markOutlineEnabled'];
+ const ignored=new Set(['loadVersion','fontVersion','fontLoading','captionPresent']);
+ let saved=null,pending=null;
+ function fingerprint(){return JSON.stringify({state:Object.fromEntries(Object.entries(state).filter(([key])=>!ignored.has(key))),controls:ids.map(id=>{const control=document.getElementById(id);return [id,control?.value,control?.checked];}),extras:extraTexts.map(({fontRequest,...item})=>item),overlays:photoOverlays.map(({image,originalImage,...item})=>item),markPosition,original:backgroundOriginal});}
+ const changed=()=>window.dispatchEvent(new Event('wandeungsavestate'));
+ window.wandeungEditorCanSave=()=>Boolean(state.photoURL||document.getElementById('text').value.trim()||state.hearts.some(key=>key!=='\n')||extraTexts.some(item=>item.text.trim())||photoOverlays.length)&&fingerprint()!==saved;
+ window.wandeungEditorBeginExport=()=>{pending=fingerprint();};
+ window.wandeungEditorExportStatus=saving=>{if(saving&&pending===null)pending=fingerprint();if(!saving)pending=null;};
+ document.addEventListener('click',event=>{
+  const anchor=event.target.closest?.('a[download]');
+  if(anchor&&anchor.download.endsWith('.png')){saved=pending||fingerprint();changed();}
+ },true);
+ for(const type of ['input','change','click','pointerup','pointercancel'])document.addEventListener(type,()=>queueMicrotask(changed));
+ // Existing v1 history already uses these hooks; retain it and report after rendering.
+ const wrap=fn=>function(...args){const result=fn.apply(this,args);changed();return result;};
+ update=wrap(update);renderPosition=wrap(renderPosition);
+ changed();
+})();
+</script><script>
 (()=>{
   const params=new URLSearchParams(location.search);
   if(!params.has('caption'))return;
@@ -90,7 +236,7 @@
   input.dispatchEvent(new Event('input',{bubbles:true}));
   let counts=[];try{counts=JSON.parse(params.get('counts')||'[]');}catch{}
   if(!Array.isArray(counts))return;
-  ['💚','💙','💜'].forEach((heart,index)=>{
+  ['💚','💙','💜','🤍','💛','🧡','❤️','🩷','🩶','🤎','🖤','💚','💙','🩵'].forEach((heart,index)=>{
     const button=document.querySelector('[data-heart="'+heart+'"]');
     const count=Math.max(0,Math.min(99,Math.floor(Number(counts[index])||0)));
     for(let i=0;i<count;i++)button?.click();

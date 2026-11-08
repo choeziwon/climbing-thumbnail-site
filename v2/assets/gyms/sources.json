@@ -1,5 +1,5 @@
 {
-  "checkedOn": "2026-10-22",
+  "checkedOn": "2026-11-04",
   "scope": "Local wireframe only; brand assets belong to their respective owners. Directory copies are not verified official originals.",
   "assets": {
     "the-climb": "http://theclimb.co.kr/wp-content/uploads/2019/12/theclimb_fav_144-1.png",
@@ -27,9 +27,459 @@
     "lead-climbing-gym": "https://holday.rocks/brands/lead-climbing-gym.png",
     "climb-us": "https://holday.rocks/brands/climb-us.png",
     "fix-boulder": "https://holday.rocks/brands/fix-boulder.png",
-    "the-climb-hires": "https://holday.rocks/brands/the-climb.png"
+    "the-climb-hires": "https://holday.rocks/brands/the-climb.png",
+    "onfleek-verified": "https://cdn.prod.website-files.com/6a15875cc0756d9d3227375d/6a1589eda52a9811c886b1bf_%EB%A1%9C%EA%B3%A0%EB%A7%8C%EB%B8%94%EB%A3%A8png.png",
+    "off-the-wall": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/445123855_974832517189936_4381603074650651342_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=105&ig_cache_key=GA8NiBowEefhmnYDAM66TxvIlM48bkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=L9gCrBGhnT8Q7kNvwFgfOjD&_nc_oc=AdoPWza71creZEXTo1EX5MZCBwxxogZx-5hinjkfC8mIkxvVpJJCRmcABI7W_dVc1Vw&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQTPrwgK0PgO3D6TRDAJNZTgxw0d9UUuyXjU0SS0svmr3Q&oe=6AF11E83",
+    "stonz": "https://scontent-ssn1-1.cdninstagram.com/v/t51.82787-19/515192081_18005438765792666_2840827634191029454_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=100&ig_cache_key=GBE1tR6a-ajl2fc-AM7UEZSupWwnbmNDAQAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=lcZtxeEHqmUQ7kNvwHJtEfx&_nc_oc=AdpBg0BCsHsTMijMOvF1p7dVHsNSoC9bmT41osRFxCuu2iehOOR4_bWi87Z0FS3ct3k&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_gid=B6piO6aesSbTwbjI6QcPHA&_nc_ss=7060f&oh=00_AQQUFyq9iisfAaREz_dqe4CMs2_lJ0_iPRhJZi4ulTtocw&oe=6AF10A28",
+    "hook-wangsimni": "https://scontent-ssn1-1.cdninstagram.com/v/t51.82787-19/711369338_18094664699594787_949139669393558797_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=108&ig_cache_key=GHqiZiojyL9tAElAAA1NbySABSwNbmNDAQAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy45MDAuQzMifQ%3D%3D&_nc_ohc=EecXo_n2OrQQ7kNvwGvD0k2&_nc_oc=AdqyWjwGjQ5s7ihtEHO64eQ-_gMZ5Aiqk81iABlkm1LwrFcEU74jK60MRFIlkKIeVjo&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_gid=nTr0Mz8lIPG3PamvSp_Qkg&_nc_ss=7060f&oh=00_AQTxodFuoQpqfVoktvhgyxR5zvXM1EviQmhcNaZxWjcf5g&oe=6AF102FC",
+    "dolmenge-jeonpo": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/429362277_1041053536979142_9203271208898313761_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=109&ig_cache_key=GGWMlxnGiEMq1bIDACG_9klnlrh-bkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=t17B9GHfzGMQ7kNvwFGtb8B&_nc_oc=AdqAzNjLOtYbYprMjPffMadRwbaV95C8Xo8h1NLVrKJ6eTkmr7Fn1GRjhYj3zIzdLbc&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQRCd9GRBx40SFzfMbgipth7gZV6FGsLLKizEIp7oBiwtA&oe=6AF0F784",
+    "groot-verified": "https://scontent-ssn1-1.cdninstagram.com/v/t51.82787-19/515585059_17847653550510067_3751454474732488653_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=107&ig_cache_key=GCM0ux7zz-OpWGg-AM3Hev331w80bmNDAQAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=j-hnb-YKDXgQ7kNvwHPflBc&_nc_oc=Adr1Q_1g8h0ksPZiurUFhb1zXsQLPBvYqskyxvasmPxtUT4JJSv2_BEcaagAh1U3lg4&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_gid=JGDmAXk4Fhja3PFopldTIw&_nc_ss=7060f&oh=00_AQTi0dg8br4rYskqEdjbLybX5RLWHaxcpPapOr9bX-yncA&oe=6AF10C8D",
+    "grabit": "https://img.kr.gcp-karroter.net/business/bizPlatform/profile/97712000/1745932915274/NmFiNDhhMDIzYjhiMDc2ODQ2OGVlYmJjODQxMWIwMGE4ZmUxYWNiNzViNDQ5ZGFjZmU3NWQ3NjMzMGI0OTUyZV8wLmpwZWc=.jpeg?q=95&s=1200x630&t=cover&service=business-profile",
+    "puzzle": "https://dnvefa72aowie.cloudfront.net/business/bizPlatform/profile/19127476/1666146296487/REFEQzlBNTktN0VDNy00MDdFLTgyMEItOUE1RUZFMTU0RDVELmpwZWc=.jpeg?q=82&s=640x640&t=crop&service=business-profile",
+    "daegu-climbing-center": "https://dnvefa72aowie.cloudfront.net/business/bizPlatform/profile/23994230/1705020048978/ZDY1NjE4ZmE5YjJmNjg4MDVkZDhiZjgwY2M2NTdkNDViOTlhZmVlYjg0ODY2MWYwYTBjNzE1YWU3OTM5ZTgxOF8wLmpwZWc=.jpeg?q=82&s=640x640&t=crop&service=business-profile",
+    "dino-cat": "https://img.kr.gcp-karroter.net/business/bizPlatform/profile/36727561/1747726127474/SU1HXzEzMTIuanBlZw==.jpeg?q=95&s=1200x630&t=cover&service=business-profile",
+    "cracker": "https://dnvefa72aowie.cloudfront.net/businessPlatform/bizPlatform/profile/center_biz_9670225/1688792204476/dd7c319eb58d40294e897d3136dea070a4cda5c4b887369ce9e45f65e27286ce.jpeg?q=82&s=640x640&t=crop&service=business-profile",
+    "mong": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/324390913_180195684652781_6512269698159121489_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=104&ig_cache_key=GAHQVRPtFsYT46MAAFGUUHjJOmBabkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4zMjYuQzMifQ%3D%3D&_nc_ohc=n5MmboBNUhsQ7kNvwFYPbnp&_nc_oc=Ado1-PzI5IXiCTtr1sQvT7M_ovt_z35uFFzihp_1es3_rPCYWY2gacSLQWCBR_Xfcdw&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQTafN0OwsgO6X33jxllHyTBVBnCplL8ccDd809rrGQ2Og&oe=6AF0FBD2",
+    "spicy": "https://scontent-ssn1-1.cdninstagram.com/v/t51.82787-19/533526642_17844842976551546_2723062280176714538_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=110&ig_cache_key=GHL4zB96orBGymU-ACrDMme3QsolbmNDAQAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy40NzkuQzMifQ%3D%3D&_nc_ohc=95pzz2t7XhsQ7kNvwGaxutN&_nc_oc=Adq_ujKX4QWS_KwmYd_rVtHqraGL3pQEDTpcZ4AxMJQ8-CGIZBBLb9RYQmJ9ZW6vGK8&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_gid=Ex_lyw9JOcL0pgeeSSJVTg&_nc_ss=7060f&oh=00_AQRlUGJArekDLiW55qw_-WcFtg36r8DhQzBvn_oaUo3amQ&oe=6AF0FA80",
+    "catchstone-bucheon": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/462770061_879912224108254_8151479743878562800_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=107&ig_cache_key=GI1PlRveLo2HRiADAPCDrH_j3x9xbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=0EcX9oCW29cQ7kNvwHiiTts&_nc_oc=AdpkD8kW0xECW14d8ac7gWppTLsLF0XK3HZHyVv8i91PFMNwzeb73Kt6yAXd_wdldVw&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQQ14knKs-wZBVZ6UEhhULgvoJiy8Mxvig02pTIVA57xIA&oe=6AF12253",
+    "awake-timeworld": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/392829117_689338159527165_4805427408324333982_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=110&ig_cache_key=GL0Yahf99CAM83ICAJ4RGYPETrBCbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=Khoj5-dXT7wQ7kNvwFyPG_W&_nc_oc=Adp2e9SYqQsHCdoUGn3SpPBeWfEvLniJR2GeKO4JsKD2Wq9zowWMyj_jxmCkW-L7KHg&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQSGq6Y8Xmspt-AMxdq8ZghPemLt_rk7aATwswqmE8u6wQ&oe=6AF114A9",
+    "kind": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/455872348_1585252335679948_6115087483920170989_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=105&ig_cache_key=GFwPLBvM_VhSx6EFAO2-f_GqJ91UbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xOTIuQzMifQ%3D%3D&_nc_ohc=lZVX0F1rA08Q7kNvwG7q_G9&_nc_oc=AdoDzweZIyfP8FfuRIHmQJtHTlJSo1Reu-RjgjjOM9u-7LYuTsVVXkpqr3RmQ-8J3UA&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQS5TIaiZV9oUa5liThbPONVTVuNaBYSKo7EYMzRnFPVSg&oe=6AF1103B",
+    "dot": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/131041316_1686880594818543_6861748153070322926_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=106&ig_cache_key=GCSIzwfv9aF_Nf4FAO4E8xGX0zlfbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=N0DilHTnBvgQ7kNvwHWf_1z&_nc_oc=AdrBQA5gbLEm_KRR2WBR-9XYdxBR0Q6LQP1aUJlUJXMyHe6yqeBMHH3wnYeZCBi3rN4&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQRSanvaeTgQqHEON6rcZ5sL7O7Z6cbBQ3DgFV6H8i3XBQ&oe=6AF0F7BB",
+    "gravity-yeongtong": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/281035482_674242240545221_881616348663217565_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=102&ig_cache_key=GNpCwBDFgT1BOGUCAJ19P_plITwMbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy45ODUuQzMifQ%3D%3D&_nc_ohc=rHiU8wTCZ4oQ7kNvwGzFcRQ&_nc_oc=AdqDggQUyX7xDjuEk-4zx-ifSY8x5HeFPqvhFOTgCfv_KSvKGdOkNnyDn50wHHTxZHE&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQSvA_tH3-VLX--AuPTpxC4L0pQRLuxO-2b0AhLG8tKjiQ&oe=6AF10311",
+    "superb-yeongtong": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/454721967_345905221906034_2556963558314974115_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=108&ig_cache_key=GK_BGhtyruBVmToBAKOb_xTPKHwjbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4yNjQuQzMifQ%3D%3D&_nc_ohc=J6ycEM-WDKAQ7kNvwFT34a8&_nc_oc=AdpnT0NJToLR3L1XrnQdD2WrXTHqkBC8SkbDoSEmgCsiwm4QN_fcORiEr3s18Ikplto&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQRoZMf3zM8mTj-1BKxtvrC94DhlqA-59vgEfR2ktK6g7w&oe=6AF0FBE8",
+    "together-suwon": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/491434145_2386709091685334_5514116981416882610_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=109&ig_cache_key=GKGwSh3Wk5cDs3oIALJxTfctFIZMbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=VmNS7pNUpjAQ7kNvwFnaKVe&_nc_oc=AdoUFW2jT7kAFVPF7qcZah2MFcCsJdUsNqliTE478Pe6BHMrZe4AUBfkCrMh3yuqjQg&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQQXqx3cmjnfKQzirguX2YOYy2BiTgUQfCgSUFw75osKkw&oe=6AF0F987",
+    "forever-mangpo": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/473822010_929608916022868_3640057157052294393_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=108&ig_cache_key=GDrzPRxUNjhxeU0DAPlkONCyFIQybkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=f3ub4GLJdXYQ7kNvwEa1dob&_nc_oc=AdqG01VFB1kuBl408_2oQxX-C4Dnhv-CSgfipCFQr9JmuxZ7_PG0NDKp2roaWpvE2IU&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQRq9igvPRjSFNYikKn-erpMvA7Y-tCU7_1u5n0eDrTRNQ&oe=6AF0F92B",
+    "boulderlife": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/353606669_257452096889254_9111424317615595053_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=100&ig_cache_key=GA2cExWmIci8JuoAAC1eVXkkSHJ_bkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=i_43TjP6dEUQ7kNvwEZ5GjD&_nc_oc=Adr7g2hD1pnuD5CqWW-MKvO4mzQJRcQqkWa2D8xRSR3Anh47OXGdQ5iJhq51VtFCjj4&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQStoXiqK0poobzNrazXu2YYqofZuRkUTT8Vcv3GU5Gyag&oe=6AF11819",
+    "bouldergarden": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/340347236_539032808414834_3684141841977286489_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=100&ig_cache_key=GGRJSRRyXhFbP_oBAFmfNWF8syAzbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=293ijk06yQIQ7kNvwFAxD-c&_nc_oc=AdpdTB7GOoj-Q8uFq6LJfCo_5TQT5w70eW7Ba7laNHd4SbRoRfwnQa17Dol6ChCi8EY&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQTNanAzeCMaJztCRxyoTqv089PAESS__r_1ArNfQFrYjw&oe=6AF11512",
+    "climb-o-clock": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/255241546_573509433905175_3272625926562581027_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=111&ig_cache_key=GEqtNg8XUBWSmgkCACMKf_vws2otbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy44MDguQzMifQ%3D%3D&_nc_ohc=wPm5ZoL_JosQ7kNvwHGLmet&_nc_oc=AdpPv55iro2DH0jxLzV3QsES-V-VXdbJ9hbF3uYIJ4b3CC-fZtXEJ6Yxm4afCSk3u2g&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQRkoCEC9Iz7TSge20txbnQ4Zm5ulNVYeo5wU6a1Zxvi8w&oe=6AF10F8B",
+    "warehouse": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/278858373_396586938720959_6364325502113784597_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=103&ig_cache_key=GIUKnxC-4pqXsWgBABWjcxRToFJYbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy44OTkuQzMifQ%3D%3D&_nc_ohc=3-o79Qtr8tAQ7kNvwE-0fyu&_nc_oc=AdoQ8-VyvmlkwNLic_9aYOrN8ALydIxy1U4MhPCy0-C_oZytWBIkFOlNWAJhItzNUi0&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQTwB8QteD-x7s_76jMzXuUdsiCZoJc3u8mxWet4O-R4yA&oe=6AF11204",
+    "flow-gyeongju": "https://scontent-ssn1-1.cdninstagram.com/v/t51.82787-19/608109434_17856743157591405_2647765695857947034_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=101&ig_cache_key=GHoDPyRt7cAAnXA-AJrxEzbfwL4kbmNDAQAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=pivcz1B4t8EQ7kNvwHgJOI3&_nc_oc=AdrVnu0aiExjjwRFbRO1w_pXJzace0MylqR0BVVnCA6cfMxEy5cBjWeryeFXsGsp46A&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_gid=ta19EGRuwAXzs6-EMGAL9A&_nc_ss=7060f&oh=00_AQSQOQFWk5Kzo9V4qqzrSnbmACOzhdlTuwW1zM1URXEelw&oe=6AF0FACF",
+    "theledge-anyang": "https://scontent-ssn1-1.cdninstagram.com/v/t51.82787-19/562785678_17858178351531606_7536686205994544952_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=103&ig_cache_key=GI5tiyFWhvoo63E-ADgv5FsssJdobmNDAQAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy44MjAuQzMifQ%3D%3D&_nc_ohc=Ab78fo-6aWAQ7kNvwHjVfZw&_nc_oc=AdpFBHyUdBeSvKDsy79rhFeZIx6WMQAcNSQQb_k6klDBq1J5GkVjXj5w0zhKu2UjVBM&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_gid=RLkH2vGltYGGoGVO0lifNw&_nc_ss=7060f&oh=00_AQQGd6fbDJYi7rzfgUik6mu0mr3voBUtEfVLb2XvTIS3TA&oe=6AF10030",
+    "climbingzoom": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/470163443_1603772223681312_2553875826229505445_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=111&ig_cache_key=GPMfBhwgc7FRn7IFAKXt3W6IMHEjbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=3rEe1xfvzjIQ7kNvwE-14MV&_nc_oc=AdomwlUejnPqTR5Uq1jbEsxrQeToKNFLxSrLyEwALS1aXLZNM6F8sFvBLt-G1fEvUaI&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQQb9-kIYcj1njdANZSPNvSPpHe96UZMT5BukV2b7j__Vw&oe=6AF1121C",
+    "the-grit": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/480235603_642977291604123_6227405966037408736_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=111&ig_cache_key=GFPQnxybkBDRyEgCAODbzl27MGxWbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=Tu_hH11o1FYQ7kNvwEOGQwF&_nc_oc=AdrpEAYyMdRy-koWAorCStC_s2cGXMRv2KzYp_xtpGTDlKFdBbobEWrBbHhozKUO1jg&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQSgexBJQrXRqPQJkKStxcR7tFhgdjRNRhP9uAT0Aqw-Ew&oe=6AF11FFE",
+    "ahtty": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/414001031_894502162325040_3576690776216853049_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=104&ig_cache_key=GIcnrRgw3qKDiy0DADla0pNP9aIxbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4zMjAuQzMifQ%3D%3D&_nc_ohc=rJXy62V3zhAQ7kNvwFZeVrx&_nc_oc=AdpIwQCwFZa3z4KOKePWoFSxzylao8pSnUXpvFXObiNBozjQypiH8uv27QIrsfm01lU&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQQNLwOHrjYkpWp1TiRn3fYW2ozljUQ9r-Q2GPfxBRhYgg&oe=6AF11901",
+    "hans": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/294431600_411110551038501_849139601292446830_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=100&ig_cache_key=GHCrjBElqlsi53UBAG7MwOv3v8gLbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=0VtQ0-BwxAEQ7kNvwH--qWa&_nc_oc=Adr-3wr-abHkB2R0_9o8ksrb8w5IA6SM2Rkc3r-9a0COspoHAgST0Ap0Jk_UDqx1LGM&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQTzQeCeYb4ElfM-BpG1xO4OEbdDhG_kAF5BH5cwP-3qNw&oe=6AF10159",
+    "climbit-mokgam": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/285427135_1414439145663856_2631275373790629375_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=103&ig_cache_key=GL9FAxFwbdXGbAYFAP8NBukCK4QkbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy40MDAuQzMifQ%3D%3D&_nc_ohc=Ari-Ickjy4MQ7kNvwFyfbrr&_nc_oc=AdpZhBZLKGPnnHBzTY5mDziRZeYhb1x0F0MdhKs8DUycW9UtQQfe6HUfZ8K0oGIBwNs&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQQzi6TQXR9xWEwgesLMqnlidztwo5P0NcPGoThWtg3e5A&oe=6AF1058B",
+    "hangclimb-gupabal": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/458207178_8041196579283281_2979248498499705258_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=110&ig_cache_key=GMqvTxtRYa35bJEcAKrZsIK5algpbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDE1LkMzIn0%3D&_nc_ohc=tj5yK16wyLkQ7kNvwE6YHtn&_nc_oc=AdrZtftOIDJfGrwHCl27-lvJpBZ5qqwGisWUTc_KmVGnBXpa4nKJIJjrTruyBPbwQL4&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQTidYNi-GC0t4pqWSylyOJ9ZO4gUccfJj2iV5hrPdU20Q&oe=6AF10ACB",
+    "moonclimb": "https://scontent-ssn1-1.cdninstagram.com/v/t51.82787-19/669791201_17922275646311948_2889264102115680135_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=102&ig_cache_key=GOEz7CcMDnf5Nqw-AIef5JRkuhgobmNDAQAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=MrWLMTuoYfoQ7kNvwGVwph5&_nc_oc=AdpszPSIFg1Oy7_8ofMPZi0t872iSK6WbKKfFFiqIxZu5u-HbxtjpwKizXWOGRFcIlI&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_gid=OOMIwQcOmbFDDhoaSelrgA&_nc_ss=7060f&oh=00_AQQ4-kBkLGyJ5weinqz4T8Otgh_SE9DJ-Nb6IgYU2_bbmw&oe=6AF0F741",
+    "rockface": "https://rockfacesc.flexgym.kr/Upload/Editor/Logo/LOGO_RED_200px.jpg",
+    "kim-daewoo": "https://dcc.flexgym.kr/Upload/Editor/Logo/%EC%95%94%EB%B2%BD%EA%B5%90%EC%8B%A4%20%EB%A1%9C%EA%B3%A0.png",
+    "ayersrock-beomgye": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/353807415_277615974633003_7671694747359644167_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=104&ig_cache_key=GDesFhUrTo2BffwAAAcKmvG5VXdqbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=H_cpGWPDfqUQ7kNvwHQSfVh&_nc_oc=AdpOinj5cB7_6fAJlc0tiOQWm2K71dGVTQwk2fVFM58S2Pan58_7ZUdGWuWLm0_QcHQ&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQRlB0x6dza4za4_L8hiHW1TkJ3Xuaur6DsD4HPGSrvApg&oe=6AF12076",
+    "ssw-gangnam-profile": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/461801309_548448144504295_3484278487458944026_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=107&ig_cache_key=GF2HhhvntdSIz-IBABqUhufSpFowbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4zMDAuQzMifQ%3D%3D&_nc_ohc=jBDStXHwjRYQ7kNvwEq-GRu&_nc_oc=AdqfDBzcQnP3k9GtFkIVssz_tR6jmXvFWMVoiK-LycFcJCikqMG_xdc8PAG1llFgIXQ&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQSbjaGFfSE3eiGFnnBAmtlwJ5ZKLgf0Wg0pZBl-XiwHLQ&oe=6AF10116",
+    "ssw-euljiro-profile": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/387544855_287966667437178_7327711347307426259_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=105&ig_cache_key=GBd3GRd6dOt25wUBANOx24ClQrFlbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=O_DFxjC9NecQ7kNvwGJAkF7&_nc_oc=AdpzxIA4B21aZ_aHE9pNcWLPgxJUT6nIu5mBX30joQncmEDX9O4PVLZqi7iIBGRH8HY&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQRsTD4DsuaCKb1quyDiqLQtqJRQXB7sBdAP4HlTiF9GJQ&oe=6AF126BF",
+    "ssw-pangyo-profile": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/387693478_1047070722977565_5519428346024560106_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=100&ig_cache_key=GKa7Gxcdb38mTrgDAOoFBGjW8phMbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy41NTUuQzMifQ%3D%3D&_nc_ohc=D0-d7lUn6E8Q7kNvwGBljnk&_nc_oc=AdqCx_fC5fXpoYMn9f23I5ZLewhK-fhuSUjGrFXG4KUtN2XjKPDcD6gr34hOk_cRr5A&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQTX7q-LOuICA55CUZM4HPMSW27IwywCVwsFY2hfZRIBDw&oe=6AF0FA75",
+    "climbingpark-gangnam-profile": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/465827525_525528720474434_9203272814732422477_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=104&ig_cache_key=GMX2wxtCAbQw990BAE2tIi3dl7h-bkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=xKwuH8iDPL0Q7kNvwHMufMu&_nc_oc=AdphWedu74K1w2aMNiL-9U5ODBray8NEn0Kt2Suob3FA0SumrioZPpmp7npVoFyEphQ&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQTaOJ5Juz9_xZ2XttdIX6qxJ79lGQNDbmXqvfIiaCWFRw&oe=6AF10319",
+    "waverock-namcheon-profile": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/450090138_437982192569396_6248256066840762356_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=100&ig_cache_key=GJrU0xo0jAGtV44BAPQXucHJQ7ZWbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=T-gIFpCCUg4Q7kNvwGRnAsr&_nc_oc=AdoifmorAywwCUzsuuvGON1R1EQO3hoLkaC5gtUoNyeizS2IfP12CViCzZ5j5v01eR0&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQSjvAr-iV44rUdlmS0J8-el2w7v86vqQXseHrKUulHFjQ&oe=6AF10F19",
+    "waverock-seomyeon-profile": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/339196548_3426378947639142_2676769170759455232_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=110&ig_cache_key=GIS6NxRmNwoERiwMAACS1fBgyyUlbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=U7I5qfTdVcYQ7kNvwHUBrHc&_nc_oc=Adpu22JQ1FOPaug0CQKB8C64QW_Mt9rkM6_jTHbV3CeTop55JdaBUEBJgO_08QWKUGk&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQR9YxSBf6C6rsweyXVconUhOoL_8SRBx9URCqvle_0n5Q&oe=6AF10E36",
+    "waverock-pnu-profile": "https://scontent-ssn1-1.cdninstagram.com/v/t51.2885-19/339303475_239768311793554_2972029784386868522_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_cat=107&ig_cache_key=GDNcORSShw1pEdoAACqVQqhXxT4pbkULAAAB1501500j-ccb7-5&ccb=7-5&_nc_sid=669407&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy4xMDgwLkMzIn0%3D&_nc_ohc=wWj_YQRdWLQQ7kNvwHo5v6h&_nc_oc=AdpopOH8id041brM5ZTZyhX1uGRDtfM6korr3F52VgTkiz2COpp1Bh5tr25cqdHj5IU&_nc_zt=24&_nc_ht=scontent-ssn1-1.cdninstagram.com&_nc_ss=7060f&oh=00_AQTCI-AAjqW9N9Jz032KRMFhbr1EYfkCEKJ9cf9-C5Ib9w&oe=6AF117AC",
+    "cracker-official": "https://k.kakaocdn.net/dn/vzBet/btrMCGUa2DQ/QdblabZmZY0VD7B4jMW9YK/img_m.jpg"
   },
   "assetNotes": {
-    "the-climb-hires": "512 × 512 transparent directory copy, replacing the 144 × 144 favicon in UI. Original favicon retained as the-climb.png. Not an independently verified official master."
+    "the-climb-hires": "512 × 512 transparent directory copy, replacing the 144 × 144 favicon in UI. Original favicon retained as the-climb.png. Not an independently verified official master.",
+    "onfleek-verified": {
+      "sourceUrl": "https://www.onfleekclimbing.com/",
+      "assetUrl": "https://cdn.prod.website-files.com/6a15875cc0756d9d3227375d/6a1589eda52a9811c886b1bf_%EB%A1%9C%EA%B3%A0%EB%A7%8C%EB%B8%94%EB%A3%A8png.png",
+      "checkedAt": "2026-11-05",
+      "note": "공식 홈페이지 푸터에서 사용하는 1080px 원본. 중앙이 빈 공식 심벌 형태를 유지하며 기존 180px 사본을 대체."
+    },
+    "off-the-wall": {
+      "sourceUrl": "https://www.instagram.com/offthewallclimbing_itaewon/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked logo; PNG conversion only, no redrawing.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "stonz": {
+      "sourceUrl": "https://www.instagram.com/stonz_climbing/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked logo; PNG conversion only, no redrawing.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "hook-wangsimni": {
+      "sourceUrl": "https://www.instagram.com/hook_wangsimni/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked logo; PNG conversion only, no redrawing.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "dolmenge-jeonpo": {
+      "sourceUrl": "https://www.instagram.com/dolmenge_jeonpo/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked logo; PNG conversion only, no redrawing.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "groot-verified": {
+      "sourceUrl": "https://www.instagram.com/groot_climbing/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked logo; PNG conversion only, no redrawing.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "grabit": {
+      "sourceUrl": "https://www.daangn.com/kr/local-profile/그랩잇-클라이밍-4ob7eu2dku6w/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked logo; PNG conversion only, no redrawing.",
+      "size": [
+        1200,
+        630
+      ]
+    },
+    "puzzle": {
+      "sourceUrl": "https://www.daangn.com/kr/local-profile/퍼즐클라이밍-7e93crbj8ofh/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked logo; PNG conversion only, no redrawing.",
+      "size": [
+        640,
+        640
+      ]
+    },
+    "daegu-climbing-center": {
+      "sourceUrl": "https://www.daangn.com/kr/local-profile/대구클라이밍센터-9z4w6jn69hfu/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked logo; PNG conversion only, no redrawing.",
+      "size": [
+        640,
+        640
+      ]
+    },
+    "dino-cat": {
+      "sourceUrl": "https://www.daangn.com/kr/local-profile/다이노캣-클라이밍-44gb9emu2axu/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked logo; PNG conversion only, no redrawing.",
+      "size": [
+        1200,
+        630
+      ]
+    },
+    "cracker": {
+      "sourceUrl": "https://www.daangn.com/kr/local-profile/크래커-클라이밍-8ks1k1utp3ph/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked logo; PNG conversion only, no redrawing.",
+      "size": [
+        640,
+        640
+      ]
+    },
+    "mong": {
+      "sourceUrl": "https://www.instagram.com/mong_climbing/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "spicy": {
+      "sourceUrl": "https://www.instagram.com/spicy_climbing/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "catchstone-bucheon": {
+      "sourceUrl": "https://www.instagram.com/catchstone_bucheon/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "awake-timeworld": {
+      "sourceUrl": "https://www.instagram.com/awake_timeworld/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "kind": {
+      "sourceUrl": "https://www.instagram.com/kind_climbing/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "dot": {
+      "sourceUrl": "https://www.instagram.com/dot_climbing_gym/",
+      "checkedAt": "2026-11-05",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ],
+      "renderReview": "150px 공식 프로필 원본 유지. 원형 심벌 안 흰 선만 표시하며 유색 면·외부 종이를 제거."
+    },
+    "gravity-yeongtong": {
+      "sourceUrl": "https://www.instagram.com/gravity_yeongtong/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "superb-yeongtong": {
+      "sourceUrl": "https://www.instagram.com/superb_yeongtong/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "together-suwon": {
+      "sourceUrl": "https://www.instagram.com/climb_together_suwon/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "forever-mangpo": {
+      "sourceUrl": "https://www.instagram.com/foreverclimbing_mangpo/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "boulderlife": {
+      "sourceUrl": "https://www.instagram.com/boulderlife_official/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "bouldergarden": {
+      "sourceUrl": "https://www.instagram.com/bouldergarden_siheung/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "climb-o-clock": {
+      "sourceUrl": "https://www.instagram.com/climb_o_clock/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "warehouse": {
+      "sourceUrl": "https://www.instagram.com/warehouse_bouldering/",
+      "checkedAt": "2026-11-05",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ],
+      "renderReview": "150px 공식 프로필 원본 유지. 부드러운 흰색 잉크 마스크로 가는 글자·선의 소실 보완. 고해상도 원본 새 확보 아님."
+    },
+    "flow-gyeongju": {
+      "sourceUrl": "https://www.instagram.com/flowclimb_gyeongju/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "theledge-anyang": {
+      "sourceUrl": "https://www.instagram.com/theledge_anyang/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "climbingzoom": {
+      "sourceUrl": "https://www.instagram.com/climbingzoom/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "the-grit": {
+      "sourceUrl": "https://www.instagram.com/the.grit.climbing/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "ahtty": {
+      "sourceUrl": "https://www.instagram.com/ahtty_climbing/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "hans": {
+      "sourceUrl": "https://www.instagram.com/hans_climbing/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "climbit-mokgam": {
+      "sourceUrl": "https://www.instagram.com/climbit_mokgam/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "hangclimb-gupabal": {
+      "sourceUrl": "https://www.instagram.com/hangclimb_gupabal/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "moonclimb": {
+      "sourceUrl": "https://www.instagram.com/moonclimb_official/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "rockface": {
+      "sourceUrl": "https://rockfacesc.flexgym.kr/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        200,
+        182
+      ]
+    },
+    "kim-daewoo": {
+      "sourceUrl": "https://dcc.flexgym.kr/",
+      "checkedAt": "2026-11-04",
+      "review": "Visually checked official gym logo/profile; PNG format conversion only. Source artwork is not redrawn.",
+      "size": [
+        800,
+        239
+      ]
+    },
+    "ayersrock-beomgye": {
+      "sourceUrl": "https://www.instagram.com/ayersrock_beomgye/",
+      "checkedAt": "2026-11-05",
+      "review": "Official branch logo visually checked; PNG conversion only. Source blue background is removed with a scoped blue-channel SVG alpha filter.",
+      "size": [
+        150,
+        150
+      ],
+      "renderReview": "150px 공식 프로필 원본 유지. 유색 면을 채우지 않고 원본 검정 윤곽선만 표시."
+    },
+    "ssw-gangnam-profile": {
+      "sourceUrl": "https://www.instagram.com/sonclimb_gangnam/",
+      "checkedAt": "2026-11-04",
+      "review": "Official profile logo visually checked. PNG format conversion only; white artwork and transparent background rendered with SVG filter.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "ssw-euljiro-profile": {
+      "sourceUrl": "https://www.instagram.com/sonclimb_euljiro/",
+      "checkedAt": "2026-11-04",
+      "review": "Official profile logo visually checked. PNG format conversion only; white artwork and transparent background rendered with SVG filter.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "ssw-pangyo-profile": {
+      "sourceUrl": "https://www.instagram.com/sonclimb_pangyo/",
+      "checkedAt": "2026-11-04",
+      "review": "Official profile logo visually checked. PNG format conversion only; white artwork and transparent background rendered with SVG filter.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "climbingpark-gangnam-profile": {
+      "sourceUrl": "https://www.instagram.com/climbing_park_gangnam/",
+      "checkedAt": "2026-11-04",
+      "review": "Official profile logo visually checked. PNG format conversion only; white artwork and transparent background rendered with SVG filter.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "waverock-namcheon-profile": {
+      "sourceUrl": "https://www.instagram.com/waverock_namcheon/",
+      "checkedAt": "2026-11-04",
+      "review": "Official profile logo visually checked. PNG format conversion only; white artwork and transparent background rendered with SVG filter.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "waverock-seomyeon-profile": {
+      "sourceUrl": "https://www.instagram.com/waverock_seomyeon/",
+      "checkedAt": "2026-11-04",
+      "review": "Official profile logo visually checked. PNG format conversion only; white artwork and transparent background rendered with SVG filter.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "waverock-pnu-profile": {
+      "sourceUrl": "https://www.instagram.com/waverock_pnu/",
+      "checkedAt": "2026-11-04",
+      "review": "Official profile logo visually checked. PNG format conversion only; white artwork and transparent background rendered with SVG filter.",
+      "size": [
+        150,
+        150
+      ]
+    },
+    "cracker-official": {
+      "sourceUrl": "https://pf.kakao.com/_xfpxgdxj",
+      "checkedAt": "2026-11-05",
+      "review": "Official Kakao channel original; PNG conversion only. Replaces a softer directory copy, no upscaling or redrawing. Original source 320x320.",
+      "size": [
+        320,
+        320
+      ]
+    }
   }
 }

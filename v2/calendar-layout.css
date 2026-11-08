@@ -6,18 +6,19 @@
 #wandeung-calendar .wc-calendar-open .wc-weekday{padding:0;align-self:center}
 #wandeung-calendar .wc-calendar-open .wc-legend{flex:none;margin-top:8px}
 #wandeung-calendar .wc-nav{flex:none;gap:0;padding:6px 8px max(8px,env(safe-area-inset-bottom));background:var(--frame-background)}
-#wandeung-calendar .wc-nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:62px;height:auto;padding:6px 8px;color:var(--frame-nav-muted);font-size:14px;line-height:20px}
+#wandeung-calendar .wc-nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:62px;height:auto;padding:6px 8px;color:var(--frame-nav-muted);font-size:var(--frame-tab-size);line-height:var(--frame-tab-line)}
 #wandeung-calendar .wc-nav svg{display:block;width:24px;height:24px;flex:none;stroke-width:1.7}
 #wandeung-calendar .wc-nav button[aria-current=page]{color:var(--frame-primary);font-weight:600;background:transparent}
 #wandeung-calendar .wc-nav button[aria-current=page]::after{display:none}
 
 /* The same hover surface for ordinary, today and selected dates. */
-#wandeung-calendar .wc-calendar .wc-date:hover:not(:disabled){background:var(--frame-hover-background);color:var(--wc-fg);border:0;box-shadow:none}
+#wandeung-calendar .wc-calendar .wc-date:hover:not(:disabled),
+#wandeung-calendar .wc-year-grid .wc-year-month:hover:not(:disabled){background:var(--frame-hover-background);color:var(--wc-fg);border:0;box-shadow:none}
 #wandeung-calendar .wc-day-sheet:focus{outline:none}
 
 #wandeung-calendar .wc-calendar-summary{flex:none;grid-template-columns:repeat(3,minmax(0,1fr));margin:auto 0 0;padding:12px;border-radius:var(--frame-control-radius);background:var(--frame-soft-background)}
-#wandeung-calendar .wc-calendar-summary>div{padding:0 8px}
-#wandeung-calendar .wc-calendar-summary>div+div{padding-left:8px}
+#wandeung-calendar .wc-calendar-summary>div{padding:0 2px}
+#wandeung-calendar .wc-calendar-summary>div+div{padding-left:2px;border-left:0}
 #wandeung-calendar .wc-calendar-summary .wc-muted{font-size:12px;line-height:18px;white-space:nowrap}
 #wandeung-calendar .wc-day-more{position:absolute;right:0;top:-2px;z-index:1;min-width:14px;padding:0 2px;border:1px solid var(--frame-soft-border);border-radius:7px;background:var(--frame-background);color:var(--frame-text);font-size:9px;line-height:12px}
 
@@ -47,6 +48,7 @@
 /* Calendar has its own month/year toolbar; other screens retain their header. */
 #wandeung-calendar .wc-calendar-open>.wc-header{display:none}
 #wandeung-calendar .wc-month-heading,#wandeung-calendar .wc-year-heading{display:flex;align-items:center;gap:4px;min-width:0}
+#wandeung-calendar .wc-month-heading{gap:6px}
 #wandeung-calendar .wc-month-heading button,#wandeung-calendar .wc-year-heading button,#wandeung-calendar .wc-month-actions button{display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border:0;background:transparent;padding:8px}
 #wandeung-calendar .wc-month-heading button{margin-left:-8px}
 #wandeung-calendar .wc-month-heading svg,#wandeung-calendar .wc-month-actions svg{display:block;width:22px;height:22px}
@@ -84,25 +86,26 @@
 
 #wandeung-calendar .wc-thumbnail-home>.wc-start:first-child{margin-top:0}
 
-#wandeung-calendar .wc-day-sheet>.wc-row h3{font-size:16px;line-height:24px;font-weight:600}
-#wandeung-calendar .wc-day-sheet .wc-add{display:flex;align-items:center;justify-content:center;width:44px;min-width:44px;height:44px;min-height:44px;padding:10px;color:var(--frame-primary)}
+#wandeung-calendar .wc-day-sheet>.wc-row h3{font-size:18px;line-height:24px;font-weight:600}
+#wandeung-calendar .wc-day-sheet .wc-add{display:flex;align-items:center;justify-content:center;width:40px;min-width:40px;height:40px;min-height:40px;padding:8px;color:var(--frame-primary)}
 #wandeung-calendar .wc-day-sheet .wc-add svg{display:block;width:24px;height:24px}
 
 /* One shared panel size and content slot for empty and populated dates. */
 #wandeung-calendar .wc-day-sheet>.wc-row{flex:none;gap:0;margin:0 0 4px}
 #wandeung-calendar .wc-day-sheet-content{flex:1;min-height:0;overflow-y:auto;display:grid;align-content:start;gap:8px}
 #wandeung-calendar .wc-day-sheet-content>.wc-entry{margin-top:0}
-#wandeung-calendar .wc-day-sheet-content>.wc-empty{padding:12px 0;margin:0}
+#wandeung-calendar .wc-day-sheet-content>.wc-empty{align-self:center;padding:0;margin:0;text-align:center}
+#wandeung-calendar .wc-day-sheet-content:has(>.wc-empty){align-content:stretch;grid-template-rows:minmax(0,1fr)}
 
 /* Approved title navigation, horizontal month gestures and vertical year browsing. */
 #wandeung-calendar .wc-month-heading .wc-month-title{width:auto;margin-left:0;padding:8px 0;gap:6px;font:inherit;font-weight:inherit;color:inherit}
 #wandeung-calendar .wc-month-title svg{width:18px;height:18px}
-#wandeung-calendar .wc-calendar{touch-action:pan-y}
+#wandeung-calendar .wc-calendar,
+#wandeung-calendar .wc-year-grid{touch-action:pan-y}
 #wandeung-calendar .wc-year-view{overflow:hidden}
 #wandeung-calendar .wc-year-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;position:relative;scroll-snap-type:y mandatory;scrollbar-width:none}
 #wandeung-calendar .wc-year-section{box-sizing:border-box;height:100%;min-height:100%;padding:0;display:flex;flex-direction:column;scroll-snap-align:start;scroll-snap-stop:always}
 #wandeung-calendar .wc-year-section .wc-year-grid{flex:1;grid-template-rows:repeat(4,minmax(0,1fr));margin-top:12px}
-#wandeung-calendar .wc-year-month:hover{background:var(--frame-hover-background);border-radius:8px}
 
 #wandeung-calendar .wc-year-scroll::-webkit-scrollbar{display:none}
 
@@ -144,7 +147,7 @@
 #wandeung-calendar .wc-calendar-tools .wc-calendar-view-switch{width:112px;margin:0;padding:2px;gap:2px}
 #wandeung-calendar .wc-calendar-tools .wc-calendar-view-switch button{padding:4px 8px;min-height:28px;font-size:12px;line-height:18px}
 #wandeung-calendar .wc-calendar-tools .wc-month-actions button{min-height:36px;height:36px;padding:8px}
-#wandeung-calendar .wc-calendar-open #wc-main>.wc-pad>.wc-row{align-items:flex-start}
+#wandeung-calendar .wc-calendar-open #wc-main>.wc-pad>.wc-row{align-items:center}
 
 /* A scaled monthly calendar preserves each visit's date position. */
 #wandeung-calendar .wc-annual-view>.wc-year-grid{grid-template-rows:repeat(4,minmax(146px,1fr));gap:12px 8px}
@@ -167,11 +170,160 @@
 #wandeung-calendar .wc-annual-view>.wc-year-grid{grid-template-rows:repeat(4,minmax(118px,1fr))}
 
 /* View toggle reuses the calendar toolbar icon button style. */
-#wandeung-calendar .wc-calendar-view-toggle{display:flex;align-items:center;justify-content:center;width:44px;min-width:44px;height:36px;min-height:36px;padding:8px;border:0;background:transparent;color:var(--frame-primary)}
-#wandeung-calendar .wc-calendar-view-toggle svg{display:block;width:18px;height:18px;stroke-width:1.7}
+#wandeung-calendar .wc-toolbar-icon,
+#wandeung-calendar .wc-calendar-tools .wc-toolbar-icon,
+#wandeung-calendar .wc-info-panel .wc-toolbar-icon{display:flex;align-items:center;justify-content:center;width:36px;min-width:36px;height:36px;min-height:36px;padding:8px;border:0;background:transparent;color:var(--frame-primary)}
+#wandeung-calendar .wc-toolbar-icon svg{display:block;width:18px;height:18px;stroke-width:1.7}
 
 /* Empty days share the same pale tile as the annual calendar. */
 #wandeung-calendar .wc-day-empty-tile{display:block;height:100%;max-height:42px;width:auto;max-width:100%;aspect-ratio:1;background:var(--frame-soft-background);border-radius:var(--frame-control-radius)}
 
 /* Keep the empty-day tile distinct from the date hover surface. */
-#wandeung-calendar .wc-calendar .wc-date:hover:not(:disabled) .wc-day-empty-tile{background:var(--frame-control-border)}
+#wandeung-calendar .wc-calendar .wc-date:hover:not(:disabled) .wc-day-empty-tile,
+#wandeung-calendar .wc-year-grid .wc-year-month:hover:not(:disabled) .wc-annual-unvisited{background:var(--frame-control-border)}
+
+/* Compact circular reset; annual tiles retain the monthly corner proportion. */
+#wandeung-calendar .wc-month-heading>button[data-action="today"]{width:18px;min-width:18px;height:18px;min-height:18px;padding:3px;border-radius:50%;background:var(--frame-soft-background)}
+#wandeung-calendar .wc-month-heading>button[data-action="today"] svg{width:12px;height:12px}
+#wandeung-calendar .wc-month-heading>button[data-action="today"]:hover:not(:disabled){background:var(--frame-control-border);border-radius:50%}
+#wandeung-calendar .wc-annual-date,
+#wandeung-calendar .wc-annual-logo-slot .wc-gym-logo-small{border-radius:24%}
+#wandeung-calendar .wc-year-month{border-radius:10px}
+#wandeung-calendar .wc-year-month:hover:not(:disabled){border-radius:10px}
+
+#wandeung-calendar .wc-annual-view>.wc-calendar-summary{margin-top:12px}
+
+#wandeung-calendar .wc-annual-view>.wc-calendar-summary{margin-top:12px}
+
+#wandeung-calendar .wc-month-heading>button[data-action="today"]{background:var(--frame-secondary-text);color:var(--frame-background)}
+#wandeung-calendar .wc-month-heading>button[data-action="today"]:hover:not(:disabled){background:var(--frame-primary-hover);color:var(--frame-background)}
+
+/* Matching status badges on calendar logos, entries and legend. */
+#wandeung-calendar .wc-visit-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;flex:none;border-radius:50%;background:var(--frame-background);color:var(--frame-text);border:1px solid var(--frame-control-border);box-sizing:border-box}
+#wandeung-calendar .wc-visit-icon.done{background:var(--frame-background);border-color:var(--frame-control-border);color:var(--frame-text)}
+#wandeung-calendar .wc-visit-icon svg{display:block;width:12px;height:12px;stroke-width:2}
+#wandeung-calendar .wc-day-status>.wc-visit-icon{position:absolute;right:-3px;bottom:-3px;box-shadow:0 0 0 1px var(--frame-background)}
+#wandeung-calendar .wc-legend{font-size:12px;line-height:18px;color:var(--frame-secondary-text)}
+#wandeung-calendar .wc-legend>span{gap:5px}
+
+#wandeung-calendar .wc-calendar-open .wc-calendar-summary strong{font-size:18px;line-height:24px}
+
+/* Completed visits alone carry a neutral check badge. */
+#wandeung-calendar .wc-visit-icon.done{width:10px;height:10px;border:0;background:var(--frame-primary);color:var(--frame-background)}
+#wandeung-calendar .wc-visit-icon.done svg{width:8px;height:8px;stroke-width:3}
+
+#wandeung-calendar .wc-visit-icon.planned{width:10px;height:10px;background:var(--frame-background);border:1px dashed var(--frame-secondary-text);color:var(--frame-text)}
+
+#wandeung-calendar .wc-day-status>.wc-visit-icon.planned{right:0;bottom:0}
+
+#wandeung-calendar .wc-day-status>.wc-visit-icon.done{right:0;bottom:0}
+
+/* Visit state is shown by the logo itself, without an extra badge. */
+#wandeung-calendar .wc-visit-planned>.wc-gym-logo{opacity:.4}
+#wandeung-calendar .wc-visit-done>.wc-gym-logo{opacity:1}
+
+/* Visit badges share the service's primary and previous neutral status colors. */
+#wandeung-calendar .wc-badge{background:var(--frame-selected-background);color:var(--frame-text);border:0}
+#wandeung-calendar .wc-badge.done{background:var(--frame-primary);color:var(--frame-background);border:0}
+
+/* Entry/edit form uses the existing bottom-sheet surface over its source screen. */
+#wandeung-calendar .wc-form-open>.wc-header{display:none}
+#wandeung-calendar .wc-form-open #wc-main{overflow:hidden}
+#wandeung-calendar .wc-form-background{height:100%;overflow:hidden;pointer-events:none}
+#wandeung-calendar .wc-form-background>.wc-pad{height:100%;display:flex;flex-direction:column;padding-top:0;padding-bottom:4px}
+#wandeung-calendar .wc-form-sheet{height:94%;max-height:94%;padding:20px 16px 0}
+#wandeung-calendar .wc-form-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-top:8px;padding-bottom:16px}
+#wandeung-calendar .wc-record-exercise{margin:16px 0}
+#wandeung-calendar .wc-record-memo{margin:16px 0 0}
+#wandeung-calendar .wc-form-sheet>.wc-actions{flex:none;margin:0 -16px;padding:12px 16px;border-top:1px solid var(--frame-control-border);background:var(--frame-background)}
+#wandeung-calendar .wc-form-sheet>.wc-note{flex:none;margin-bottom:12px}
+
+#wandeung-calendar .wc-form-sheet>.wc-record-actions{display:flex}
+#wandeung-calendar .wc-record-actions>.wc-record-delete{flex:0 0 64px;width:64px}
+#wandeung-calendar .wc-record-actions>.wc-primary{flex:1}
+
+/* Calendar and profile facts use one typography and spacing rule. */
+#wandeung-calendar .wc-stat-summary>div{text-align:center;padding:0 2px}
+#wandeung-calendar .wc-stat-summary>div+div{border-left:0;padding-left:2px}
+#wandeung-calendar .wc-stat-summary p{justify-content:center;gap:2px;margin-top:4px}
+#wandeung-calendar .wc-stat-summary .wc-muted{font-size:var(--frame-stat-label-size);line-height:var(--frame-stat-label-line);font-weight:400}
+#wandeung-calendar .wc-stat-summary strong,
+#wandeung-calendar .wc-calendar-open .wc-stat-summary strong{font-size:var(--frame-stat-value-size);line-height:var(--frame-stat-value-line);font-weight:600}
+#wandeung-calendar .wc-stat-summary p>span{font-size:var(--frame-stat-label-size);line-height:var(--frame-stat-label-line);font-weight:400}
+#wandeung-calendar .wc-record-actions>.wc-record-delete{color:var(--frame-danger)}
+
+#wandeung-calendar .wc-empty-holds{display:flex;align-items:center;justify-content:center;gap:4px;height:40px;margin-bottom:8px;pointer-events:none}
+#wandeung-calendar .wc-empty-holds>span{display:block;width:32px;height:32px;transform:rotate(-12deg)}
+#wandeung-calendar .wc-empty-holds>span:nth-child(2){width:40px;height:40px;transform:rotate(10deg)}
+#wandeung-calendar .wc-empty-holds>span:nth-child(3){transform:rotate(20deg)}
+#wandeung-calendar .wc-empty-holds svg{display:block;width:100%;height:100%}
+#wandeung-calendar .wc-day-sheet-content>.wc-empty p{margin:4px 0 0}
+
+/* Empty-state decoration uses filled holds only; record and editor marks keep their outlines. */
+#wandeung-calendar .wc-empty-holds svg *{stroke:none}
+
+/* Info settings reuse the calendar's top-right toolbar position and icon button. */
+#wandeung-calendar .wc-info-panel{padding-top:0}
+#wandeung-calendar .wc-profile-toolbar{min-height:44px;align-items:center;justify-content:flex-end}
+#wandeung-calendar .wc-info-panel .wc-toolbar-icon:disabled{opacity:.35}
+
+/* The card edit action shares the calendar toolbar icon/button treatment. */
+#wandeung-calendar .wc-info-panel .wc-profile-edit{flex:none;width:40px;min-width:40px;height:40px;min-height:40px}
+
+/* Shared secondary-screen navigation; root menus keep their existing toolbars. */
+#wandeung-calendar .wc-phone>.wc-header{box-sizing:border-box;flex:none;height:var(--frame-navigation-height);min-height:var(--frame-navigation-height);padding:0 var(--frame-page-x);gap:8px;border:0;background:var(--frame-background)}
+#wandeung-calendar .wc-header .wc-toolbar-icon{display:flex;align-items:center;justify-content:center;flex:none;width:36px;min-width:36px;height:36px;min-height:36px;padding:8px;border:0;background:transparent;color:var(--frame-primary);margin-left:-8px}
+#wandeung-calendar .wc-header .wc-toolbar-icon[hidden]{display:none}
+#wandeung-calendar .wc-header .wc-toolbar-icon:hover:not(:disabled){background:var(--frame-hover-background)}
+#wandeung-calendar .wc-header .wc-toolbar-icon svg{display:block;width:18px;height:18px;stroke-width:1.7}
+#wandeung-calendar .wc-header #wc-title:not(.wc-brand){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0}
+
+/* Reference recording: 62px capsule with a persistent sliding selection.
+   Content space stays fixed while the menu visually scales. */
+#wandeung-calendar .wc-phone>.wc-nav{
+ position:absolute;z-index:5;isolation:isolate;left:var(--frame-menu-side-inset);right:var(--frame-menu-side-inset);bottom:calc(var(--device-safe-bottom) + var(--frame-menu-bottom-offset));
+ box-sizing:border-box;height:var(--frame-menu-height);min-height:var(--frame-menu-height);padding:var(--frame-menu-padding);gap:0;
+ border:1px solid var(--frame-menu-border);border-radius:var(--frame-menu-radius);
+ background:var(--frame-menu-surface);box-shadow:var(--frame-menu-shadow);
+ backdrop-filter:var(--frame-menu-backdrop);-webkit-backdrop-filter:var(--frame-menu-backdrop);
+ transform:scale(1);transform-origin:center top;transition:transform var(--frame-menu-motion);
+}
+#wandeung-calendar .wc-phone>.wc-nav::before{
+ content:"";position:absolute;z-index:-1;pointer-events:none;
+ left:var(--frame-menu-padding);top:var(--frame-menu-padding);bottom:var(--frame-menu-padding);
+ width:calc((100% - 2 * var(--frame-menu-padding)) / 3);border-radius:var(--frame-menu-radius);
+ background:var(--frame-menu-selection-surface);transform:translateX(0);
+ transition:transform var(--frame-menu-selection-motion);
+}
+#wandeung-calendar .wc-phone>.wc-nav[data-selected=thumbnail]::before{transform:translateX(100%)}
+#wandeung-calendar .wc-phone>.wc-nav[data-selected=info]::before{transform:translateX(200%)}
+#wandeung-calendar .wc-phone>.wc-nav button{
+ box-sizing:border-box;justify-content:center;min-width:0;min-height:var(--frame-menu-item-height);height:var(--frame-menu-item-height);padding:4px 8px;border-radius:var(--frame-menu-radius);gap:2px;background:transparent;color:var(--frame-text);font-weight:400;
+ font-size:var(--frame-menu-label-size);line-height:var(--frame-menu-label-line);
+ transition:transform 120ms ease;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+#wandeung-calendar .wc-phone>.wc-nav svg{width:var(--frame-menu-icon-size);height:var(--frame-menu-icon-size);stroke-width:1.8}
+#wandeung-calendar .wc-phone>.wc-nav button[aria-current=page]{background:transparent;font-weight:600}
+#wandeung-calendar .wc-phone>.wc-nav button[aria-current=page] svg{stroke-width:2.2}
+#wandeung-calendar .wc-phone>.wc-nav button:hover:not(:disabled){background:transparent;border-radius:var(--frame-menu-radius)}
+#wandeung-calendar .wc-phone>.wc-nav button:active:not(:disabled){transform:scale(.94)}
+#wandeung-calendar .wc-phone>.wc-nav button:focus-visible{outline:2px solid var(--frame-secondary-text);outline-offset:-2px}
+#wandeung-calendar .wc-phone.wc-menu-compact>.wc-nav{transform:scale(var(--frame-menu-compact-scale))}
+#wandeung-calendar .wc-phone:not(.wc-form-open)>#wc-main{box-sizing:border-box;padding-bottom:var(--frame-menu-inset)}
+/* Only bottom-pinned calendar content meets the menu; ordinary cards stay in flow. */
+#wandeung-calendar .wc-phone.wc-calendar-open>#wc-main>.wc-pad{padding-bottom:0}
+/* The editor is a secondary page with the same global menu and header actions.
+   Reserve menu space outside the iframe; its own editing tools stay above it. */
+#wandeung-calendar .wc-editor-actions{display:flex;align-items:center;gap:4px;flex:none}
+#wandeung-calendar .wc-editor-actions[hidden]{display:none}
+#wandeung-calendar .wc-editor-actions .wc-toolbar-icon{margin-left:0}
+#wandeung-calendar .wc-editor-actions .wc-toolbar-icon:disabled{opacity:.35;cursor:default}
+#wandeung-calendar .wc-v1-open:not(.wc-form-open)>#wc-main{display:flex;flex-direction:column;overflow:hidden;padding-bottom:var(--frame-editor-menu-inset)}
+#wandeung-calendar .wc-v1-open #wc-v1-editor{flex:1;min-height:0;height:0}
+#wandeung-calendar .wc-phone:has(.wc-info-overview)>.wc-device-bottom{background:var(--frame-soft-background)}
+@media(prefers-reduced-motion:reduce){#wandeung-calendar .wc-phone>.wc-nav,#wandeung-calendar .wc-phone>.wc-nav::before,#wandeung-calendar .wc-phone>.wc-nav button{transition:none}#wandeung-calendar .wc-phone>.wc-nav button:active{transform:none}}
+
+/* Shared record/profile/membership date picker heading. */
+#wandeung-calendar .wc-record-date-panel>.wc-row>strong{font-size:var(--frame-card-title-size);line-height:var(--frame-card-title-line);font-weight:600}
+/* Profile editing uses the existing secondary-screen header; no empty toolbar. */
+#wandeung-calendar .wc-phone:has(.wc-info-overview)>.wc-header{background:var(--frame-soft-background)}

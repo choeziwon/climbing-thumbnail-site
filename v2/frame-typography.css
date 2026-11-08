@@ -2,15 +2,10 @@
    Brand lettering and user-authored thumbnail artwork retain their own scale. */
 #wandeung-calendar{font-size:var(--frame-main-size);line-height:var(--frame-main-line)}
 #wandeung-calendar h2{font-size:var(--frame-title-size);line-height:var(--frame-title-line)}
-#wandeung-calendar h3,
-#wandeung-calendar .wc-info-panel h2,
-#wandeung-calendar .wc-info-panel .wc-membership-summary strong,
-#wandeung-calendar .wc-membership-card-top strong,
-#wandeung-calendar .wc-entry strong{font-size:var(--frame-main-size);line-height:var(--frame-main-line);font-weight:600}
+#wandeung-calendar .wc-info-panel h2{font-size:var(--frame-main-size);line-height:var(--frame-main-line);font-weight:600}
 #wandeung-calendar .wc-info-panel button,
 #wandeung-calendar .wc-start button,
 #wandeung-calendar .wc-actions button,
-#wandeung-calendar .wc-profile-details .wc-profile-name p,
 #wandeung-calendar .wc-profile-details .wc-body-value p,
 #wandeung-calendar .wc-membership-period dd{font-size:var(--frame-main-size);line-height:var(--frame-main-line)}
 #wandeung-calendar .wc-muted,
@@ -20,7 +15,6 @@
 #wandeung-calendar .wc-body-value>span,
 #wandeung-calendar .wc-membership-kind,
 #wandeung-calendar .wc-membership-period dt,
-#wandeung-calendar .wc-experience-details,
 #wandeung-calendar .wc-error,
 #wandeung-calendar .wc-empty p,
 #wandeung-calendar .wc-info-field,
@@ -48,8 +42,26 @@
 #wandeung-calendar .wc-info-panel .wc-info-field input{font-size:16px;font-weight:400}
 #wandeung-calendar .wc-info-panel .wc-info-field input{line-height:22px}
 #wandeung-calendar .wc-info-value{font-size:var(--frame-main-size);line-height:var(--frame-main-line)}
-#wandeung-calendar .wc-header #wc-title:not(.wc-brand){font-size:var(--frame-main-size);line-height:var(--frame-main-line);letter-spacing:0}
+#wandeung-calendar .wc-header #wc-title:not(.wc-brand){font-size:var(--frame-navigation-title-size);line-height:var(--frame-navigation-title-line);font-weight:600;letter-spacing:0}
 #wandeung-calendar .wc-gym-location{font-size:var(--frame-caption-size);line-height:var(--frame-caption-line)}
 #wandeung-calendar .wc-gym-location>button{font-size:var(--frame-main-size);line-height:var(--frame-main-line)}
-#wandeung-calendar .wc-nav button{font-size:var(--frame-tab-size);line-height:20px}
+#wandeung-calendar .wc-nav button{font-size:var(--frame-tab-size);line-height:var(--frame-tab-line)}
 #wandeung-calendar .wc-header #wc-title.wc-brand{font-size:clamp(20px,calc(12.5vw - 20px),30px)}
+
+/* Shared card titles; page, dialog and field headings retain their own hierarchy. */
+#wandeung-calendar .wc-start>h3,
+#wandeung-calendar .wc-info-panel .wc-membership-summary strong,
+#wandeung-calendar .wc-membership-card-top strong,
+#wandeung-calendar .wc-entry strong{font-size:var(--frame-card-title-size);line-height:var(--frame-card-title-line);font-weight:600}
+
+/* Approved Title UI. Card titles and dialog/page headings keep their explicit roles. */
+#wandeung-calendar h3,
+#wandeung-calendar .wc-ui-title,
+#wandeung-calendar .wc-info-panel .wc-info-heading>h2,
+#wandeung-calendar .wc-field,
+#wandeung-calendar .wc-info-field{font-size:var(--frame-ui-title-size);line-height:var(--frame-ui-title-line);font-weight:var(--frame-ui-title-weight)}
+#wandeung-calendar .wc-start>h3{font-size:var(--frame-card-title-size);line-height:var(--frame-card-title-line);font-weight:600}
+#wandeung-calendar :is(input,textarea)::placeholder{color:var(--frame-placeholder);opacity:1}
+
+/* The profile name keeps its own 17px identity role. */
+#wandeung-calendar .wc-profile-details .wc-profile-name p{font-size:var(--frame-profile-name-size);line-height:var(--frame-profile-name-line)}

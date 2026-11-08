@@ -70,13 +70,12 @@
 #wandeung-calendar .wc-membership-summary-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
 #wandeung-calendar .wc-membership-summary strong{font-size:var(--frame-card-title-size);line-height:var(--frame-card-title-line);font-weight:600}
 #wandeung-calendar .wc-membership-summary-heading svg{width:18px;height:18px;flex:none;stroke-width:1.7;color:var(--frame-muted)}
-#wandeung-calendar .wc-info-panel .wc-membership-summary-row{width:100%;min-height:0;text-align:left;border:0;border-radius:0;background:transparent;color:var(--frame-text);display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:var(--frame-main-size);line-height:var(--frame-main-line);font-variant-numeric:tabular-nums;padding:0;position:relative}
+#wandeung-calendar .wc-info-panel .wc-membership-summary-row{width:100%;min-height:0;text-align:left;border:0;border-radius:0;background:transparent;color:var(--frame-text);display:flex;align-items:center;gap:12px;font-size:var(--frame-main-size);line-height:var(--frame-main-line);font-variant-numeric:tabular-nums;padding:0;position:relative}
 #wandeung-calendar .wc-membership-summary-row+.wc-membership-summary-row::before{content:"";position:absolute;top:-4px;left:0;right:0;height:1px;background:var(--frame-soft-background);pointer-events:none}
 #wandeung-calendar .wc-membership-summary-row:last-child{padding-bottom:0}
-#wandeung-calendar .wc-membership-summary-identity{display:flex;align-items:center;gap:4px;min-width:0}
-#wandeung-calendar .wc-membership-summary-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#wandeung-calendar .wc-membership-summary-identity>.wc-badge{flex:none}
-#wandeung-calendar .wc-membership-summary-balance{flex:none;margin-left:auto;color:var(--frame-secondary-text);text-align:right;white-space:nowrap}
+#wandeung-calendar .wc-membership-summary-copy{display:grid;gap:4px;flex:1;min-width:0}
+#wandeung-calendar .wc-membership-summary-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+#wandeung-calendar .wc-membership-summary-balance{color:var(--frame-secondary-text);font-size:var(--frame-caption-size);line-height:var(--frame-caption-line);white-space:nowrap}
 #wandeung-calendar .wc-membership-total{margin-left:4px;color:var(--frame-secondary-text)}
 #wandeung-calendar .wc-membership-page .wc-membership-empty{padding:var(--frame-card-padding);border-radius:var(--frame-control-radius);background:var(--frame-soft-background)}
 
@@ -117,7 +116,7 @@
 
 /* Membership rows reuse the summary surface and open their own existing detail card. */
 #wandeung-calendar .wc-membership-summary-heading>.wc-toolbar-icon{margin:-5px -8px -5px 0}
-#wandeung-calendar .wc-membership-summary .wc-membership-remaining{color:var(--frame-text)}
+#wandeung-calendar .wc-membership-summary .wc-membership-remaining{color:inherit}
 #wandeung-calendar .wc-membership-remaining b{font-weight:600}
 #wandeung-calendar .wc-info-panel .wc-membership-detail-link{min-width:0;min-height:0;padding:0;border:0;border-radius:0;background:transparent;text-align:left;color:var(--frame-text)}
 #wandeung-calendar .wc-info-panel :is(.wc-membership-summary-row,.wc-membership-detail-link):hover:not(:disabled),

@@ -1,6 +1,6 @@
 /* Match v1 UI values without importing its page-layout selectors into the service. */
 html{color-scheme:light}
-body{background:#f4f5f7;color:var(--frame-text);font-family:var(--frame-font-family)}
+body{background:var(--frame-soft-background);color:var(--frame-text);font-family:var(--frame-font-family)}
 #wandeung-calendar{
   --wc-bg:var(--frame-background);
   --wc-fg:var(--frame-text);
@@ -41,6 +41,104 @@ body{background:#f4f5f7;color:var(--frame-text);font-family:var(--frame-font-fam
 #wandeung-calendar .wc-membership-status,#wandeung-calendar .wc-badge.done{background:var(--frame-selected-background);color:var(--frame-text)}
 #wandeung-calendar .is-expired .wc-membership-status{color:var(--frame-muted)}
 #wandeung-calendar .wc-info-panel .wc-membership-summary{background:var(--frame-soft-background);color:var(--frame-text);border-radius:var(--frame-control-radius)}
-#wandeung-calendar .wc-info-panel .wc-membership-summary:hover{background:var(--frame-hover-background)}
+#wandeung-calendar .wc-info-panel .wc-membership-summary:hover{background:var(--frame-soft-background)}
 #wandeung-calendar :is(.wc-start,.wc-entry,.wc-note){padding:var(--frame-card-padding)}
 /* Gym brand colors remain gym data, not service UI colors. */
+
+/* Common service surfaces reuse v1 control, selection and spacing tokens. */
+#wandeung-calendar :is(.wc-start,.wc-entry,.wc-counts,.wc-note){border-radius:var(--frame-control-radius)}
+#wandeung-calendar .wc-start{border-color:var(--frame-control-border);background:var(--frame-background)}
+#wandeung-calendar .wc-entry{border-color:var(--frame-control-border);background:var(--frame-background)}
+#wandeung-calendar :is(.wc-start,.wc-section){margin-top:var(--frame-field-gap)}
+#wandeung-calendar .wc-start button{margin-top:var(--frame-field-gap)}
+#wandeung-calendar .wc-field :is(input,select,textarea){margin-top:var(--frame-label-gap)}
+#wandeung-calendar .wc-counts{padding:0 var(--frame-card-padding);border-color:var(--frame-control-border);background:var(--frame-background)}
+#wandeung-calendar .wc-count{padding:8px 0;gap:var(--frame-action-gap);border-color:var(--frame-control-border)}
+#wandeung-calendar .wc-count button{height:var(--frame-control-height);min-height:var(--frame-control-height);width:var(--frame-control-height);border-radius:var(--frame-control-radius);background:var(--frame-soft-background);border-color:var(--frame-control-border)}
+#wandeung-calendar .wc-count output{font-size:var(--frame-main-size);font-weight:600;font-variant-numeric:tabular-nums}
+#wandeung-calendar .wc-photo{display:flex;align-items:center;justify-content:center;min-height:52px;padding:12px;border:1px solid var(--frame-control-border);border-radius:var(--frame-control-radius);background:var(--frame-background);color:var(--frame-text);font-size:var(--frame-main-size)}
+#wandeung-calendar .wc-photo:hover:not(:disabled){background:var(--frame-subtle-background)}
+#wandeung-calendar .wc-record-photo{display:block;width:100%;max-height:320px;object-fit:cover;border-radius:var(--frame-control-radius);margin-top:var(--frame-field-gap)}
+#wandeung-calendar .wc-tags{gap:var(--frame-action-gap);margin-top:var(--frame-label-gap)}
+#wandeung-calendar .wc-tags span{background:var(--frame-soft-background);border-radius:var(--frame-control-item-radius);font-size:var(--frame-caption-size);line-height:var(--frame-caption-line);padding:6px 10px}
+#wandeung-calendar .wc-note{background:var(--frame-soft-background);font-size:var(--frame-main-size);line-height:var(--frame-main-line)}
+#wandeung-calendar .wc-link{text-decoration:none;min-height:var(--frame-control-height);padding:8px 0;font-size:var(--frame-main-size)}
+#wandeung-calendar .wc-divider{margin:var(--frame-field-gap) 0;background:var(--frame-control-border)}
+#wandeung-calendar .wc-optional-details{padding-top:var(--frame-field-gap);margin-top:var(--frame-field-gap);border-color:var(--frame-control-border)}
+#wandeung-calendar .wc-error:empty{display:none}
+
+/* Existing count row and service color-button pattern. */
+#wandeung-calendar .wc-count .wc-level-color{display:flex;align-items:center;justify-content:flex-start;gap:8px;flex:1;width:auto;min-width:0;border:0;background:transparent;padding:0;text-align:left}
+#wandeung-calendar .wc-level-swatch{display:block;flex:none;width:24px;height:24px;background:var(--level-color);border:1px solid var(--frame-control-border);border-radius:var(--frame-control-item-radius)}
+#wandeung-calendar .wc-count .wc-level-color:hover:not(:disabled){background:var(--frame-hover-background)}
+
+/* Compact horizontal color counters, using the service color-button pattern. */
+#wandeung-calendar .wc-color-counts{display:flex;flex-wrap:nowrap;gap:8px;padding:8px 0;border:0;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+#wandeung-calendar .wc-color-counts .wc-count{flex:0 0 88px;width:88px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:0;border:0;min-width:0}
+#wandeung-calendar .wc-color-counts .wc-level-color{flex:none;display:flex;justify-content:center;width:100%;min-height:44px;height:44px;padding:4px;background:transparent}
+#wandeung-calendar .wc-color-counts .wc-level-swatch{width:32px;height:32px}
+#wandeung-calendar .wc-color-counts output{width:auto;line-height:20px}
+#wandeung-calendar .wc-color-counts .wc-level-minus{width:100%;height:24px;min-height:24px;padding:2px;border:0;background:var(--frame-soft-background)}
+
+
+/* Compact existing controls and selected gym summary. */
+#wandeung-calendar .wc-photo{height:var(--frame-control-height);min-height:var(--frame-control-height);padding:10px 12px}
+#wandeung-calendar .wc-record-memo textarea{height:44px;min-height:44px;padding:10px 12px;line-height:22px;resize:none;overflow-y:auto;border-radius:var(--frame-control-radius)}
+#wandeung-calendar .wc-required-dot{display:inline-block;vertical-align:super;width:4px;height:4px;border-radius:50%;background:var(--frame-destructive);margin-left:4px}
+#wandeung-calendar .wc-selected-gym{display:flex;align-items:center;gap:12px;margin-top:var(--frame-label-gap)}
+#wandeung-calendar .wc-selected-gym>strong{font-size:16px;line-height:24px;flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere}
+#wandeung-calendar .wc-selected-gym>button{display:flex;align-items:center;justify-content:center;width:40px;height:40px;min-height:40px;border:0;border-radius:50%;background:transparent;padding:10px;position:relative;isolation:isolate}
+#wandeung-calendar .wc-selected-gym>button svg{width:18px;height:18px}
+
+/* Actual v1 heart-choice artwork and button metrics; scroll without a visible bar. */
+#wandeung-calendar .wc-color-counts{scrollbar-width:none;-ms-overflow-style:none}
+#wandeung-calendar .wc-color-counts::-webkit-scrollbar{display:none;width:0;height:0}
+#wandeung-calendar .wc-color-counts .wc-level-color{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;min-height:36px;padding:5px;border:1px solid var(--frame-button-border);border-radius:var(--frame-control-radius);background:var(--frame-background)}
+#wandeung-calendar .wc-color-counts .wc-level-color svg{display:block;width:100%;height:100%}
+
+/* Service date picker uses existing calendar and control tokens instead of native UI. */
+#wandeung-calendar .wc-record-date-trigger,
+#wandeung-calendar .wc-info-panel .wc-record-date-trigger{display:flex;align-items:center;justify-content:space-between;width:100%;height:var(--frame-control-height);margin-top:var(--frame-label-gap);padding:10px 12px;border:1px solid var(--frame-control-border);border-radius:var(--frame-control-radius);background:var(--frame-background);font-size:16px}
+#wandeung-calendar .wc-record-date-trigger svg,
+#wandeung-calendar .wc-info-panel .wc-record-date-trigger svg{width:18px;height:18px}
+#wandeung-calendar .wc-record-date-panel,
+#wandeung-calendar .wc-info-panel .wc-record-date-panel{padding:16px;margin-top:8px;border:1px solid var(--frame-control-border);border-radius:var(--frame-control-radius);background:var(--frame-background)}
+#wandeung-calendar .wc-record-date-panel>.wc-row button,
+#wandeung-calendar .wc-info-panel .wc-record-date-panel>.wc-row button{display:flex;align-items:center;justify-content:center;width:40px;min-height:40px;padding:10px;border:0;background:transparent}
+#wandeung-calendar .wc-record-date-panel>.wc-row svg,
+#wandeung-calendar .wc-info-panel .wc-record-date-panel>.wc-row svg{width:18px;height:18px}
+#wandeung-calendar .wc-record-date-grid,
+#wandeung-calendar .wc-info-panel .wc-record-date-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px 2px;margin-top:8px}
+#wandeung-calendar .wc-record-date-grid button,
+#wandeung-calendar .wc-info-panel .wc-record-date-grid button{padding:4px 0;min-width:0;min-height:36px;border:0;border-radius:var(--frame-control-item-radius);background:transparent;font-size:14px}
+#wandeung-calendar .wc-record-date-grid .wc-record-date-today:not([aria-pressed=true]),
+#wandeung-calendar .wc-info-panel .wc-record-date-grid .wc-record-date-today:not([aria-pressed=true]){box-shadow:inset 0 0 0 1px var(--frame-primary)}
+#wandeung-calendar .wc-record-date-grid button[aria-pressed=true],
+#wandeung-calendar .wc-info-panel .wc-record-date-grid button[aria-pressed=true]{background:var(--frame-primary);color:var(--frame-background)}
+
+#wandeung-calendar .wc-selected-gym>.wc-gym-logo{width:36px;height:36px;flex-basis:36px}
+
+#wandeung-calendar .wc-color-counts output{font-weight:400;color:var(--frame-secondary-text)}
+#wandeung-calendar .wc-failure-heading{margin-top:8px}
+
+#wandeung-calendar .wc-selected-gym>button::before{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--frame-soft-background);z-index:-1}
+#wandeung-calendar .wc-selected-gym>button:hover:not(:disabled){background:transparent;border-radius:50%}
+#wandeung-calendar .wc-selected-gym>button:hover:not(:disabled)::before{background:var(--frame-control-border)}
+
+/* Approved explicit minus/value/plus control; the hold is a color label. */
+#wandeung-calendar .wc-color-counts .wc-level-stepper{display:grid;grid-template-columns:28px 24px 28px;align-items:center;gap:4px;width:88px}
+#wandeung-calendar .wc-color-counts .wc-level-stepper button{display:flex;align-items:center;justify-content:center;min-width:28px;width:28px;min-height:28px;height:28px;padding:0;border:0;border-radius:var(--frame-control-item-radius);background:var(--frame-soft-background);font-size:16px;line-height:20px}
+#wandeung-calendar .wc-color-counts .wc-level-stepper button:hover:not(:disabled){background:var(--frame-hover-background)}
+#wandeung-calendar .wc-color-counts .wc-level-stepper output{text-align:center;min-width:0;font-variant-numeric:tabular-nums}
+
+/* Information overview: white cards on the existing light-gray surface. */
+#wandeung-calendar #wc-main:has(>.wc-info-overview),
+#wandeung-calendar .wc-info-overview{background:var(--frame-soft-background)}
+#wandeung-calendar .wc-info-overview .wc-profile-card,
+#wandeung-calendar .wc-info-overview .wc-membership-card,
+#wandeung-calendar .wc-info-overview .wc-membership-summary{background:var(--frame-background)}
+#wandeung-calendar .wc-info-overview .wc-membership-summary:hover:not(:disabled){background:var(--frame-background)}
+
+/* Match the information screen's safe-area surface to its content. */
+#wandeung-calendar .wc-phone:has(.wc-info-overview)>.wc-device-top{background:var(--frame-soft-background)}
+#wandeung-calendar .wc-record-date-grid button:disabled{opacity:.35}

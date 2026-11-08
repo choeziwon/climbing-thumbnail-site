@@ -2,9 +2,9 @@
    Calendar/profile layout is service-specific; thumbnail artwork is independent. */
 :root {
   /* Keep the original component aliases on the same semantic palette. */
-  --control-surface: var(--atomic-neutral-98);
-  --control-border: var(--atomic-neutral-96);
-  --selection-bg: var(--atomic-neutral-97);
+  --control-surface: var(--atomic-cool-neutral-98);
+  --control-border: var(--atomic-cool-neutral-96);
+  --selection-bg: var(--atomic-cool-neutral-97);
   --selection-ink: var(--atomic-brand-10);
   --selection-border: var(--atomic-brand-10);
   --tab-selection-bg: var(--atomic-brand-10);
@@ -26,7 +26,7 @@
   --frame-ui-title-size: 14px;
   --frame-ui-title-line: 20px;
   --frame-ui-title-weight: 500;
-  --frame-placeholder: var(--atomic-neutral-80);
+  --frame-placeholder: var(--atomic-cool-neutral-80);
   --frame-card-title-size: 17px;
   --frame-card-title-line: 26px;
   --frame-stat-label-size: 14px;
@@ -74,21 +74,21 @@
   --frame-textarea-padding: 16px;
   --frame-textarea-radius: 12px;
   --frame-text: var(--atomic-brand-10);
-  --frame-secondary-text: var(--atomic-neutral-40);
-  --frame-muted: var(--atomic-neutral-50);
-  --frame-nav-muted: var(--atomic-neutral-50);
+  --frame-secondary-text: var(--atomic-cool-neutral-40);
+  --frame-muted: var(--atomic-cool-neutral-50);
+  --frame-nav-muted: var(--atomic-cool-neutral-50);
   --frame-background: var(--atomic-common-100);
-  --frame-control-border: var(--atomic-neutral-95);
-  --frame-button-border: var(--atomic-neutral-95);
-  --frame-soft-border: var(--atomic-neutral-96);
-  --frame-nav-border: var(--atomic-neutral-97);
-  --frame-soft-background: var(--atomic-neutral-98);
-  --frame-subtle-background: var(--atomic-neutral-99);
-  --frame-hover-background: var(--atomic-neutral-98);
+  --frame-control-border: var(--atomic-cool-neutral-95);
+  --frame-button-border: var(--atomic-cool-neutral-95);
+  --frame-soft-border: var(--atomic-cool-neutral-96);
+  --frame-nav-border: var(--atomic-cool-neutral-97);
+  --frame-soft-background: var(--atomic-cool-neutral-98);
+  --frame-subtle-background: var(--atomic-cool-neutral-99);
+  --frame-hover-background: var(--atomic-cool-neutral-98);
   --frame-primary: var(--atomic-brand-10);
   --frame-primary-hover: var(--atomic-brand-10);
   --frame-action-text: var(--atomic-brand-10);
-  --frame-selected-background: var(--atomic-neutral-97);
+  --frame-selected-background: var(--atomic-cool-neutral-97);
   --frame-danger: var(--atomic-red-30);
   --frame-destructive: var(--atomic-red-40);
 }

@@ -29,3 +29,14 @@
 #wandeung-calendar .wc-nav button{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:row;border:0;color:#737780}
 #wandeung-calendar .wc-segment>button:hover:not(:disabled){background:transparent}
 #wandeung-calendar .wc-segment>button[aria-pressed=true]:hover:not(:disabled){background:var(--tab-selection-bg)}
+/* Source: .mobile-panel .mark-link-switch */
+#wandeung-calendar .wc-visit-toggle{position:relative;width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border:0;background:transparent;border-radius:0;height:24px;min-height:24px}
+/* Source: .mobile-panel .mark-link-switch::before */
+#wandeung-calendar .wc-visit-toggle::before{content:"";position:absolute;left:0;top:10px;width:44px;height:24px;border-radius:12px;background:#d8d8d8;transition:background .15s;top:0}
+/* Source: .mobile-panel .mark-link-switch::after */
+#wandeung-calendar .wc-visit-toggle::after{content:"";position:absolute;left:3px;top:13px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s;top:3px}
+/* Source: .mobile-panel .mark-link-switch[aria-checked=true]::before */
+#wandeung-calendar .wc-visit-toggle[aria-checked=true]::before{background:#111}
+/* Source: .mobile-panel .mark-link-switch[aria-checked=true]::after */
+#wandeung-calendar .wc-visit-toggle[aria-checked=true]::after{transform:translateX(20px)}
+#wandeung-calendar .wc-visit-toggle:hover:not(:disabled){background:transparent}

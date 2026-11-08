@@ -1,6 +1,6 @@
 /* Match v1 UI values without importing its page-layout selectors into the service. */
 html{color-scheme:light}
-body{background:#f4f5f7;color:var(--frame-text);font-family:var(--frame-font-family)}
+body{background:var(--frame-soft-background);color:var(--frame-text);font-family:var(--frame-font-family)}
 #wandeung-calendar{
   --wc-bg:var(--frame-background);
   --wc-fg:var(--frame-text);

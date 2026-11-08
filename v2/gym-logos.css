@@ -48,3 +48,25 @@
 #wandeung-calendar .wc-day-backdrop:hover:not(:disabled){background:#0005}
 #wandeung-calendar .wc-day-sheet{position:relative;display:flex;flex-direction:column;width:100%;height:220px;max-height:65%;overflow:hidden;border-radius:20px 20px 0 0;background:var(--frame-background);padding:20px 16px;border:0;box-shadow:0 -4px 24px #0001}
 #wandeung-calendar .wc-day-sheet::before{content:'';display:block;width:40px;height:4px;border-radius:2px;background:var(--frame-control-border);margin:-12px auto 8px;flex:none}
+
+/* White artwork on a colored original background uses its light ink mask. */
+#wandeung-calendar .wc-gym-logo-light>img{filter:url(#wc-light-logo)}
+/* Preserve colored artwork and white cutouts on near-black source backgrounds. */
+#wandeung-calendar .wc-gym-logo-color-on-dark>img{filter:url(#wc-color-on-dark-logo)}
+/* Remove the warm paper background of the original Moon Climb wordmark. */
+#wandeung-calendar .wc-gym-logo-paper>img{filter:url(#wc-paper-logo)}
+
+/* Ayers Rock: keep the original dark/orange ink, remove white and cyan paper. */
+#wandeung-calendar .wc-gym-logo-blue-paper>img{filter:url(#wc-blue-paper-logo)}
+
+/* Stonz: remove gray textured paper while preserving the original dark silhouette. */
+#wandeung-calendar .wc-gym-logo-dark-ink>img{filter:url(#wc-dark-ink-logo)}
+
+/* Reviewed source-space symbol crops are shared by search, records and calendars. */
+#wandeung-calendar .wc-gym-logo-fitted>img{inset:auto;right:auto;bottom:auto;max-width:none;max-height:none;object-fit:fill;padding:0}
+#wandeung-calendar .wc-gym-logo-warm-ink>img{filter:url(#wc-warm-ink-logo)}
+
+/* Keep the original fine strokes instead of flattening colored artwork into a fill. */
+#wandeung-calendar .wc-gym-logo-light-soft>img{filter:url(#wc-light-soft-logo)}
+#wandeung-calendar .wc-gym-logo-light-line>img{filter:url(#wc-light-line-logo)}
+#wandeung-calendar .wc-gym-logo-outline>img{filter:url(#wc-outline-logo)}
