@@ -8,10 +8,10 @@
  line-height:var(--frame-main-line);font-variant-numeric:tabular-nums;
 }
 #wandeung-calendar .wc-phone .wc-logo-info-row>.wc-gym-logo{
- width:var(--frame-logo-info-logo-size);height:var(--frame-logo-info-logo-size);
- flex:0 0 var(--frame-logo-info-logo-size);
+ width:var(--logo-info-measured-height,var(--frame-logo-info-logo-size));height:var(--logo-info-measured-height,var(--frame-logo-info-logo-size));
+ flex:0 0 var(--logo-info-measured-height,var(--frame-logo-info-logo-size));
 }
-#wandeung-calendar .wc-phone .wc-logo-info-copy{display:grid;gap:var(--frame-logo-info-copy-gap);flex:1;min-width:0}
+#wandeung-calendar .wc-phone .wc-logo-info-copy{display:grid;align-content:center;gap:var(--frame-logo-info-copy-gap);flex:1;min-width:0;min-height:var(--frame-logo-info-content-height)}
 #wandeung-calendar .wc-phone .wc-logo-info-title{
  display:block;margin:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
  font-size:var(--frame-logo-info-title-size);line-height:var(--frame-logo-info-title-line);
@@ -36,9 +36,6 @@
 #wandeung-calendar .wc-phone .wc-logo-info-row.wc-gym-option{padding:10px 8px;min-height:60px}
 #wandeung-calendar .wc-phone .wc-logo-info-row.wc-gym-option:hover:not(:disabled){background:var(--frame-hover-background)}
 #wandeung-calendar .wc-phone .wc-logo-info-row.wc-selected-gym{margin-top:var(--frame-label-gap)}
-#wandeung-calendar .wc-phone .wc-logo-info-row.wc-selected-gym>.wc-gym-logo{
- width:var(--frame-selected-gym-logo-size);height:var(--frame-selected-gym-logo-size);flex-basis:var(--frame-selected-gym-logo-size);
-}
 #wandeung-calendar .wc-phone .wc-logo-info-row.wc-membership-card-top{margin-bottom:var(--frame-field-gap)}
 /* Keep the component consistent even when hosted inside another card/form. */
 #wandeung-calendar .wc-phone .wc-logo-info-row .wc-badge{flex:none}
