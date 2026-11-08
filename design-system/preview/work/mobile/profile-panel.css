@@ -115,7 +115,7 @@
 #wandeung-calendar .wc-info-panel :is(.wc-membership-summary-row,.wc-membership-detail-link):hover:not(:disabled),
 #wandeung-calendar .wc-membership-summary .wc-toolbar-icon:hover:not(:disabled){background:transparent}
 
-#wandeung-calendar .wc-membership-expiry{display:inline-flex;align-items:center;margin-left:6px;vertical-align:baseline;white-space:nowrap}
+#wandeung-calendar .wc-membership-expiry{display:inline;margin-left:6px;vertical-align:baseline;white-space:nowrap;color:var(--frame-danger)}
 #wandeung-calendar .wc-info-panel .wc-photo-remove{display:flex;align-items:center;justify-content:center;width:40px;height:40px;min-height:40px;border:0;border-radius:50%;background:transparent;padding:10px;position:relative;isolation:isolate}
 #wandeung-calendar .wc-photo-remove::before{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--frame-soft-background);z-index:-1}
 #wandeung-calendar .wc-photo-remove svg{width:16px;height:16px;color:var(--frame-secondary-text)}
