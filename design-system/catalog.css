@@ -1,5 +1,6 @@
+@scope (body) to (.ds-sample){
 *{box-sizing:border-box}
-body{margin:0;background:var(--frame-soft-background);color:var(--frame-text);font-family:var(--frame-font-family)}
+:scope{margin:0;background:var(--frame-soft-background);color:var(--frame-text);font-family:var(--frame-font-family)}
 main{max-width:1100px;margin:auto;padding:40px 24px 80px}
 h1{font:32px Wave;margin:0 0 14px}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
@@ -17,3 +18,6 @@ iframe.sample{border:0;display:block;width:100%;min-height:60px;background:var(-
 .utility-scroll>div{flex:0 0 120px;height:72px;display:grid;place-items:center;background:var(--frame-soft-background);border-radius:var(--frame-control-radius);font-size:14px}
 .utility-token{font:12px/20px ui-monospace,monospace;color:var(--frame-secondary-text);overflow-wrap:anywhere}
 @media(max-width:720px){main{padding:28px 16px}.grid{grid-template-columns:1fr}section{padding:20px}}
+
+}
+.ds-sample{display:block;width:100%;min-width:0;box-sizing:border-box;isolation:isolate}

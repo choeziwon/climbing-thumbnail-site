@@ -36,10 +36,9 @@ function serviceDocument(kind){
    if(context==='thumbnail')content='<div class="wc-thumbnail-home">'+content+'</div>';
    const sampleBody=clone.matches('.wc-nav,.wc-header')?content:'<main id="wc-main"><div class="wc-pad">'+content+'</div></main>';
    frame.onload=()=>{
-    const d=frame.contentDocument,w=frame.contentWindow;
+    const d=mountCatalogSample(frame);
     win.wandeungObserveLogoInfoSizes(d);
-    const resize=()=>{if(frame.getBoundingClientRect().width>0)frame.style.height=Math.ceil(d.querySelector('#sample-content').getBoundingClientRect().height+32)+'px';};
-    new w.ResizeObserver(resize).observe(d.querySelector('#sample-content'));new ResizeObserver(resize).observe(frame);d.fonts.ready.then(resize);resize();
+
     d.querySelectorAll('.wc-nav [data-menu]').forEach(button=>button.onclick=()=>{const nav=button.closest('.wc-nav');nav.dataset.selected=button.dataset.menu;nav.querySelectorAll('[data-menu]').forEach(b=>b.setAttribute('aria-current',b===button?'page':'false'));});
     d.querySelectorAll('[role=switch]').forEach(button=>button.onclick=()=>button.setAttribute('aria-checked',String(button.getAttribute('aria-checked')!=='true')));
     d.querySelectorAll('[role=group] button[aria-pressed]').forEach(button=>button.onclick=()=>button.parentElement.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===button))));

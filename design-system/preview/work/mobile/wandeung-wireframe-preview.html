@@ -294,12 +294,13 @@ function logoInfoRow({logoName,title,metadata='',attributes='',className='',show
 // Follow the text block when metadata wraps; keep the brand mark square.
 let logoInfoSizeObserver;
 function observeLogoInfoSizes(scope){
- if(typeof ResizeObserver==='undefined')return;
+ const Observer=scope.ownerDocument?.defaultView?.ResizeObserver||window.ResizeObserver;
+ if(!Observer)return;
  const fit=copy=>{
   const height=Math.ceil(copy.getBoundingClientRect().height);
   if(height>0)copy.parentElement.style.setProperty('--logo-info-measured-height',height+'px');
  };
- const observer=new ResizeObserver(entries=>entries.forEach(({target})=>fit(target)));
+ const observer=new Observer(entries=>entries.forEach(({target})=>fit(target)));
  scope.querySelectorAll('.wc-logo-info-copy').forEach(copy=>{fit(copy);observer.observe(copy);});
  return observer;
 }
