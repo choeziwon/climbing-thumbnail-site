@@ -19,7 +19,11 @@
     "template-first-thumbnail-home",
     "visit-membership-links",
     "membership-visit-history",
-    "modal-menu-occlusion-fix"
+    "modal-menu-occlusion-fix",
+    "automatic-membership-visit-balance",
+    "swipeable-style-carousel",
+    "shared-date-year-month-picker",
+    "compact-expiry-summary"
   ],
   "colorTokenSha256": "8749dad86bfd29d5ae2db0d02ed1cc9370a28ab98d9fb31585852b9597d0c24b"
 }
