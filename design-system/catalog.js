@@ -8,6 +8,7 @@ const componentGroups={
  Feedback:['빈 상태']
 };
 const componentCatalog=document.querySelector('#component-catalog');
+if(new URLSearchParams(location.search).has('capture')){componentCatalog.replaceChildren();document.querySelector('#utility-catalog').replaceChildren();}
 const groupTabs=document.createElement('div');groupTabs.className='ds-tabs ds-component-tabs';groupTabs.setAttribute('role','tablist');groupTabs.setAttribute('aria-label','Component categories');
 const groupPanels=new Map();
 function selectComponentGroup(name,focus=false){
@@ -44,6 +45,7 @@ function serviceDocument(kind){
  foundation('표면 효과',['menu-backdrop','menu-shadow'].map(key=>'<div class="foundation-row"><code>--frame-'+key+'</code><span>'+value('--frame-'+key)+'</span></div>'));
 })();
 (async()=>{
+ if(document.documentElement.hasAttribute('data-catalog-static')){sortComponentCatalog();document.querySelectorAll('.ds-sample').forEach(host=>hydrateCatalogSample(host,host.dataset.sampleKind));document.documentElement.dataset.catalogReady='true';return;}
  const source=document.createElement('iframe');source.className='catalog-source';source.title='서비스 컴포넌트 원본';source.tabIndex=-1;source.setAttribute('aria-hidden','true');
  source.onload=async()=>{
   const doc=source.contentDocument,win=source.contentWindow;
@@ -62,13 +64,8 @@ function serviceDocument(kind){
    if(context==='thumbnail')content='<div class="wc-thumbnail-home">'+content+'</div>';
    const sampleBody=clone.matches('.wc-nav,.wc-header')?content:'<main id="wc-main"><div class="wc-pad">'+content+'</div></main>';
    frame.onload=()=>{
-    const d=mountCatalogSample(frame);
-    win.wandeungObserveLogoInfoSizes(d);
-
-    d.querySelectorAll('.wc-nav [data-menu]').forEach(button=>button.onclick=()=>{const nav=button.closest('.wc-nav');nav.dataset.selected=button.dataset.menu;nav.querySelectorAll('[data-menu]').forEach(b=>b.setAttribute('aria-current',b===button?'page':'false'));});
-    d.querySelectorAll('[role=switch]').forEach(button=>button.onclick=()=>button.setAttribute('aria-checked',String(button.getAttribute('aria-checked')!=='true')));
-    d.querySelectorAll('[role=group] button[aria-pressed]').forEach(button=>button.onclick=()=>button.parentElement.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===button))));
-    d.querySelectorAll('[data-count]').forEach(button=>button.onclick=()=>{const step=button.closest('.wc-level-stepper'),out=step.querySelector('output');let n=Math.max(0,Math.min(99,Number(out.value||out.textContent)+Number(button.dataset.delta)));out.value=n;step.querySelectorAll('button').forEach(b=>b.disabled=Number(b.dataset.delta)<0?n===0:n===99);});
+    const d=mountCatalogSample(frame);d.dataset.sampleKind='v2';
+    hydrateCatalogSample(d,'v2');
    };
    frame.srcdoc='<!doctype html><html lang="ko"><head><meta charset="utf-8"><base href="'+new URL('preview/work/mobile/',location.href).href+'">'+serviceStyles+'<style>body{margin:0;padding:16px;background:var(--frame-background);overflow:hidden}#wandeung-calendar{display:block;padding:0;min-height:0;width:100%}#wandeung-calendar .ds-shell{display:block!important;width:100%!important;max-width:none!important;height:auto!important;min-height:0!important;border:0!important;border-radius:0;box-shadow:none!important;overflow:visible!important;transform:none!important;background:transparent}#sample-content{display:flow-root}#wandeung-calendar .ds-shell #wc-main{display:block!important;height:auto!important;min-height:0!important;padding:0!important;overflow:visible!important}#wandeung-calendar .ds-shell .wc-pad{display:block!important;height:auto!important;min-height:0!important;padding:0!important}#wandeung-calendar .wc-info-panel{padding:0;min-height:0}#wandeung-calendar .wc-form-scroll{padding:0;overflow:visible}#wandeung-calendar .wc-header{display:flex!important}#wandeung-calendar .wc-nav{position:relative!important;inset:auto!important;transform:none!important;margin:0!important;width:100%!important}#wandeung-calendar .wc-day-sheet{position:relative!important;inset:auto!important;transform:none!important;width:100%;max-height:none}#wandeung-calendar .wc-profile-section{margin:0}#wandeung-calendar .wc-template-preview{width:100%;max-width:280px;margin:0 auto}#wandeung-calendar .wc-record-date-panel{position:relative}</style></head><body><div id="wandeung-calendar">'+symbols+'<div class="wc-phone ds-shell '+doc.querySelector('.wc-phone').className.replace('wc-phone','')+'" id="sample-content">'+sampleBody+'</div></div></body></html>';
   }
