@@ -7,20 +7,30 @@ const componentGroups={
  Overlay:['연·월 선택 패널','날짜 내역 바텀 시트'],
  Feedback:['빈 상태']
 };
+// Reuse one category navigation for Foundations and Components.
+function categoryNavigation(host,names,prefix,label,initial=names[0]){
+ const tabs=document.createElement('div'),panels=new Map();
+ tabs.className='ds-tabs ds-category-tabs';tabs.role='tablist';tabs.setAttribute('aria-label',label);
+ function select(name,focus=false){
+  for(const tab of tabs.children){const active=tab.dataset.category===name;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;panels.get(tab.dataset.category).hidden=!active;if(active&&focus)tab.focus();}
+ }
+ for(const name of names){
+  const key=name.toLowerCase().replace(/[^a-z0-9]+/g,'-'),tab=document.createElement('button'),panel=document.createElement('div');
+  tab.type='button';tab.role='tab';tab.id=prefix+'-tab-'+key;tab.dataset.category=name;tab.textContent=name;tab.setAttribute('aria-controls',prefix+'-group-'+key);
+  panel.id=tab.getAttribute('aria-controls');panel.role='tabpanel';panel.className='grid';panel.setAttribute('aria-labelledby',tab.id);panels.set(name,panel);tabs.append(tab);
+  tab.onclick=()=>select(name);
+  tab.onkeydown=event=>{const items=[...tabs.children],index=items.indexOf(tab);let next;if(event.key==='ArrowRight')next=(index+1)%items.length;else if(event.key==='ArrowLeft')next=(index+items.length-1)%items.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=items.length-1;else return;event.preventDefault();select(items[next].dataset.category,true);};
+ }
+ host.classList.remove('grid');host.append(tabs,...panels.values());select(initial);return {tabs,panels};
+}
 const componentCatalog=document.querySelector('#component-catalog');
 if(new URLSearchParams(location.search).has('capture')){componentCatalog.replaceChildren();document.querySelector('#utility-catalog').replaceChildren();}
-const groupTabs=document.createElement('div');groupTabs.className='ds-tabs ds-component-tabs';groupTabs.setAttribute('role','tablist');groupTabs.setAttribute('aria-label','Component categories');
-const groupPanels=new Map();
-function selectComponentGroup(name,focus=false){
- for(const tab of groupTabs.children){const active=tab.dataset.componentGroup===name;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;groupPanels.get(tab.dataset.componentGroup).hidden=!active;if(active&&focus)tab.focus();}
-}
-for(const name of Object.keys(componentGroups)){
- const tab=document.createElement('button'),panel=document.createElement('div');tab.type='button';tab.role='tab';tab.id='component-tab-'+name.toLowerCase();tab.dataset.componentGroup=name;tab.textContent=name;tab.setAttribute('aria-controls','component-group-'+name.toLowerCase());
- panel.id=tab.getAttribute('aria-controls');panel.role='tabpanel';panel.className='grid';panel.setAttribute('aria-labelledby',tab.id);groupPanels.set(name,panel);groupTabs.append(tab);
- tab.onclick=()=>selectComponentGroup(name);
- tab.onkeydown=event=>{const tabs=[...groupTabs.children],index=tabs.indexOf(tab);let next;if(event.key==='ArrowRight')next=(index+1)%tabs.length;else if(event.key==='ArrowLeft')next=(index+tabs.length-1)%tabs.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=tabs.length-1;else return;event.preventDefault();selectComponentGroup(tabs[next].dataset.componentGroup,true);};
-}
-componentCatalog.classList.remove('grid');componentCatalog.append(groupTabs,...groupPanels.values());selectComponentGroup('Input');
+const {panels:groupPanels}=categoryNavigation(componentCatalog,Object.keys(componentGroups),'component','Component categories');
+const foundationGroups={Color:[],Typography:['타이포그래피'],Spacing:['간격'],'Size & Radius':['크기 · 모서리'],Motion:['모션'],Effects:['표면 효과']};
+const {panels:foundationPanels}=categoryNavigation(document.querySelector('#foundation-catalog'),Object.keys(foundationGroups),'foundation','Foundation categories');
+foundationPanels.get('Color').className='color-sections';
+foundationPanels.get('Color').append(document.querySelector('#color-catalog'));
+
 function sortComponentCatalog(){
  for(const card of componentCatalog.querySelectorAll('section[data-component-example]')){
   const name=card.dataset.componentExample,group=Object.keys(componentGroups).find(key=>componentGroups[key].includes(name));if(!group)throw new Error('컴포넌트 분류 누락: '+name);groupPanels.get(group).append(card);
@@ -35,7 +45,7 @@ function serviceDocument(kind){
 }
 (()=>{
  const styles=getComputedStyle(document.documentElement),value=t=>styles.getPropertyValue(t).trim();
- function foundation(title,rows){const section=document.createElement('section');section.innerHTML='<h2>'+title+'</h2>';for(const row of rows)section.insertAdjacentHTML('beforeend',row);document.querySelector('#foundation-catalog').append(section);}
+ function foundation(title,rows){const group=Object.keys(foundationGroups).find(key=>foundationGroups[key].includes(title));if(!group)throw new Error('파운데이션 분류 누락: '+title);const section=document.createElement('section');section.dataset.foundationExample=title;section.innerHTML='<h2>'+title+'</h2>';for(const row of rows)section.insertAdjacentHTML('beforeend',row);foundationPanels.get(group).append(section);}
  const types=[['페이지 제목','title',600],['카드 제목','card-title',600],['로고 정보 제목','logo-info-title',500],['Title UI','ui-title',500],['본문','main',400],['설명','description',400],['캡션','caption',400]];
  foundation('타이포그래피',types.map(([label,key,weight])=>'<div class="foundation-row"><div style="font-size:var(--frame-'+key+'-size);line-height:var(--frame-'+key+'-line);font-weight:'+weight+'">'+label+' · 완등 한 컷</div><span>'+value('--frame-'+key+'-size')+' / '+value('--frame-'+key+'-line')+' / '+weight+'</span><code>--frame-'+key+'-size · --frame-'+key+'-line</code></div>'));
  foundation('간격', ['page-x','card-padding','field-gap','label-gap','action-gap','menu-content-gap','logo-info-gap','logo-info-copy-gap'].map(key=>'<div class="foundation-row"><code>--frame-'+key+'</code><span>'+value('--frame-'+key)+'</span><div class="token-size" style="width:var(--frame-'+key+')"></div></div>'));

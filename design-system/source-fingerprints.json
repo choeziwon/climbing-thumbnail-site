@@ -3,7 +3,7 @@
   "styleSource": "current-service",
   "files": {
     "design-system/build-preview.py": "d11a0202e3c71e1157313ba6cb4efe6ac549d9a81fc2286262d36739551ac048",
-    "design-system/catalog.js": "3c85681fb22a59e13ba7276700f3a6c9dc601c74f2563c6c576d078d45272b3a",
+    "design-system/catalog.js": "66ede1a2f692c28c832f820c23b324872808279622df0df245e0bb947284d1d2",
     "design-system/editor-catalog.js": "f867b7023201f71ea3afdc746e0819c3cddd62f4c01177de330c2161f8435b86",
     "design-system/preview/static/mobile/editor.css": "bdcdc9632e3e81c77499f1076069ece009061e8c87f84a4353032e906cad4a5f",
     "design-system/preview/static/shared/editor.css": "36c335f4509071422823edd7444b916ca2e03e08dfa163cac40edaee6c333fd2",

@@ -21,3 +21,7 @@ Input variants belong under Components → Input. All reusable gym/logo informat
 ## Shared source of truth
 
 A design-system annotation is a request to change the corresponding shared service token/component, not just this catalog. Apply the shared change to every actual service use, build both outputs, verify them, and deploy them together. Styles are always rebuilt from the actual v2 service and its embedded editor. Markup captures must be refreshed after structural changes; editing generated example HTML/CSS alone is not a completed change. Run `python3 work/design-system/check-shared-sources.py` before packaging.
+
+## Catalog categories
+
+Foundations uses the same category navigation as Components: Color, Typography, Spacing, Size & Radius, Motion, and Effects. Atomic and semantic palettes belong under Color; values continue to come from shared service tokens. Utilities currently has only selection helpers and scrolling, so it remains a flat list until additional helpers warrant categories.
