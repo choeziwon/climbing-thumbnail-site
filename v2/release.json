@@ -23,7 +23,9 @@
     "automatic-membership-visit-balance",
     "swipeable-style-carousel",
     "shared-date-year-month-picker",
-    "compact-expiry-summary"
+    "compact-expiry-summary",
+    "shared-current-service-design-system",
+    "native-annotatable-component-catalog"
   ],
   "colorTokenSha256": "8749dad86bfd29d5ae2db0d02ed1cc9370a28ab98d9fb31585852b9597d0c24b"
 }

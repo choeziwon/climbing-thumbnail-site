@@ -522,7 +522,7 @@ window.addEventListener('message',event=>{
 function startEditor(r=null){editor={sourceId:r?.id||null,title:r?.gym||'오늘의 클라이밍',date:r?.date||TODAY,counts:r?[...r.counts]:[0,0,0],shape:'♥',photo:!!r?.photo,layout:r?.photo?'photo':'type',size:30};editTab='text';}
 function edit(){
   const query=new URLSearchParams();
-  query.set('v','0c4f17725d37');
+  query.set('v','a098cf4c4276');
   if(editor.templateId)query.set('template',editor.templateId);
   if(editor.sourceId){query.set('caption',editor.title);query.set('counts',JSON.stringify(editor.counts));}
   return `<iframe id="wc-v1-editor" title="완등 한 컷 v1 편집기" src="wandeung-v1-embedded.html?${esc(query.toString())}" allow="clipboard-write"></iframe>`;
@@ -895,4 +895,4 @@ window.addEventListener('openai:set_globals',e=>{if(e.detail?.globals?.widgetSta
 render();if(false&&globalThis.Tweak){const t=new Tweak({container:root.querySelector('.wc-phone'),onChange:render});t.addSlider(design,'dayHeight',{label:'달력 날짜 칸 높이',min:49,max:65,unit:'px'});}
 })();
 </script>
-<link rel="stylesheet" href="frame-theme.css?v=12b9937e0fd4"><link rel="stylesheet" href="gym-logos.css?v=b287f146a627"><link rel="stylesheet" href="frame-typography.css?v=6626252fcc73"><link rel="stylesheet" href="v1-components.css?v=277b15937ed1"><link rel="stylesheet" href="calendar-layout.css?v=d0c0eca76f25"><link rel="stylesheet" href="service-components.css?v=59f30473e46e"><script src="https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js" onload="lucide.createIcons()"></script></body></html>
+<link rel="stylesheet" href="frame-theme.css?v=12b9937e0fd4"><link rel="stylesheet" href="gym-logos.css?v=b287f146a627"><link rel="stylesheet" href="frame-typography.css?v=824996dae2be"><link rel="stylesheet" href="v1-components.css?v=277b15937ed1"><link rel="stylesheet" href="calendar-layout.css?v=223ca5e8b37d"><link rel="stylesheet" href="service-components.css?v=59f30473e46e"><script src="https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js" onload="lucide.createIcons()"></script></body></html>

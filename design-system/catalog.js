@@ -31,7 +31,7 @@ function sortComponentCatalog(){
 function serviceDocument(kind){
  const base=new URL(kind==='v1'?'preview/static/mobile/':'preview/work/mobile/',location.href);
  const storage='<script>(()=>{const data=new Map();Object.defineProperty(window,"localStorage",{value:{getItem:k=>data.get(String(k))??null,setItem:(k,v)=>data.set(String(k),String(v)),removeItem:k=>data.delete(String(k)),clear:()=>data.clear(),key:i=>[...data.keys()][i]??null,get length(){return data.size}}});})();<\/script>';
- return window.designSystemSources[kind].replace(/<head([^>]*)>/i,'<head$1><base href="'+base.href+'">'+storage);
+ return window.designSystemSources[kind].replace(/<base[^>]*>/gi,'').replace(/<head([^>]*)>/i,'<head$1><base href="'+base.href+'">'+storage);
 }
 (()=>{
  const styles=getComputedStyle(document.documentElement),value=t=>styles.getPropertyValue(t).trim();
@@ -59,6 +59,7 @@ function serviceDocument(kind){
    const card=document.createElement('section'),heading=document.createElement('h2'),frame=document.createElement('iframe');card.dataset.componentExample=name;heading.textContent=name;frame.className='sample';frame.title=name;frame.dataset.selector=selector;card.append(heading,frame);document.querySelector('#component-catalog').append(card);sortComponentCatalog();
    const symbols=doc.querySelector('#wandeung-calendar>svg')?.outerHTML||'';
    let content=clone.outerHTML;
+   if(name==='프로필 사진 편집')content='<section class="wc-info-section wc-profile-section">'+content+'</section>';
    if(context==='info')content='<div class="wc-info-panel wc-info-overview">'+content+'</div>';
    if(context==='form')content='<div class="wc-form-scroll">'+content+'</div>';
    if(context==='thumbnail')content='<div class="wc-thumbnail-home">'+content+'</div>';

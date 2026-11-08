@@ -239,6 +239,7 @@
 #wandeung-calendar .wc-form-sheet>.wc-note{flex:none;margin-bottom:12px}
 
 #wandeung-calendar .wc-form-sheet>.wc-record-actions{display:flex}
+#wandeung-calendar .wc-record-actions{border-top:1px solid var(--frame-control-border);background:var(--frame-background)}
 #wandeung-calendar .wc-record-actions>.wc-record-delete{flex:0 0 64px;width:64px}
 #wandeung-calendar .wc-record-actions>.wc-primary{flex:1}
 

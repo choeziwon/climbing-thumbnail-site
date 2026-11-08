@@ -1,0 +1,40 @@
+/* V2-only page integration. Original v1 editor controls and dialogs are reused.
+   The outer page now owns the title and reset/save icon actions. */
+:root{--primary:var(--frame-primary)}
+.mobile-editor{
+ --control-surface:var(--frame-soft-background);
+ --control-border:var(--frame-soft-border);
+ --selection-bg:var(--frame-selected-background);
+ --selection-ink:var(--frame-text);
+ --selection-border:var(--frame-primary);
+ --tab-selection-bg:var(--frame-primary);
+ --tab-selection-ink:var(--frame-background);
+}
+body.mobile-editing{color:var(--frame-text);background:var(--frame-background)}
+.mobile-editor,.mobile-editor :is(.mobile-content,.mobile-panel-bar,.mobile-feedback,.mobile-tools){background-color:var(--frame-background)}
+.mobile-editor :is(.mobile-panel-bar,.mobile-header){border-color:var(--frame-nav-border)}
+.mobile-editor .mobile-menu button{background-color:var(--frame-background);color:var(--frame-nav-muted)}
+.mobile-editor .mobile-menu button[aria-expanded=true]{background-color:var(--frame-selected-background);color:var(--frame-text)}
+.mobile-editor .mobile-panel :is(textarea,input:not([type=color]):not([type=range]):not([type=checkbox]),select,.gym-trigger,.font-trigger){border-color:var(--frame-control-border);background-color:var(--frame-background);color:var(--frame-text)}
+.mobile-editor :is(input,textarea)::placeholder{color:var(--frame-placeholder);opacity:1}
+.mobile-editor :is(.hint,.mobile-feedback .status){color:var(--frame-secondary-text)}
+.mobile-editor .mobile-header{display:none}
+
+/* Tools scroll over the preview; opening them never resizes the photo. */
+.mobile-editor #mobile-tools.mobile-tools:not([hidden]){position:absolute;z-index:3;left:0;right:0;bottom:0;box-sizing:border-box;height:45%;max-height:100%;background:var(--frame-background);overflow-y:auto}
+.mobile-editor.menu-overview-open #mobile-tools.mobile-tools:not([hidden]){height:65px;overflow:hidden}
+.mobile-editor.template-browser-open #mobile-tools.mobile-tools:not([hidden]){height:184px;overflow-y:auto}
+
+/* Center the unchanged photo in the uncovered canvas, so the visible hatched
+   space above and below it stays equal when a tool overlays the lower edge. */
+.mobile-editor .mobile-canvas .preview-frame{transform:translateY(calc(var(--v2-tools-overlap,0px) / -2))}
+
+/* Keep all composition options on one naturally swipeable strip. */
+.mobile-editor .image-tool-strip{width:100%;max-width:100%;box-sizing:border-box;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;touch-action:pan-x;overscroll-behavior-x:contain}
+.mobile-editor .image-tool-strip .image-ratio-tools{flex:0 0 auto}
+.mobile-editor .image-tool-strip button{touch-action:pan-x}
+
+/* The canvas stays stationary while tools overlay it. Its floating controls
+   clear the measured overlay instead of covering the first action row. */
+.mobile-editor .mobile-canvas>.editor-history{bottom:calc(12px + var(--v2-tools-overlap,0px))}
+.mobile-editor .mobile-canvas>#resetImageSettings{bottom:calc(12px + var(--v2-tools-overlap,0px))!important}

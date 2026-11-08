@@ -1,0 +1,6 @@
+/* Catalog framing only; component appearance comes from service styles. */
+body{margin: 0px; overflow: hidden; background: white !important;}
+.mobile-editor{position: relative !important; inset: auto !important; height: auto !important; width: 100% !important; margin: 0px !important; overflow: visible !important; z-index: auto !important;}
+.mobile-tools{position:relative!important;inset:auto!important;height:auto!important;max-height:none!important;padding-top: 16px !important; padding-bottom: 16px !important;}
+.mobile-panel{display: block !important;}
+.mobile-panel[hidden]{display: none !important;}

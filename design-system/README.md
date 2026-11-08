@@ -1,7 +1,23 @@
-# 완등 한 컷 디자인 시스템
+# Design system examples
 
-구성 요소와 컬러 시스템을 탭으로 제공합니다. 컬러 탭 직접 열기: `./#colors`.
+The default catalog contains native HTML examples, captured from the service. Do not render normal catalog examples in iframes: the desktop browser feedback picker must be able to select the actual element in this document.
 
-`preview/`는 실제 서비스 구성 요소를 보여주기 위한 배포 시점의 미리보기 전용 파일입니다. 운영 v1과 v2 파일은 변경하지 않습니다.
+- `service-examples.json`: captured example markup only; it is not a style source.
+- `service-styles.py`: reads the current service stylesheet links and inline rules in their actual cascade order, then scopes them to native examples.
+- `sample-layout-v1.css` / `sample-layout-v2.css`: catalog framing only, without component appearance overrides.
+- `build-preview.py`: embeds the markup and current service CSS directly in `index.html`, refreshes asset versions, and writes source fingerprints.
+- `catalog.js`: Foundations, Components categories, Utilities and service capture setup.
+- `sample-dom.js`: sample interactions and capture-only stylesheet/ID isolation.
 
-컬러 기준: Wanted Montage Atomic Colors. 완등 한 컷의 블랙 브랜드와 회색 위계를 유지하도록 조정했습니다.
+Token and CSS changes are reflected automatically by the service build. After changing component markup, refresh the examples as well:
+
+1. Build service sources with `python3 work/mobile/build-calendar-preview.py`.
+2. Open the catalog with `?capture=1` to extract the current v1/v2 service UI. This maintenance mode temporarily runs the actual service documents.
+3. Capture each `.ds-sample` outer HTML together with its containing section's `data-component-example`, `data-sample-kind`, and component/utility target into `service-examples.json`. Preserve isolated IDs, remove captured `<style>` elements, and normalize the catalog URL prefix to `__DS_BASE__/` and deployment asset paths to `preview/work/mobile/` or `preview/static/`.
+4. Run the build again, package, and verify the normal catalog without `capture=1`. It must have 39 native examples and zero iframes. Check annotation selection as well as visible styles.
+
+Input variants belong under Components → Input. All reusable gym/logo information rows and cards, including visit cards inside bottom sheets, belong under Components → Card. The sheet container itself belongs under Overlay.
+
+## Shared source of truth
+
+A design-system annotation is a request to change the corresponding shared service token/component, not just this catalog. Apply the shared change to every actual service use, build both outputs, verify them, and deploy them together. Styles are always rebuilt from the actual v2 service and its embedded editor. Markup captures must be refreshed after structural changes; editing generated example HTML/CSS alone is not a completed change. Run `python3 work/design-system/check-shared-sources.py` before packaging.

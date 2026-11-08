@@ -1,0 +1,29 @@
+{
+  "examples": 39,
+  "styleSource": "current-service",
+  "files": {
+    "design-system/build-preview.py": "d11a0202e3c71e1157313ba6cb4efe6ac549d9a81fc2286262d36739551ac048",
+    "design-system/catalog.js": "3c85681fb22a59e13ba7276700f3a6c9dc601c74f2563c6c576d078d45272b3a",
+    "design-system/editor-catalog.js": "f867b7023201f71ea3afdc746e0819c3cddd62f4c01177de330c2161f8435b86",
+    "design-system/preview/static/mobile/editor.css": "bdcdc9632e3e81c77499f1076069ece009061e8c87f84a4353032e906cad4a5f",
+    "design-system/preview/static/shared/editor.css": "36c335f4509071422823edd7444b916ca2e03e08dfa163cac40edaee6c333fd2",
+    "design-system/preview/static/shared/fonts.css": "f5285aa97d2386000a8659a9ac483d6e747bdc4780e072d7832f775b27721e8a",
+    "design-system/preview/work/mobile/calendar-layout.css": "223ca5e8b37d4d4a7f79b53b9c99e85124fc72036a46b0d1f02ecf5ec0b6f87c",
+    "design-system/preview/work/mobile/frame-color-tokens.css": "8749dad86bfd29d5ae2db0d02ed1cc9370a28ab98d9fb31585852b9597d0c24b",
+    "design-system/preview/work/mobile/frame-theme.css": "12b9937e0fd44d7f097785259fe09743e5e2bc7e33084d4444f2670ab489edc2",
+    "design-system/preview/work/mobile/frame-typography.css": "824996dae2bec82859ab5513656e2bb03f5eef0a7eabc4bb84856475107b2968",
+    "design-system/preview/work/mobile/frame-ui-tokens.css": "8946c85b369c120a7b9f714613fbb71853817eb466597209fa154ed7b4b4592c",
+    "design-system/preview/work/mobile/gym-logos.css": "b287f146a62726b5dec1802f6dd69f518207082d31b6f7bf38bf2b85470a3528",
+    "design-system/preview/work/mobile/profile-panel.css": "4999abbbe31cfc01001aa1acf64c5937024602bc8dd4c8d80e02dc4a37c5e616",
+    "design-system/preview/work/mobile/service-components.css": "59f30473e46efa61bc6e854c6fa9fe68734f1400e58c026e41bfa67fa17472c1",
+    "design-system/preview/work/mobile/v1-components.css": "277b15937ed14080bf8265b86cfa784d39205c91757150bdce2ae78eaa64b767",
+    "design-system/preview/work/mobile/v1-design-tokens.css": "0802b654dc7c2434195413c44ef2d1d964968374fa4fb6a45079a50bc2ecbf9e",
+    "design-system/preview/work/mobile/wandeung-v1-embedded.html": "85d343014192c1939555d45be8c864c29851c04d4db15c3da7f7486fa0159cf8",
+    "design-system/preview/work/mobile/wandeung-wireframe-preview.html": "289aabd26c36958cd910a11bc919306a7afa8de9a9ea60aa43194de3e7f60c9b",
+    "design-system/sample-dom.js": "5c6846843b006e463eb5557bb58ebb10344640ff5c3a4fa1299150b57640b584",
+    "design-system/sample-layout-v1.css": "7e8520331ff7e9a51299af5d2a8c3ee694d0ee9669673f2caf4bab46dd9719a6",
+    "design-system/sample-layout-v2.css": "3f53fa9c74dc7cd7dc8827585e1b6667b837f518c7f1faac6411ccdf239c08b8",
+    "design-system/service-examples.json": "bd6ea38c250293cf9ca3d3fc1524d1cc2af37e2975c0b3f91c1d0e3970070d95",
+    "design-system/service-styles.py": "7d665c17f242a19985df34adb5acf903984a960901ebd908047a9b699cf7a75e"
+  }
+}

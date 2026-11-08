@@ -28,6 +28,15 @@
 <link rel="stylesheet" href="../../frame-color-tokens.css?v=8749dad86bfd"><link rel="stylesheet" href="../../frame-ui-tokens.css?v=8946c85b369c"><style data-v2-page-shell>/* V2-only page integration. Original v1 editor controls and dialogs are reused.
    The outer page now owns the title and reset/save icon actions. */
 :root{--primary:var(--frame-primary)}
+.mobile-editor{
+ --control-surface:var(--frame-soft-background);
+ --control-border:var(--frame-soft-border);
+ --selection-bg:var(--frame-selected-background);
+ --selection-ink:var(--frame-text);
+ --selection-border:var(--frame-primary);
+ --tab-selection-bg:var(--frame-primary);
+ --tab-selection-ink:var(--frame-background);
+}
 body.mobile-editing{color:var(--frame-text);background:var(--frame-background)}
 .mobile-editor,.mobile-editor :is(.mobile-content,.mobile-panel-bar,.mobile-feedback,.mobile-tools){background-color:var(--frame-background)}
 .mobile-editor :is(.mobile-panel-bar,.mobile-header){border-color:var(--frame-nav-border)}
@@ -110,7 +119,7 @@ body.mobile-editing{color:var(--frame-text);background:var(--frame-background)}
 
 <script src="../shared/editor.js?v=1e65e62a5f45"></script>
 <script>window.WONINE_MOBILE_FORCE=true;</script>
-<script src="../../wandeung-v1-mobile-editor.js?v=0c4f17725d37"></script>
+<script src="../../wandeung-v1-mobile-editor.js?v=a098cf4c4276"></script>
 <script src="../shared/history.js?v=bfa12344fcfd"></script>
 <script data-v2-page-shell>// Commands invoke v1's existing reset dialog and PNG export handlers.
 (()=>{

@@ -58,6 +58,7 @@
 #wandeung-calendar .wc-info-panel .wc-info-heading>h2,
 #wandeung-calendar .wc-field,
 #wandeung-calendar .wc-info-field{font-size:var(--frame-ui-title-size);line-height:var(--frame-ui-title-line);font-weight:var(--frame-ui-title-weight)}
+#wandeung-calendar .wc-visit-toggle-row{font-weight:var(--frame-ui-title-weight)}
 #wandeung-calendar .wc-start>h3{font-size:var(--frame-card-title-size);line-height:var(--frame-card-title-line);font-weight:600}
 #wandeung-calendar :is(input,textarea)::placeholder{color:var(--frame-placeholder);opacity:1}
 

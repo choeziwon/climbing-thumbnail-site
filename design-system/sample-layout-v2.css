@@ -1,0 +1,15 @@
+/* Catalog framing only; component appearance comes from service styles. */
+body{margin: 0px; padding: 16px; background: var(--frame-background); overflow: hidden;}
+#wandeung-calendar{display: block; padding: 0px; min-height: 0px; width: 100%;}
+#wandeung-calendar .ds-shell{border-radius: 0px; background: transparent; display: block !important; width: 100% !important; max-width: none !important; height: auto !important; min-height: 0px !important; border: 0px !important; box-shadow: none !important; overflow: visible !important; transform: none !important;}
+#sample-content{display: flow-root;}
+#wandeung-calendar .ds-shell #wc-main{display: block !important; height: auto !important; min-height: 0px !important; padding: 0px !important; overflow: visible !important;}
+#wandeung-calendar .ds-shell .wc-pad{display: block !important; height: auto !important; min-height: 0px !important; padding: 0px !important;}
+#wandeung-calendar .wc-info-panel{padding: 0px; min-height: 0px;}
+#wandeung-calendar .wc-form-scroll{padding: 0px; overflow: visible;}
+#wandeung-calendar .wc-header{display: flex !important;}
+#wandeung-calendar .wc-nav{position: relative !important; inset: auto !important; transform: none !important; margin: 0px !important; width: 100% !important;}
+#wandeung-calendar .wc-day-sheet{width: 100%; max-height: none; position: relative !important; inset: auto !important; transform: none !important;}
+#wandeung-calendar .wc-profile-section{margin: 0px;}
+#wandeung-calendar .wc-template-preview{width: 100%; max-width: 280px; margin: 0px auto;}
+#wandeung-calendar .wc-record-date-panel{position: relative;}
