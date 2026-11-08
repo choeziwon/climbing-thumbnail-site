@@ -40,3 +40,9 @@
 /* Source: .mobile-panel .mark-link-switch[aria-checked=true]::after */
 #wandeung-calendar .wc-visit-toggle[aria-checked=true]::after{transform:translateX(20px)}
 #wandeung-calendar .wc-visit-toggle:hover:not(:disabled){background:transparent}
+
+/* Shared logo + title + metadata row, extracted from the live membership UI. */
+#wandeung-calendar .wc-phone .wc-logo-info-row{width:100%;min-height:0;text-align:left;border:0;border-radius:0;background:transparent;color:var(--frame-text);display:flex;align-items:center;gap:12px;font-size:var(--frame-main-size);line-height:var(--frame-main-line);font-variant-numeric:tabular-nums;padding:0;position:relative}
+#wandeung-calendar .wc-logo-info-copy{display:grid;gap:var(--frame-logo-info-copy-gap);flex:1;min-width:0}
+#wandeung-calendar .wc-logo-info-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;font-size:var(--frame-logo-info-title-size);line-height:var(--frame-logo-info-title-line)}
+#wandeung-calendar .wc-logo-info-meta{color:var(--frame-secondary-text);font-size:var(--frame-caption-size);line-height:var(--frame-caption-line);white-space:normal}

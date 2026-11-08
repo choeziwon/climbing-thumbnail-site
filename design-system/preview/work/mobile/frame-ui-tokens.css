@@ -29,6 +29,9 @@
   --frame-placeholder: var(--atomic-cool-neutral-80);
   --frame-card-title-size: 17px;
   --frame-card-title-line: 26px;
+  --frame-logo-info-title-size: 15px;
+  --frame-logo-info-title-line: 24px;
+  --frame-logo-info-copy-gap: 3px;
   --frame-stat-label-size: 14px;
   --frame-stat-label-line: 22px;
   --frame-stat-value-size: 16px;
