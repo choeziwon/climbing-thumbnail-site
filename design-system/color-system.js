@@ -35,8 +35,8 @@
       if(!value)throw new Error('컬러 토큰 누락: '+token);
       const item=document.createElement('div'),swatch=document.createElement('div'),fill=document.createElement('span'),name=document.createElement('strong'),code=document.createElement('code'),output=document.createElement('span');
       item.className='color-token';swatch.className='swatch';
-      fill.style.background=opacity?'rgb(17 17 17 / '+(Number(value)*100)+'%)':'var('+token+')';swatch.append(fill);
-      name.textContent=label;code.textContent=token;output.className='color-value';output.textContent=opacity?(Number(value)*100)+'%':value;
+      fill.style.background=opacity?'rgb(17 17 17 / '+Math.round(Number(value)*100)+'%)':'var('+token+')';swatch.append(fill);
+      name.textContent=label;code.textContent=token;output.className='color-value';output.textContent=opacity?Math.round(Number(value)*100)+'%':value;
       item.append(swatch,name,output,code);swatches.append(item);
     }
     section.append(heading,swatches);catalog.append(section);
