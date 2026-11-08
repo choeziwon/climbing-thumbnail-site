@@ -1,5 +1,31 @@
-const componentOrder=['상단 내비게이션 바','캘린더 툴바','하단 플로팅 메뉴','저장 · 삭제 버튼','텍스트 입력','단위 입력','날짜 입력','메모 입력','셀렉트박스','방문 상태 스위치','글자 연결 스위치','분할 선택','스타일 탭','텍스트 탭','색상 선택','크기 슬라이더','각도 슬라이더','글자 정렬','색상별 개수 조절','사진 구도 도구','텍스트 도구','전체 작업 기록','폰트 카드','통계 요약','프로필 카드','프로필 사진 편집','암장 카드','선택한 암장','암장 검색','방문 기록 항목','완등 통계','회원권 요약 카드','로고 정보 항목','템플릿 카드','날짜 선택 달력','연·월 선택 패널','날짜 내역 바텀 시트','빈 상태'];
-function sortComponentCatalog(){const catalog=document.querySelector('#component-catalog');[...catalog.children].sort((a,b)=>componentOrder.indexOf(a.querySelector('h2').textContent)-componentOrder.indexOf(b.querySelector('h2').textContent)).forEach(section=>catalog.append(section));}
+const componentGroups={
+ Input:['텍스트 입력','단위 입력','날짜 입력','메모 입력','셀렉트박스','암장 검색','크기 슬라이더','각도 슬라이더','색상 선택','색상별 개수 조절','프로필 사진 편집','날짜 선택 달력'],
+ Card:['로고 정보 항목','암장 카드','방문 기록 카드','선택한 암장','회원권 요약 카드','프로필 카드','템플릿 카드','폰트 카드','통계 요약','완등 통계'],
+ Navigation:['상단 내비게이션 바','캘린더 툴바','하단 플로팅 메뉴','스타일 탭','텍스트 탭'],
+ Button:['저장 · 삭제 버튼','방문 상태 스위치','글자 연결 스위치','분할 선택','글자 정렬'],
+ Tool:['사진 구도 도구','텍스트 도구','전체 작업 기록'],
+ Overlay:['연·월 선택 패널','날짜 내역 바텀 시트'],
+ Feedback:['빈 상태']
+};
+const componentCatalog=document.querySelector('#component-catalog');
+const groupTabs=document.createElement('div');groupTabs.className='ds-tabs ds-component-tabs';groupTabs.setAttribute('role','tablist');groupTabs.setAttribute('aria-label','Component categories');
+const groupPanels=new Map();
+function selectComponentGroup(name,focus=false){
+ for(const tab of groupTabs.children){const active=tab.dataset.componentGroup===name;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;groupPanels.get(tab.dataset.componentGroup).hidden=!active;if(active&&focus)tab.focus();}
+}
+for(const name of Object.keys(componentGroups)){
+ const tab=document.createElement('button'),panel=document.createElement('div');tab.type='button';tab.role='tab';tab.id='component-tab-'+name.toLowerCase();tab.dataset.componentGroup=name;tab.textContent=name;tab.setAttribute('aria-controls','component-group-'+name.toLowerCase());
+ panel.id=tab.getAttribute('aria-controls');panel.role='tabpanel';panel.className='grid';panel.setAttribute('aria-labelledby',tab.id);groupPanels.set(name,panel);groupTabs.append(tab);
+ tab.onclick=()=>selectComponentGroup(name);
+ tab.onkeydown=event=>{const tabs=[...groupTabs.children],index=tabs.indexOf(tab);let next;if(event.key==='ArrowRight')next=(index+1)%tabs.length;else if(event.key==='ArrowLeft')next=(index+tabs.length-1)%tabs.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=tabs.length-1;else return;event.preventDefault();selectComponentGroup(tabs[next].dataset.componentGroup,true);};
+}
+componentCatalog.classList.remove('grid');componentCatalog.append(groupTabs,...groupPanels.values());selectComponentGroup('Input');
+function sortComponentCatalog(){
+ for(const card of componentCatalog.querySelectorAll('section[data-component-example]')){
+  const name=card.dataset.componentExample,group=Object.keys(componentGroups).find(key=>componentGroups[key].includes(name));if(!group)throw new Error('컴포넌트 분류 누락: '+name);groupPanels.get(group).append(card);
+ }
+ for(const [group,panel] of groupPanels){const order=componentGroups[group];[...panel.children].sort((a,b)=>order.indexOf(a.dataset.componentExample)-order.indexOf(b.dataset.componentExample)).forEach(card=>panel.append(card));}
+}
 // Catalog examples come from the current service, with storage isolated per preview.
 function serviceDocument(kind){
  const base=new URL(kind==='v1'?'preview/static/mobile/':'preview/work/mobile/',location.href);
@@ -24,14 +50,14 @@ function serviceDocument(kind){
   const click=selector=>{const node=doc.querySelector(selector);if(!node)throw new Error('카탈로그 원본 누락: '+selector);node.click();};
   const settle=()=>new Promise(resolve=>win.requestAnimationFrame(()=>win.requestAnimationFrame(resolve)));
   await doc.fonts.ready;await settle();
-  const serviceStyles=[...doc.querySelectorAll('link[rel=stylesheet]')].map(x=>'<link rel="stylesheet" href="'+x.href+'">').join('')+[...doc.querySelectorAll('style')].map(x=>x.outerHTML).join('');
+  const serviceStyles=[...doc.querySelectorAll('link[rel=stylesheet],style')].map(node=>node.tagName==='LINK'?'<link rel="stylesheet" href="'+node.href+'">':node.outerHTML).join('');
   function sample(name,selector,context='plain',prepare){
    const original=doc.querySelector(selector);if(!original)throw new Error('카탈로그 원본 누락: '+name+' '+selector);
    const clone=original.cloneNode(true);if(prepare)prepare(clone);clone.hidden=false;
-   const card=document.createElement('section'),heading=document.createElement('h2'),frame=document.createElement('iframe');heading.textContent=name;frame.className='sample';frame.title=name;frame.dataset.selector=selector;card.append(heading,frame);document.querySelector('#component-catalog').append(card);sortComponentCatalog();
+   const card=document.createElement('section'),heading=document.createElement('h2'),frame=document.createElement('iframe');card.dataset.componentExample=name;heading.textContent=name;frame.className='sample';frame.title=name;frame.dataset.selector=selector;card.append(heading,frame);document.querySelector('#component-catalog').append(card);sortComponentCatalog();
    const symbols=doc.querySelector('#wandeung-calendar>svg')?.outerHTML||'';
    let content=clone.outerHTML;
-   if(context==='info')content='<div class="wc-info-panel">'+content+'</div>';
+   if(context==='info')content='<div class="wc-info-panel wc-info-overview">'+content+'</div>';
    if(context==='form')content='<div class="wc-form-scroll">'+content+'</div>';
    if(context==='thumbnail')content='<div class="wc-thumbnail-home">'+content+'</div>';
    const sampleBody=clone.matches('.wc-nav,.wc-header')?content:'<main id="wc-main"><div class="wc-pad">'+content+'</div></main>';
@@ -57,7 +83,7 @@ function serviceDocument(kind){
    if(emptyDay){emptyDay.click();await settle();sample('빈 상태','.wc-day-sheet-content');click('[data-action="close-day"]');await settle();}
    const day=doc.querySelector('.wc-day-status')?.closest('[data-date]')||doc.querySelector('[data-date]');day.click();await settle();
    sample('날짜 내역 바텀 시트','.wc-day-sheet');
-   sample('방문 기록 항목','.wc-day-sheet-content .wc-entry');
+   sample('방문 기록 카드','.wc-day-sheet-content .wc-entry');
    click('[data-open]');await settle();
    sample('상단 내비게이션 바','.wc-header');
    sample('암장 카드','.wc-record-gym-card');
