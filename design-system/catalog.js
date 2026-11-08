@@ -1,4 +1,4 @@
-const componentOrder=['상단 내비게이션 바','캘린더 툴바','하단 플로팅 메뉴','저장 · 삭제 버튼','텍스트 입력','단위 입력','날짜 입력','메모 입력','셀렉트박스','방문 상태 스위치','글자 연결 스위치','분할 선택','스타일 탭','텍스트 탭','색상 선택','크기 슬라이더','각도 슬라이더','글자 정렬','색상별 개수 조절','사진 구도 도구','텍스트 도구','폰트 카드','통계 요약','프로필 카드','프로필 사진 편집','암장 카드','선택한 암장','암장 검색','방문 기록 항목','완등 통계','회원권 요약 카드','로고 정보 항목','템플릿 카드','날짜 선택 달력','연·월 선택 패널','날짜 내역 바텀 시트','빈 상태'];
+const componentOrder=['상단 내비게이션 바','캘린더 툴바','하단 플로팅 메뉴','저장 · 삭제 버튼','텍스트 입력','단위 입력','날짜 입력','메모 입력','셀렉트박스','방문 상태 스위치','글자 연결 스위치','분할 선택','스타일 탭','텍스트 탭','색상 선택','크기 슬라이더','각도 슬라이더','글자 정렬','색상별 개수 조절','사진 구도 도구','텍스트 도구','전체 작업 기록','폰트 카드','통계 요약','프로필 카드','프로필 사진 편집','암장 카드','선택한 암장','암장 검색','방문 기록 항목','완등 통계','회원권 요약 카드','로고 정보 항목','템플릿 카드','날짜 선택 달력','연·월 선택 패널','날짜 내역 바텀 시트','빈 상태'];
 function sortComponentCatalog(){const catalog=document.querySelector('#component-catalog');[...catalog.children].sort((a,b)=>componentOrder.indexOf(a.querySelector('h2').textContent)-componentOrder.indexOf(b.querySelector('h2').textContent)).forEach(section=>catalog.append(section));}
 // Catalog examples come from the current service, with storage isolated per preview.
 function serviceDocument(kind){
@@ -14,7 +14,8 @@ function serviceDocument(kind){
  foundation('간격', ['page-x','card-padding','field-gap','label-gap','action-gap','menu-content-gap'].map(key=>'<div class="foundation-row"><code>--frame-'+key+'</code><span>'+value('--frame-'+key)+'</span><div class="token-size" style="width:var(--frame-'+key+')"></div></div>'));
  foundation('크기 · 모서리',['control-height','control-radius','button-radius','navigation-height','menu-height','menu-item-height'].map(key=>'<div class="foundation-row"><code>--frame-'+key+'</code><span>'+value('--frame-'+key)+'</span></div>'));
  const utility=document.createElement('section');utility.innerHTML='<h2>스크롤</h2><div class="utility-scroll" tabindex="0" aria-label="가로 스크롤 예시">'+[1,2,3,4,5,6].map(i=>'<div>'+i+'</div>').join('')+'</div><code class="utility-token">static/shared/scrollbars.css</code>';document.querySelector('#utility-catalog').append(utility);
- const motion=document.createElement('section');motion.innerHTML='<h2>모션</h2>'+['menu-motion','menu-selection-motion','menu-compact-scale','menu-backdrop'].map(key=>'<div class="foundation-row"><code>--frame-'+key+'</code><span>'+value('--frame-'+key)+'</span></div>').join('');document.querySelector('#utility-catalog').append(motion);
+ foundation('모션',['menu-motion','menu-selection-motion','menu-compact-scale'].map(key=>'<div class="foundation-row"><code>--frame-'+key+'</code><span>'+value('--frame-'+key)+'</span></div>'));
+ foundation('표면 효과',['menu-backdrop','menu-shadow'].map(key=>'<div class="foundation-row"><code>--frame-'+key+'</code><span>'+value('--frame-'+key)+'</span></div>'));
 })();
 (async()=>{
  const source=document.createElement('iframe');source.className='catalog-source';source.title='서비스 컴포넌트 원본';source.tabIndex=-1;source.setAttribute('aria-hidden','true');
