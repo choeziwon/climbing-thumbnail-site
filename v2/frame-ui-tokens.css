@@ -29,6 +29,10 @@
   --frame-placeholder: var(--atomic-cool-neutral-80);
   --frame-card-title-size: 17px;
   --frame-card-title-line: 26px;
+  --frame-logo-info-gap: 12px;
+  --frame-logo-info-logo-size: 40px;
+  --frame-selected-gym-logo-size: 36px;
+  --frame-logo-info-title-weight: 500;
   --frame-logo-info-title-size: 15px;
   --frame-logo-info-title-line: 24px;
   --frame-logo-info-copy-gap: 3px;

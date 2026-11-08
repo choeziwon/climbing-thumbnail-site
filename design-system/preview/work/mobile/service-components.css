@@ -1,0 +1,44 @@
+/* Shared service identity row. Layout variants reuse the approved search,
+   selected-gym, framed entry and unframed membership surfaces. */
+#wandeung-calendar .wc-phone .wc-logo-info-row{
+ display:flex;align-items:center;gap:var(--frame-logo-info-gap);width:100%;min-width:0;
+ min-height:0;margin:0;padding:0;text-align:left;box-sizing:border-box;
+ border:0;border-radius:0;background:transparent;color:var(--frame-text);
+ font-family:var(--frame-font-family);font-size:var(--frame-main-size);
+ line-height:var(--frame-main-line);font-variant-numeric:tabular-nums;
+}
+#wandeung-calendar .wc-phone .wc-logo-info-row>.wc-gym-logo{
+ width:var(--frame-logo-info-logo-size);height:var(--frame-logo-info-logo-size);
+ flex:0 0 var(--frame-logo-info-logo-size);
+}
+#wandeung-calendar .wc-phone .wc-logo-info-copy{display:grid;gap:var(--frame-logo-info-copy-gap);flex:1;min-width:0}
+#wandeung-calendar .wc-phone .wc-logo-info-title{
+ display:block;margin:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+ font-size:var(--frame-logo-info-title-size);line-height:var(--frame-logo-info-title-line);
+ font-weight:var(--frame-logo-info-title-weight);color:var(--frame-text);
+}
+#wandeung-calendar .wc-phone .wc-logo-info-meta,
+#wandeung-calendar .wc-phone .wc-logo-info-meta small{
+ display:block;margin:0;min-width:0;font-size:var(--frame-caption-size);
+ line-height:var(--frame-caption-line);font-weight:400;color:var(--frame-secondary-text);
+ white-space:normal;overflow-wrap:anywhere;
+}
+#wandeung-calendar .wc-logo-info-meta .wc-badge{display:inline-block;margin-left:4px;vertical-align:baseline}
+#wandeung-calendar .wc-phone .wc-logo-info-chevron{flex:none;width:18px;height:18px;color:var(--frame-secondary-text)}
+#wandeung-calendar .wc-phone .wc-logo-info-row.is-card{
+ padding:var(--frame-card-padding);border:1px solid var(--frame-control-border);
+ border-radius:var(--frame-control-radius);background:var(--frame-background);
+}
+#wandeung-calendar .wc-phone .wc-logo-info-row.wc-entry{margin-bottom:12px}
+#wandeung-calendar .wc-phone .wc-logo-info-row.wc-record-gym-card{margin-top:12px}
+#wandeung-calendar .wc-phone button.wc-logo-info-row:hover:not(:disabled){background:transparent}
+#wandeung-calendar .wc-phone button.wc-logo-info-row.is-card:hover:not(:disabled){background:var(--frame-hover-background)}
+#wandeung-calendar .wc-phone .wc-logo-info-row.wc-gym-option{padding:10px 8px;min-height:60px}
+#wandeung-calendar .wc-phone .wc-logo-info-row.wc-gym-option:hover:not(:disabled){background:var(--frame-hover-background)}
+#wandeung-calendar .wc-phone .wc-logo-info-row.wc-selected-gym{margin-top:var(--frame-label-gap)}
+#wandeung-calendar .wc-phone .wc-logo-info-row.wc-selected-gym>.wc-gym-logo{
+ width:var(--frame-selected-gym-logo-size);height:var(--frame-selected-gym-logo-size);flex-basis:var(--frame-selected-gym-logo-size);
+}
+#wandeung-calendar .wc-phone .wc-logo-info-row.wc-membership-card-top{margin-bottom:var(--frame-field-gap)}
+/* Keep the component consistent even when hosted inside another card/form. */
+#wandeung-calendar .wc-phone .wc-logo-info-row .wc-badge{flex:none}

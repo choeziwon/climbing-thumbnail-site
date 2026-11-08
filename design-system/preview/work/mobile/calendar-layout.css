@@ -352,9 +352,7 @@
 #wandeung-calendar .wc-template-footer strong{font-size:var(--frame-card-title-size);font-weight:600;line-height:var(--frame-card-title-line)}
 #wandeung-calendar .wc-template-footer>span{display:flex;align-items:center;justify-content:space-between;color:var(--frame-secondary-text);font-size:var(--frame-caption-size)}
 #wandeung-calendar .wc-template-footer svg{width:16px;height:16px}
-#wandeung-calendar .wc-thumbnail-records .wc-entry{margin:0 0 12px;padding:12px;gap:12px}
 #wandeung-calendar .wc-thumbnail-records .wc-entry-main{min-width:0}
-#wandeung-calendar .wc-thumbnail-records .wc-entry strong{font-size:var(--frame-main-size);line-height:var(--frame-main-line);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #wandeung-calendar .wc-thumbnail-records .wc-entry>svg{flex:none;width:18px;height:18px;color:var(--frame-secondary-text)}
 #wandeung-calendar .wc-membership-history .wc-entry{width:100%;margin:12px 0 0}
 #wandeung-calendar .wc-membership-history .wc-entry>svg{flex:none;width:18px;height:18px}
@@ -368,5 +366,4 @@
 #wandeung-calendar .wc-record-detail-date{margin:0;font:600 18px/24px var(--frame-font-family)}
 #wandeung-calendar .wc-record-gym-card,
 #wandeung-calendar .wc-record-membership-card{border:1px solid var(--frame-control-border);border-radius:var(--frame-control-radius);background:var(--frame-background);padding:var(--frame-card-padding);margin-top:12px}
-#wandeung-calendar .wc-record-membership-card .wc-membership-summary-row{border:0;border-radius:0;padding:0;min-height:0;background:transparent}
 #wandeung-calendar .wc-record-membership-card .wc-membership-summary-row>svg{flex:none;width:18px;height:18px;color:var(--frame-secondary-text)}

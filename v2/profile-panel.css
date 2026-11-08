@@ -44,8 +44,6 @@
 #wandeung-calendar .wc-membership-dates{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
 #wandeung-calendar .wc-membership-dates input[type=date]{margin-top:var(--frame-label-gap);font-size:14px;padding:10px 8px}
 #wandeung-calendar .wc-membership-card{padding:var(--frame-card-padding);border:1px solid var(--frame-control-border);border-radius:var(--frame-control-radius);margin-bottom:12px}
-#wandeung-calendar .wc-membership-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-#wandeung-calendar .wc-membership-card-top strong{min-width:0;overflow-wrap:anywhere;font-size:var(--frame-card-title-size);line-height:var(--frame-card-title-line);font-weight:600}
 #wandeung-calendar .wc-membership-status{flex:none;font-size:13px;line-height:20px;padding:2px 8px;border-radius:6px;background:var(--frame-soft-background);font-weight:600}
 #wandeung-calendar .is-expired .wc-membership-status{color:var(--frame-muted)}
 #wandeung-calendar .wc-membership-kind{font-size:14px;line-height:20px;margin:4px 0 16px;overflow-wrap:anywhere;color:var(--frame-muted)}
@@ -68,7 +66,7 @@
 #wandeung-calendar .wc-info-panel .wc-membership-summary{display:block;width:100%;text-align:left;padding:var(--frame-card-padding);border:0;border-radius:var(--frame-control-radius);background:var(--frame-soft-background);color:var(--frame-text)}
 #wandeung-calendar .wc-membership-summary>.wc-membership-summary-body{display:grid;gap:12px;min-width:0;width:100%}
 #wandeung-calendar .wc-membership-summary-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
-#wandeung-calendar .wc-membership-summary strong{font-size:var(--frame-card-title-size);line-height:var(--frame-card-title-line);font-weight:600}
+#wandeung-calendar .wc-membership-summary-heading>.wc-card-title{font-size:var(--frame-card-title-size);line-height:var(--frame-card-title-line);font-weight:600}
 #wandeung-calendar .wc-membership-summary-heading svg{width:18px;height:18px;flex:none;stroke-width:1.7;color:var(--frame-muted)}
 #wandeung-calendar .wc-membership-summary-row:last-child{padding-bottom:0}
 #wandeung-calendar .wc-membership-total{margin-left:4px;color:var(--frame-secondary-text)}

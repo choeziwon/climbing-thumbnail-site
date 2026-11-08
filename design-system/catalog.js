@@ -9,10 +9,10 @@ function serviceDocument(kind){
 (()=>{
  const styles=getComputedStyle(document.documentElement),value=t=>styles.getPropertyValue(t).trim();
  function foundation(title,rows){const section=document.createElement('section');section.innerHTML='<h2>'+title+'</h2>';for(const row of rows)section.insertAdjacentHTML('beforeend',row);document.querySelector('#foundation-catalog').append(section);}
- const types=[['페이지 제목','title',600],['카드 제목','card-title',600],['Title UI','ui-title',500],['본문','main',400],['설명','description',400],['캡션','caption',400]];
+ const types=[['페이지 제목','title',600],['카드 제목','card-title',600],['로고 정보 제목','logo-info-title',500],['Title UI','ui-title',500],['본문','main',400],['설명','description',400],['캡션','caption',400]];
  foundation('타이포그래피',types.map(([label,key,weight])=>'<div class="foundation-row"><div style="font-size:var(--frame-'+key+'-size);line-height:var(--frame-'+key+'-line);font-weight:'+weight+'">'+label+' · 완등 한 컷</div><span>'+value('--frame-'+key+'-size')+' / '+value('--frame-'+key+'-line')+' / '+weight+'</span><code>--frame-'+key+'-size · --frame-'+key+'-line</code></div>'));
- foundation('간격', ['page-x','card-padding','field-gap','label-gap','action-gap','menu-content-gap'].map(key=>'<div class="foundation-row"><code>--frame-'+key+'</code><span>'+value('--frame-'+key)+'</span><div class="token-size" style="width:var(--frame-'+key+')"></div></div>'));
- foundation('크기 · 모서리',['control-height','control-radius','button-radius','navigation-height','menu-height','menu-item-height'].map(key=>'<div class="foundation-row"><code>--frame-'+key+'</code><span>'+value('--frame-'+key)+'</span></div>'));
+ foundation('간격', ['page-x','card-padding','field-gap','label-gap','action-gap','menu-content-gap','logo-info-gap','logo-info-copy-gap'].map(key=>'<div class="foundation-row"><code>--frame-'+key+'</code><span>'+value('--frame-'+key)+'</span><div class="token-size" style="width:var(--frame-'+key+')"></div></div>'));
+ foundation('크기 · 모서리',['control-height','control-radius','button-radius','navigation-height','menu-height','menu-item-height','logo-info-logo-size','selected-gym-logo-size'].map(key=>'<div class="foundation-row"><code>--frame-'+key+'</code><span>'+value('--frame-'+key)+'</span></div>'));
  const utility=document.createElement('section');utility.innerHTML='<h2>스크롤</h2><div class="utility-scroll" tabindex="0" aria-label="가로 스크롤 예시">'+[1,2,3,4,5,6].map(i=>'<div>'+i+'</div>').join('')+'</div><code class="utility-token">static/shared/scrollbars.css</code>';document.querySelector('#utility-catalog').append(utility);
  foundation('모션',['menu-motion','menu-selection-motion','menu-compact-scale'].map(key=>'<div class="foundation-row"><code>--frame-'+key+'</code><span>'+value('--frame-'+key)+'</span></div>'));
  foundation('표면 효과',['menu-backdrop','menu-shadow'].map(key=>'<div class="foundation-row"><code>--frame-'+key+'</code><span>'+value('--frame-'+key)+'</span></div>'));
@@ -76,7 +76,7 @@ function serviceDocument(kind){
    click('[data-action="close-form"]');click('[data-menu="info"]');await settle();
    sample('프로필 카드','.wc-profile-section','info');
    sample('회원권 요약 카드','.wc-membership-summary','info');
-   sample('로고 정보 항목','.wc-membership-summary-row','info');
+   sample('로고 정보 항목','.wc-membership-summary .wc-logo-info-row','info');
    click('[data-profile-action="edit"]');await settle();
    sample('프로필 사진 편집','.wc-profile-photo-row','info');
    sample('텍스트 입력','.wc-profile-edit-fields>.wc-info-field','info');

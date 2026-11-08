@@ -86,7 +86,6 @@ body{background:var(--frame-soft-background);color:var(--frame-text);font-family
 #wandeung-calendar .wc-record-memo textarea{height:44px;min-height:44px;padding:10px 12px;line-height:22px;resize:none;overflow-y:auto;border-radius:var(--frame-control-radius)}
 #wandeung-calendar .wc-required-dot{display:inline-block;vertical-align:super;width:4px;height:4px;border-radius:50%;background:var(--frame-destructive);margin-left:4px}
 #wandeung-calendar .wc-selected-gym{display:flex;align-items:center;gap:12px;margin-top:var(--frame-label-gap)}
-#wandeung-calendar .wc-selected-gym>strong{font-size:16px;line-height:24px;flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere}
 #wandeung-calendar .wc-selected-gym>button{display:flex;align-items:center;justify-content:center;width:40px;height:40px;min-height:40px;border:0;border-radius:50%;background:transparent;padding:10px;position:relative;isolation:isolate}
 #wandeung-calendar .wc-selected-gym>button svg{width:18px;height:18px}
 
