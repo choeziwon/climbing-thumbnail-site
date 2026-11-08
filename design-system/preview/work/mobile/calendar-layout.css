@@ -363,3 +363,10 @@
 #wandeung-calendar .wc-template-carousel.is-dragging{cursor:grabbing;scroll-snap-type:none}
 #wandeung-calendar .wc-record-date-panel>.wc-row>.wc-date-month-title{display:flex;align-items:center;justify-content:center;gap:4px;width:auto;padding:4px 8px;font:600 var(--frame-card-title-size)/var(--frame-card-title-line) var(--frame-font-family)}
 #wandeung-calendar .wc-date-month-title svg{width:16px;height:16px}
+
+/* Visit detail reuses the day-sheet date and existing entry card. */
+#wandeung-calendar .wc-record-detail-date{margin:0;font:600 18px/24px var(--frame-font-family)}
+#wandeung-calendar .wc-record-gym-card,
+#wandeung-calendar .wc-record-membership-card{border:1px solid var(--frame-control-border);border-radius:var(--frame-control-radius);background:var(--frame-background);padding:var(--frame-card-padding);margin-top:12px}
+#wandeung-calendar .wc-record-membership-card .wc-membership-summary-row{border:0;border-radius:0;padding:0;min-height:0;background:transparent}
+#wandeung-calendar .wc-record-membership-card .wc-membership-summary-row>svg{flex:none;width:18px;height:18px;color:var(--frame-secondary-text)}

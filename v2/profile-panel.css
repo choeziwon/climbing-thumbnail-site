@@ -70,7 +70,7 @@
 #wandeung-calendar .wc-membership-summary-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
 #wandeung-calendar .wc-membership-summary strong{font-size:var(--frame-card-title-size);line-height:var(--frame-card-title-line);font-weight:600}
 #wandeung-calendar .wc-membership-summary-heading svg{width:18px;height:18px;flex:none;stroke-width:1.7;color:var(--frame-muted)}
-#wandeung-calendar .wc-info-panel .wc-membership-summary-row{width:100%;min-height:0;text-align:left;border:0;border-radius:0;background:transparent;color:var(--frame-text);display:flex;align-items:center;gap:12px;font-size:var(--frame-main-size);line-height:var(--frame-main-line);font-variant-numeric:tabular-nums;padding:0;position:relative}
+#wandeung-calendar .wc-membership-summary-row{width:100%;min-height:0;text-align:left;border:0;border-radius:0;background:transparent;color:var(--frame-text);display:flex;align-items:center;gap:12px;font-size:var(--frame-main-size);line-height:var(--frame-main-line);font-variant-numeric:tabular-nums;padding:0;position:relative}
 #wandeung-calendar .wc-membership-summary-row:last-child{padding-bottom:0}
 #wandeung-calendar .wc-membership-summary-copy{display:grid;gap:4px;flex:1;min-width:0}
 #wandeung-calendar .wc-membership-summary-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;font-size:16px;line-height:24px}
