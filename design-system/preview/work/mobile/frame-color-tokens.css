@@ -1,0 +1,41 @@
+/* Wanted Montage Atomic → 완등 한 컷 adaptation, reviewed 2026-11-08.
+   Source: https://montage.wanted.co.kr/docs/foundations/base-material/colors/atomic
+   Cool Neutral is softened slightly; the existing #111111 brand is preserved.
+   These are UI colors, independent of gym logos and user artwork. */
+:root {
+  --atomic-common-0: #000000;
+  --atomic-common-100: #ffffff;
+  --atomic-brand-10: #111111;
+  --atomic-neutral-5: #0f0f10;
+  --atomic-neutral-7: #141415;
+  --atomic-neutral-10: #171717;
+  --atomic-neutral-15: #1b1c1e;
+  --atomic-neutral-17: #212225;
+  --atomic-neutral-20: #292a2c;
+  --atomic-neutral-22: #2e2f33;
+  --atomic-neutral-23: #333438;
+  --atomic-neutral-25: #37383c;
+  --atomic-neutral-30: #46474c;
+  --atomic-neutral-40: #5a5c63;
+  --atomic-neutral-50: #72747c;
+  --atomic-neutral-60: #898b93;
+  --atomic-neutral-70: #9b9da4;
+  --atomic-neutral-80: #aeb1b8;
+  --atomic-neutral-90: #c2c4c8;
+  --atomic-neutral-95: #dbdcdf;
+  --atomic-neutral-96: #e1e2e4;
+  --atomic-neutral-97: #ececef;
+  --atomic-neutral-98: #f5f5f7;
+  --atomic-neutral-99: #fafafb;
+  --atomic-red-10: #3b0101;
+  --atomic-red-20: #730303;
+  --atomic-red-30: #b3262e;
+  --atomic-red-40: #d9363e;
+  --atomic-red-50: #ee4853;
+  --atomic-red-60: #ff6363;
+  --atomic-red-70: #ff8c8c;
+  --atomic-red-80: #ffb5b5;
+  --atomic-red-90: #fed5d5;
+  --atomic-red-95: #feecec;
+  --atomic-red-99: #fffafa;
+}

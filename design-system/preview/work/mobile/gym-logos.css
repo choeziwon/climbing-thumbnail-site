@@ -1,0 +1,72 @@
+#wandeung-calendar .wc-gym-logo{position:relative;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;flex:0 0 40px;border-radius:10px;overflow:hidden;background:#fff;color:var(--wc-muted);border:1px solid var(--wc-line);vertical-align:middle}
+#wandeung-calendar .wc-gym-logo>svg{width:22px;height:22px}
+#wandeung-calendar .wc-gym-logo>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff;padding:3px}
+#wandeung-calendar .wc-gym-logo-small{width:42px;height:42px;flex-basis:42px;border-radius:10px}
+#wandeung-calendar .wc-gym-logo-small>svg{width:27px;height:27px}
+#wandeung-calendar .wc-gym-logo-small>img{padding:1px}
+#wandeung-calendar .wc-date{min-height:58px;height:58px!important;gap:2px;padding:4px 0}
+#wandeung-calendar .wc-day-gyms{display:flex;align-items:center;justify-content:center;gap:2px;height:44px;max-width:100%;width:42px;position:relative}
+#wandeung-calendar .wc-day-more{font-size:10px;line-height:12px}
+#wandeung-calendar .wc-day-status{position:relative;display:inline-flex}
+#wandeung-calendar .wc-day-status>.wc-dot{position:absolute;right:-1px;bottom:-1px;background:var(--wc-bg);color:var(--wc-fg);width:6px;height:6px}
+#wandeung-calendar .wc-day-status>.wc-dot.done{background:var(--wc-fg)}
+#wandeung-calendar .wc-gym-input-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+#wandeung-calendar .wc-gym-input-row input{margin-top:0;flex:1;min-width:0}
+#wandeung-calendar .wc-gym-results{margin-top:8px;max-height:240px;overflow:auto;border:1px solid var(--wc-line);border-radius:10px;padding:4px}
+#wandeung-calendar .wc-gym-option{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:transparent;padding:10px 8px;min-height:60px}
+#wandeung-calendar .wc-gym-option>span:last-child{min-width:0;flex:1}
+#wandeung-calendar .wc-gym-option strong{display:block;font-size:15px;line-height:22px;font-weight:500;overflow-wrap:anywhere}
+#wandeung-calendar .wc-gym-option small{display:block;font-size:12px;line-height:18px;color:var(--wc-muted)}
+#wandeung-calendar .wc-gym-option:hover,#wandeung-calendar .wc-gym-option:focus-visible{background:var(--wc-soft)}
+#wandeung-calendar .wc-gym-results>p{padding:12px;margin:0}
+#wandeung-calendar .wc-gym-detail-title{display:flex;align-items:center;gap:12px}
+
+#wandeung-calendar .wc-gym-more{width:100%;min-height:44px;background:var(--wc-soft);border:0;border-radius:8px;font-size:15px;color:var(--wc-fg)}
+
+/* White artwork with original white areas revealing the gym background. */
+#wandeung-calendar .wc-gym-logo{background:var(--gym-accent,#3d424b);color:#fff;border:0}
+#wandeung-calendar .wc-gym-logo>img{background:transparent;filter:url(#wc-white-logo)}
+/* This high-resolution monochrome original already has transparent cutouts. */
+#wandeung-calendar .wc-gym-logo>img[src$="/the-climb-hires.png"]{filter:brightness(0) invert(1);padding:0}
+#wandeung-calendar .wc-gym-location{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;color:var(--wc-muted);font-size:12px;line-height:18px}
+#wandeung-calendar .wc-gym-location>button{flex-shrink:0;min-height:44px;padding:4px 8px;background:transparent;border:0;color:var(--wc-fg);font-size:13px}
+
+/* Calendar density approved 2026-11-04. */
+#wandeung-calendar .wc-date-number{font-size:12px;line-height:16px;font-weight:400}
+#wandeung-calendar .wc-calendar{margin-top:12px;row-gap:2px}
+#wandeung-calendar .wc-weekday{padding-block:4px}
+#wandeung-calendar .wc-legend{margin-top:10px}
+
+/* Approved number-only date badges and date-detail bottom sheet. */
+#wandeung-calendar .wc-date,#wandeung-calendar .wc-date[aria-pressed=true],#wandeung-calendar .wc-date[aria-pressed=true]:hover,#wandeung-calendar .wc-date.wc-today:not([aria-pressed=true]){background:transparent;color:var(--wc-fg);border:0;box-shadow:none}
+#wandeung-calendar .wc-date-number{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:18px;border-radius:9px;padding:0 4px}
+#wandeung-calendar .wc-date[aria-pressed=true] .wc-date-number{background:var(--frame-primary);color:#fff}
+#wandeung-calendar .wc-date.wc-today:not([aria-pressed=true]) .wc-date-number{box-shadow:inset 0 0 0 1px var(--frame-primary)}
+#wandeung-calendar .wc-phone{position:relative}
+#wandeung-calendar .wc-day-overlay{position:absolute;inset:0;z-index:30;display:flex;align-items:flex-end}
+#wandeung-calendar .wc-day-backdrop{position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:0;padding:0;background:#0005}
+#wandeung-calendar .wc-day-backdrop:hover:not(:disabled){background:#0005}
+#wandeung-calendar .wc-day-sheet{position:relative;display:flex;flex-direction:column;width:100%;height:220px;max-height:65%;overflow:hidden;border-radius:20px 20px 0 0;background:var(--frame-background);padding:20px 16px;border:0;box-shadow:0 -4px 24px #0001}
+#wandeung-calendar .wc-day-sheet::before{content:'';display:block;width:40px;height:4px;border-radius:2px;background:var(--frame-control-border);margin:-12px auto 8px;flex:none}
+
+/* White artwork on a colored original background uses its light ink mask. */
+#wandeung-calendar .wc-gym-logo-light>img{filter:url(#wc-light-logo)}
+/* Preserve colored artwork and white cutouts on near-black source backgrounds. */
+#wandeung-calendar .wc-gym-logo-color-on-dark>img{filter:url(#wc-color-on-dark-logo)}
+/* Remove the warm paper background of the original Moon Climb wordmark. */
+#wandeung-calendar .wc-gym-logo-paper>img{filter:url(#wc-paper-logo)}
+
+/* Ayers Rock: keep the original dark/orange ink, remove white and cyan paper. */
+#wandeung-calendar .wc-gym-logo-blue-paper>img{filter:url(#wc-blue-paper-logo)}
+
+/* Stonz: remove gray textured paper while preserving the original dark silhouette. */
+#wandeung-calendar .wc-gym-logo-dark-ink>img{filter:url(#wc-dark-ink-logo)}
+
+/* Reviewed source-space symbol crops are shared by search, records and calendars. */
+#wandeung-calendar .wc-gym-logo-fitted>img{inset:auto;right:auto;bottom:auto;max-width:none;max-height:none;object-fit:fill;padding:0}
+#wandeung-calendar .wc-gym-logo-warm-ink>img{filter:url(#wc-warm-ink-logo)}
+
+/* Keep the original fine strokes instead of flattening colored artwork into a fill. */
+#wandeung-calendar .wc-gym-logo-light-soft>img{filter:url(#wc-light-soft-logo)}
+#wandeung-calendar .wc-gym-logo-light-line>img{filter:url(#wc-light-line-logo)}
+#wandeung-calendar .wc-gym-logo-outline>img{filter:url(#wc-outline-logo)}
