@@ -110,7 +110,7 @@ body.mobile-editing{color:var(--frame-text);background:var(--frame-background)}
 
 <script src="../shared/editor.js?v=1e65e62a5f45"></script>
 <script>window.WONINE_MOBILE_FORCE=true;</script>
-<script src="../../work/mobile/wandeung-v1-mobile-editor.js?v=0f3bb37680a9"></script>
+<script src="../../work/mobile/wandeung-v1-mobile-editor.js?v=c73683c26af2"></script>
 <script src="../shared/history.js?v=bfa12344fcfd"></script>
 <script data-v2-page-shell>// Commands invoke v1's existing reset dialog and PNG export handlers.
 (()=>{
@@ -228,8 +228,9 @@ body.mobile-editing{color:var(--frame-text);background:var(--frame-background)}
  changed();
 })();
 </script><script>
-(()=>{
+(async()=>{
   const params=new URLSearchParams(location.search);
+  if(params.has('template'))await window.wandeungApplyTemplate?.(params.get('template'));
   if(!params.has('caption'))return;
   const input=document.getElementById('text');
   input.value=params.get('caption').slice(0,80);

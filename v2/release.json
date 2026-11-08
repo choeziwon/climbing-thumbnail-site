@@ -15,7 +15,11 @@
     "shared-atomic-color-system",
     "full-color-palette",
     "updated-service-ui",
-    "gym-logo-membership-summary"
+    "gym-logo-membership-summary",
+    "template-first-thumbnail-home",
+    "visit-membership-links",
+    "membership-visit-history",
+    "modal-menu-occlusion-fix"
   ],
   "colorTokenSha256": "8749dad86bfd29d5ae2db0d02ed1cc9370a28ab98d9fb31585852b9597d0c24b"
 }

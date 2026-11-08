@@ -327,3 +327,34 @@
 #wandeung-calendar .wc-record-date-panel>.wc-row>strong{font-size:var(--frame-card-title-size);line-height:var(--frame-card-title-line);font-weight:600}
 /* Profile editing uses the existing secondary-screen header; no empty toolbar. */
 #wandeung-calendar .wc-phone:has(.wc-info-overview)>.wc-header{background:var(--frame-soft-background)}
+
+/* Modal sheets cover the menu, including its part inside the home safe area. */
+#wandeung-calendar .wc-phone:has(.wc-day-overlay)>.wc-nav{visibility:hidden;pointer-events:none}
+
+/* Approved template-first home, composed from service cards, holds and entries. */
+#wandeung-calendar .wc-thumbnail-home{display:grid;gap:28px;padding-top:16px}
+#wandeung-calendar .wc-thumbnail-home section{min-width:0}
+#wandeung-calendar .wc-thumbnail-home .wc-row{margin-bottom:12px;gap:8px}
+#wandeung-calendar .wc-thumbnail-home h2{margin:0;font:600 var(--frame-card-title-size)/var(--frame-card-title-line) var(--frame-font-family)}
+#wandeung-calendar .wc-thumbnail-home .wc-link{display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;padding:4px 0;min-height:32px;font-size:var(--frame-caption-size);color:var(--frame-secondary-text);border:0;background:transparent}
+#wandeung-calendar .wc-thumbnail-home .wc-link svg{width:16px;height:16px}
+#wandeung-calendar .wc-template-carousel{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;touch-action:pan-x;padding:2px 2px 8px;margin:0 -2px}
+#wandeung-calendar button.wc-template-preview{flex:0 0 76%;min-width:0;display:block;border:1px solid var(--frame-soft-border);border-radius:var(--frame-control-radius);padding:0;background:var(--frame-background);text-align:left;overflow:hidden;scroll-snap-align:start}
+#wandeung-calendar .wc-template-art{position:relative;display:block;aspect-ratio:3/3.25;background:var(--frame-soft-background);overflow:hidden}
+#wandeung-calendar .wc-template-art::before{content:'';position:absolute;inset:12px;border:1px solid var(--frame-background);border-radius:4px}
+#wandeung-calendar .wc-template-caption{position:absolute;left:16px;right:16px;transform:translateY(-50%);text-align:center;white-space:pre-line;font-family:Wave,OneKutBrand,var(--frame-font-family);font-size:38px;line-height:1.15;color:var(--frame-background);-webkit-text-stroke:.7px var(--frame-primary);paint-order:stroke fill}
+#wandeung-calendar .wc-template-bottom .wc-template-caption,#wandeung-calendar .wc-template-count .wc-template-caption{font-size:26px}
+#wandeung-calendar .wc-template-holds{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;font:500 18px/24px var(--frame-font-family);color:var(--frame-text);-webkit-text-stroke:0}
+#wandeung-calendar .wc-template-holds svg{width:30px;height:30px}
+#wandeung-calendar .wc-template-count .wc-template-holds svg{width:18px;height:18px}
+#wandeung-calendar .wc-template-number{position:absolute;top:22px;left:22px;font-size:var(--frame-caption-size);color:var(--frame-muted)}
+#wandeung-calendar .wc-template-footer{display:grid;gap:4px;padding:12px 16px}
+#wandeung-calendar .wc-template-footer strong{font-size:var(--frame-card-title-size);font-weight:600;line-height:var(--frame-card-title-line)}
+#wandeung-calendar .wc-template-footer>span{display:flex;align-items:center;justify-content:space-between;color:var(--frame-secondary-text);font-size:var(--frame-caption-size)}
+#wandeung-calendar .wc-template-footer svg{width:16px;height:16px}
+#wandeung-calendar .wc-thumbnail-records .wc-entry{margin:0 0 12px;padding:12px;gap:12px}
+#wandeung-calendar .wc-thumbnail-records .wc-entry-main{min-width:0}
+#wandeung-calendar .wc-thumbnail-records .wc-entry strong{font-size:var(--frame-main-size);line-height:var(--frame-main-line);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#wandeung-calendar .wc-thumbnail-records .wc-entry>svg{flex:none;width:18px;height:18px;color:var(--frame-secondary-text)}
+#wandeung-calendar .wc-membership-history .wc-entry{width:100%;margin:12px 0 0}
+#wandeung-calendar .wc-membership-history .wc-entry>svg{flex:none;width:18px;height:18px}

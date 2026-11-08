@@ -537,6 +537,7 @@ function setupMobileWorkspace(){
       state.captionPresent=true;state.x=clamp(Number(snapshot.x)||50,0,100);state.y=clamp(Number(snapshot.y)||50,0,100);state.loadVersion++;activeTemplate=item.id;update();renderExtraTexts();renderTemplates();showStatus('');
     }catch{showStatus('템플릿을 적용하지 못했어요. 다시 시도해 주세요.');}
   }
+  window.wandeungApplyTemplate=id=>{const item=builtInTemplates.find(item=>item.id===id);return item?applyTemplate(item):Promise.resolve();};
   window.addEventListener('editorreset',()=>{templateRequest++;activeTemplate=null;});
   const templateMenu=makeMenuOverview(panels[3],'템플릿',[
     ['전체 템플릿','<rect x="3" y="3" width="8" height="8" rx="1"/><rect x="14" y="3" width="7" height="8" rx="1"/><rect x="3" y="14" width="8" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',()=>showTemplateDetail('all')],
