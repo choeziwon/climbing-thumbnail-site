@@ -3,7 +3,7 @@
   "styleSource": "current-service",
   "files": {
     "design-system/build-preview.py": "d11a0202e3c71e1157313ba6cb4efe6ac549d9a81fc2286262d36739551ac048",
-    "design-system/catalog.js": "744bcbc2bf720d393eb2f0d620bb252da782adfedd4fb6bac3c0a839672b2288",
+    "design-system/catalog.js": "0ef1fdf0aa89b000a2032741223da36253e3df3f146b236d42ad7c6de25a074d",
     "design-system/editor-catalog.js": "f867b7023201f71ea3afdc746e0819c3cddd62f4c01177de330c2161f8435b86",
     "design-system/preview/static/mobile/editor.css": "bdcdc9632e3e81c77499f1076069ece009061e8c87f84a4353032e906cad4a5f",
     "design-system/preview/static/shared/editor.css": "36c335f4509071422823edd7444b916ca2e03e08dfa163cac40edaee6c333fd2",
@@ -23,7 +23,7 @@
     "design-system/sample-dom.js": "5c6846843b006e463eb5557bb58ebb10344640ff5c3a4fa1299150b57640b584",
     "design-system/sample-layout-v1.css": "7e8520331ff7e9a51299af5d2a8c3ee694d0ee9669673f2caf4bab46dd9719a6",
     "design-system/sample-layout-v2.css": "3f53fa9c74dc7cd7dc8827585e1b6667b837f518c7f1faac6411ccdf239c08b8",
-    "design-system/service-examples.json": "b77b226c1627df7f2134b25b9e603936441ea84d6053d0fd78d472f5d33a8400",
+    "design-system/service-examples.json": "3329bd1a6bff4fa1eff91a768392b8cd9aba8c43138ff47684654bf9042ee59e",
     "design-system/service-styles.py": "7d665c17f242a19985df34adb5acf903984a960901ebd908047a9b699cf7a75e"
   }
 }

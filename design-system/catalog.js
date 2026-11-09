@@ -101,7 +101,7 @@ catalogLayouts.forEach(refreshCatalogOutline);
    const symbols=doc.querySelector('#wandeung-calendar>svg')?.outerHTML||'';
    let content=clone.outerHTML;
    if(name==='프로필 사진 편집')content='<section class="wc-info-section wc-profile-section">'+content+'</section>';
-   if(context==='info'){const overview=['프로필 카드','회원권 요약 카드','로고 정보 항목'].includes(name)?' wc-info-overview':'';content='<div class="wc-info-panel'+overview+'">'+content+'</div>';}
+   if(context==='info'){const overview=['프로필 카드','회원권 요약 카드'].includes(name)?' wc-info-overview':'';content='<div class="wc-info-panel'+overview+'">'+content+'</div>';}
    if(context==='form')content='<div class="wc-form-scroll">'+content+'</div>';
    if(context==='thumbnail')content='<div class="wc-thumbnail-home">'+content+'</div>';
    const sampleBody=clone.matches('.wc-nav,.wc-header')?content:'<main id="wc-main"><div class="wc-pad">'+content+'</div></main>';
