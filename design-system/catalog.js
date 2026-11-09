@@ -7,22 +7,48 @@ const componentGroups={
  Overlay:['연·월 선택 패널','날짜 내역 바텀 시트'],
  Feedback:['빈 상태']
 };
-// Reuse one category navigation for Foundations and Components.
+// Documentation shell: top-level menu → sidebar category → page outline.
+const catalogLayouts=[];
+function refreshCatalogOutline(layout){
+ const {host,panels,outline}=layout, panel=panels.get(host.dataset.category);
+ if(!panel)return;
+ const sections=[...panel.children].filter(node=>node.tagName==='SECTION');
+ sections.push(...[...panel.querySelectorAll('[data-color-section]')].filter(node=>!node.closest('[hidden]')));
+ outline.replaceChildren();layout.observer?.disconnect();
+ const links=new Map();
+ for(const [index,section] of sections.entries()){
+  if(!section.id)section.id=host.id+'-'+host.dataset.category.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+index;
+  const heading=section.querySelector('h2');if(!heading)continue;
+  const link=document.createElement('button');link.type='button';link.textContent=heading.textContent;
+  link.onclick=()=>{section.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});};
+  outline.append(link);links.set(section,link);
+ }
+ const activate=section=>{for(const [node,link] of links){if(node===section)link.setAttribute('aria-current','location');else link.removeAttribute('aria-current');}};
+ if(sections[0])activate(sections[0]);
+ layout.observer=new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting)activate(entry.target);},{rootMargin:'-100px 0px -65% 0px',threshold:0});
+ sections.forEach(section=>layout.observer.observe(section));
+}
 function categoryNavigation(host,names,prefix,label,initial=names[0]){
- const tabs=document.createElement('div'),panels=new Map();
- tabs.className='ds-tabs ds-category-tabs';tabs.role='tablist';tabs.setAttribute('aria-label',label);
+ const tabs=document.createElement('nav'),panels=new Map(),article=document.createElement('div'),title=document.createElement('h1'),toc=document.createElement('aside'),outline=document.createElement('nav');
+ tabs.className='ds-sidebar';tabs.setAttribute('aria-label',label);
+ article.className='ds-article';title.className='ds-page-title';article.append(title);
+ toc.className='ds-toc';toc.innerHTML='<h2>On this page</h2>';outline.setAttribute('aria-label',label+' page outline');toc.append(outline);
+ const layout={host,panels,outline};catalogLayouts.push(layout);
  function select(name,focus=false){
-  for(const tab of tabs.children){const active=tab.dataset.category===name;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;panels.get(tab.dataset.category).hidden=!active;if(active&&focus)tab.focus();}
+  host.dataset.category=name;title.textContent=name==='Color'?'Colors':name;
+  for(const tab of tabs.children){const active=tab.dataset.category===name;if(active)tab.setAttribute('aria-current','page');else tab.removeAttribute('aria-current');panels.get(tab.dataset.category).hidden=!active;if(active&&focus)tab.focus();}
+  refreshCatalogOutline(layout);
  }
  for(const name of names){
   const key=name.toLowerCase().replace(/[^a-z0-9]+/g,'-'),tab=document.createElement('button'),panel=document.createElement('div');
-  tab.type='button';tab.role='tab';tab.id=prefix+'-tab-'+key;tab.dataset.category=name;tab.textContent=name;tab.setAttribute('aria-controls',prefix+'-group-'+key);
-  panel.id=tab.getAttribute('aria-controls');panel.role='tabpanel';panel.className='grid';panel.setAttribute('aria-labelledby',tab.id);panels.set(name,panel);tabs.append(tab);
-  tab.onclick=()=>select(name);
-  tab.onkeydown=event=>{const items=[...tabs.children],index=items.indexOf(tab);let next;if(event.key==='ArrowRight')next=(index+1)%items.length;else if(event.key==='ArrowLeft')next=(index+items.length-1)%items.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=items.length-1;else return;event.preventDefault();select(items[next].dataset.category,true);};
+  tab.type='button';tab.id=prefix+'-tab-'+key;tab.dataset.category=name;tab.textContent=name==='Color'?'Colors':name;tab.setAttribute('aria-controls',prefix+'-group-'+key);
+  panel.id=tab.getAttribute('aria-controls');panel.role='region';panel.className='grid';panel.setAttribute('aria-labelledby',tab.id);panels.set(name,panel);tabs.append(tab);article.append(panel);
+  tab.onclick=()=>{select(name);window.scrollTo({top:0,behavior:'instant'});};
+  tab.onkeydown=event=>{const items=[...tabs.children],index=items.indexOf(tab);let next;if(event.key==='ArrowDown')next=(index+1)%items.length;else if(event.key==='ArrowUp')next=(index+items.length-1)%items.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=items.length-1;else return;event.preventDefault();select(items[next].dataset.category,true);};
  }
- host.classList.remove('grid');host.append(tabs,...panels.values());select(initial);return {tabs,panels};
+ host.classList.remove('grid');host.classList.add('ds-doc-layout');host.append(tabs,article,toc);select(initial);return {tabs,panels};
 }
+window.addEventListener('ds-colors-ready',()=>catalogLayouts.forEach(refreshCatalogOutline));
 const componentCatalog=document.querySelector('#component-catalog');
 if(new URLSearchParams(location.search).has('capture')){componentCatalog.replaceChildren();document.querySelector('#utility-catalog').replaceChildren();}
 const {panels:groupPanels}=categoryNavigation(componentCatalog,Object.keys(componentGroups),'component','Component categories');
@@ -54,8 +80,13 @@ function serviceDocument(kind){
  foundation('모션',['menu-motion','menu-selection-motion','menu-compact-scale'].map(key=>'<div class="foundation-row"><code>--frame-'+key+'</code><span>'+value('--frame-'+key)+'</span></div>'));
  foundation('표면 효과',['menu-backdrop','menu-shadow'].map(key=>'<div class="foundation-row"><code>--frame-'+key+'</code><span>'+value('--frame-'+key)+'</span></div>'));
 })();
+const utilityHost=document.querySelector('#utility-catalog');
+const utilitySections=[...utilityHost.children];
+const {panels:utilityPanels}=categoryNavigation(utilityHost,['Utilities'],'utility','Utility categories');
+utilityPanels.get('Utilities').append(...utilitySections);
+catalogLayouts.forEach(refreshCatalogOutline);
 (async()=>{
- if(document.documentElement.hasAttribute('data-catalog-static')){sortComponentCatalog();document.querySelectorAll('.ds-sample').forEach(host=>hydrateCatalogSample(host,host.dataset.sampleKind));document.documentElement.dataset.catalogReady='true';return;}
+ if(document.documentElement.hasAttribute('data-catalog-static')){sortComponentCatalog();catalogLayouts.forEach(refreshCatalogOutline);document.querySelectorAll('.ds-sample').forEach(host=>hydrateCatalogSample(host,host.dataset.sampleKind));document.documentElement.dataset.catalogReady='true';return;}
  const source=document.createElement('iframe');source.className='catalog-source';source.title='서비스 컴포넌트 원본';source.tabIndex=-1;source.setAttribute('aria-hidden','true');
  source.onload=async()=>{
   const doc=source.contentDocument,win=source.contentWindow;
@@ -117,7 +148,7 @@ function serviceDocument(kind){
    sample('단위 입력','.wc-body-fields','info');
    click('#wc-back');click('[data-menu="thumbnail"]');await settle();
    sample('템플릿 카드','.wc-template-preview','thumbnail');
-   source.remove();document.documentElement.dataset.catalogReady='true';
+   source.remove();catalogLayouts.forEach(refreshCatalogOutline);document.documentElement.dataset.catalogReady='true';
   }catch(error){document.documentElement.dataset.catalogError=error.message;console.error(error);}
  };
  source.srcdoc=serviceDocument('v2');document.body.append(source);

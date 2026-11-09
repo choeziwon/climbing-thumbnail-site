@@ -24,4 +24,4 @@ A design-system annotation is a request to change the corresponding shared servi
 
 ## Catalog categories
 
-Foundations uses the same category navigation as Components: Color, Typography, Spacing, Size & Radius, Motion, and Effects. Atomic and semantic palettes belong under Color; values continue to come from shared service tokens. Utilities currently has only selection helpers and scrolling, so it remains a flat list until additional helpers warrant categories.
+The catalog uses a top-level menu, a left category menu, and a right page outline. Foundations contains Colors, Typography, Spacing, Size & Radius, Motion, and Effects. Colors separates Semantic and Atomic into local tabs. Each palette stays on a single row, with horizontal scrolling on narrow screens and no visible scrollbar or token-code labels. Values continue to come from shared service tokens. Utilities currently has only selection helpers and scrolling, so it remains a flat list within its page. Component examples remain native, selectable HTML.
