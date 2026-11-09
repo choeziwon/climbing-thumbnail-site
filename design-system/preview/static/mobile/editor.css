@@ -498,7 +498,7 @@ body.mobile-editing input.centered-range{background:transparent}
 .mobile-editor .mobile-panel :is(.mobile-text-tabs,.order-options,.ratio-control,.photo-crop-ratios,.mark-link-options,.alignment-options)>button:is([aria-selected=true],[aria-pressed=true]){background:var(--tab-selection-bg);color:var(--tab-selection-ink);font-weight:600;box-shadow:none}
 .mobile-editor .mobile-panel .mobile-text-tabs button[aria-selected=true]::after{display:none}
 .mobile-editor .mobile-panel .mobile-text-tabs>.mobile-edit-done{flex:0 0 48px;color:#111;font-weight:600}
-.mobile-editor .mobile-panel :is(.mark-link-switch-row,.toggle-control){display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:3px 12px;margin:0;border:1px solid var(--control-border);border-radius:var(--control-radius);background:var(--control-surface)}
+.mobile-editor .mobile-panel :is(.mark-link-switch-row,.toggle-control){display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:3px 12px;margin:0;border:0;border-radius:var(--control-radius);background:var(--control-surface)}
 .mobile-editor .mobile-panel .mark-outline-settings{gap:12px}
 
 /* Text editor navigation keeps its original flat header and underline tabs. */

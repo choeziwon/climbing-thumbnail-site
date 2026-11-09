@@ -6,7 +6,7 @@
 /* Source: .mobile-editor .mobile-panel :is(.mobile-text-tabs,.order-options,.ratio-control,.photo-crop-ratios,.mark-link-options,.alignment-options)>button:is([aria-selected=true],[aria-pressed=true]) */
 #wandeung-calendar .wc-segment>button[aria-pressed=true]{background:var(--tab-selection-bg);color:var(--tab-selection-ink);font-weight:600;box-shadow:none}
 /* Source: .mobile-editor .mobile-panel :is(.mark-link-switch-row,.toggle-control) */
-#wandeung-calendar .wc-toggle-control{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:3px 12px;margin:0;border:1px solid var(--control-border);border-radius:var(--control-radius);background:var(--control-surface)}
+#wandeung-calendar .wc-toggle-control{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:3px 12px;margin:0;border:0;border-radius:var(--control-radius);background:var(--control-surface)}
 /* Source: .mobile-editor .mobile-panel .text-editor-tabs */
 #wandeung-calendar .wc-tabs{gap:0;padding:0 8px;margin:0 -16px 12px;border:0;border-bottom:1px solid var(--frame-soft-border);border-radius:0;background:var(--frame-background);min-height:44px}
 /* Source: .mobile-editor .mobile-panel .text-editor-tabs>button */
