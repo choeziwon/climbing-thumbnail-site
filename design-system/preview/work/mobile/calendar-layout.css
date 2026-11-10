@@ -81,7 +81,7 @@
 #wandeung-calendar .wc-nav button:hover:not(:disabled){border-radius:8px}
 
 /* Approved spacing: flush calendar toolbar and borderless bottom navigation. */
-#wandeung-calendar .wc-calendar-open #wc-main>.wc-pad{padding-top:0}
+#wandeung-calendar .wc-calendar-open #wc-main>.wc-pad{padding-top:var(--frame-menu-top)}
 #wandeung-calendar .wc-nav{border-top:0}
 
 #wandeung-calendar .wc-thumbnail-home>.wc-start:first-child{margin-top:0}
@@ -264,7 +264,7 @@
 #wandeung-calendar .wc-empty-holds svg *{stroke:none}
 
 /* Info settings reuse the calendar's top-right toolbar position and icon button. */
-#wandeung-calendar .wc-info-panel{padding-top:0}
+#wandeung-calendar .wc-info-panel{padding-top:var(--frame-menu-top)}
 #wandeung-calendar .wc-profile-toolbar{min-height:44px;align-items:center;justify-content:flex-end}
 #wandeung-calendar .wc-info-panel .wc-toolbar-icon:disabled{opacity:.35}
 
@@ -333,7 +333,7 @@
 #wandeung-calendar .wc-phone:has(.wc-day-overlay)>.wc-nav{visibility:hidden;pointer-events:none}
 
 /* Approved template-first home, composed from service cards, holds and entries. */
-#wandeung-calendar .wc-thumbnail-home{display:grid;gap:28px;padding-top:16px}
+#wandeung-calendar .wc-thumbnail-home{display:grid;gap:28px;padding-top:var(--frame-menu-top)}
 #wandeung-calendar .wc-thumbnail-home section{min-width:0}
 #wandeung-calendar .wc-thumbnail-home .wc-row{margin-bottom:12px;gap:8px}
 #wandeung-calendar .wc-thumbnail-home h2{margin:0;font:600 var(--frame-card-title-size)/var(--frame-card-title-line) var(--frame-font-family)}

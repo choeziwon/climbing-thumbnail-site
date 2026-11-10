@@ -13,6 +13,7 @@
   --frame-page-x: 16px;
   --frame-card-padding: 16px;
   --frame-panel-top: 18px;
+  --frame-menu-top: 0px;
   --frame-panel-bottom: 24px;
   --frame-field-gap: 16px;
   --frame-label-gap: 8px;
@@ -39,7 +40,7 @@
   --frame-selected-gym-title-size: 16px;
   --frame-logo-info-title-line: 24px;
   --frame-logo-info-copy-gap: 1px;
-  --frame-record-hold-size: 14px;
+  --frame-record-hold-size: 12px;
   --frame-record-hold-gap: 2px;
   --frame-stat-label-size: 14px;
   --frame-stat-label-line: 22px;
