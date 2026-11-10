@@ -37,7 +37,9 @@
   --frame-logo-info-title-weight: 500;
   --frame-logo-info-title-size: 15px;
   --frame-logo-info-title-line: 24px;
-  --frame-logo-info-copy-gap: 0px;
+  --frame-logo-info-copy-gap: 1px;
+  --frame-record-hold-size: 14px;
+  --frame-record-hold-gap: 2px;
   --frame-stat-label-size: 14px;
   --frame-stat-label-line: 22px;
   --frame-stat-value-size: 16px;
