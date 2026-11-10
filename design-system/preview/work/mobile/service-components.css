@@ -36,6 +36,7 @@
 #wandeung-calendar .wc-phone .wc-logo-info-row.wc-gym-option{padding:10px 8px;min-height:60px}
 #wandeung-calendar .wc-phone .wc-logo-info-row.wc-gym-option:hover:not(:disabled){background:var(--frame-hover-background)}
 #wandeung-calendar .wc-phone .wc-logo-info-row.wc-selected-gym{margin-top:var(--frame-label-gap)}
+#wandeung-calendar .wc-phone .wc-selected-gym .wc-logo-info-title{font-size:var(--frame-selected-gym-title-size)}
 #wandeung-calendar .wc-phone .wc-logo-info-row.wc-membership-card-top{margin-bottom:var(--frame-field-gap)}
 /* Keep the component consistent even when hosted inside another card/form. */
 #wandeung-calendar .wc-phone .wc-logo-info-row .wc-badge{flex:none}
