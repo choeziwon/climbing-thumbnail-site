@@ -73,8 +73,8 @@ body{background:var(--frame-soft-background);color:var(--frame-text);font-family
 #wandeung-calendar .wc-count .wc-level-color:hover:not(:disabled){background:var(--frame-hover-background)}
 
 /* Compact horizontal color counters, using the service color-button pattern. */
-#wandeung-calendar .wc-color-counts{display:flex;flex-wrap:nowrap;gap:8px;padding:8px 0;border:0;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
-#wandeung-calendar .wc-color-counts .wc-count{flex:0 0 88px;width:88px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:0;border:0;min-width:0}
+#wandeung-calendar .wc-color-counts{display:flex;flex-wrap:nowrap;gap:8px;padding:var(--frame-stepper-padding-y) 0;border:0;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+#wandeung-calendar .wc-color-counts .wc-count{flex:0 0 88px;width:88px;display:flex;flex-direction:column;align-items:center;gap:var(--frame-stepper-stack-gap);padding:0;border:0;min-width:0}
 #wandeung-calendar .wc-color-counts .wc-level-color{flex:none;display:flex;justify-content:center;width:100%;min-height:44px;height:44px;padding:4px;background:transparent}
 #wandeung-calendar .wc-color-counts .wc-level-swatch{width:32px;height:32px}
 #wandeung-calendar .wc-color-counts output{width:auto;line-height:20px}

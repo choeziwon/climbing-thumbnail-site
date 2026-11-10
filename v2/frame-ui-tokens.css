@@ -17,6 +17,8 @@
   --frame-field-gap: 16px;
   --frame-label-gap: 8px;
   --frame-action-gap: 8px;
+  --frame-stepper-padding-y: 4px;
+  --frame-stepper-stack-gap: 2px;
   --frame-control-height: 44px;
   --frame-control-radius: var(--control-radius);
   --frame-button-radius: 9px;
